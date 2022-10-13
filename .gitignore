@@ -1,0 +1,17 @@
+.vscode
+.DS_STORE
+node_modules
+.module-cache
+*.log*
+dist
+docs-dist
+lib
+.idea
+.docz
+.tscache
+package-lock.json
+*.tsbuildinfo*
+yarn.lock
+coverage
+landing/out
+.env

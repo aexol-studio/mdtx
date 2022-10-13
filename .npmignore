@@ -1,0 +1,16 @@
+.vscode
+.DS_STORE
+.docz
+.tscache
+node_modules
+.module-cache
+*.log*
+src
+sandbox
+pokemon
+examples
+out
+.idea
+package-lock.json
+__tests__
+examples
