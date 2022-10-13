@@ -39,6 +39,6 @@ export const readConfig = (path: string) => {
   }
 };
 
-export const initConfig = async () => {
-  fs.writeFileSync('mdtx.json', JSON.stringify(GLOBAL_CONFIG_FILE, null, 4));
+export const initConfig = async (values = GLOBAL_CONFIG_FILE) => {
+  fs.writeFileSync('mdtx.json', JSON.stringify(values, null, 4));
 };

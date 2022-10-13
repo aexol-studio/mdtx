@@ -11,10 +11,7 @@ export const isDirectory = (p: string) => fs.statSync(p).isDirectory();
 
 export const mayBeIndexFileOrWithoutExtension = (p: string) => {
   if (p.includes('.')) {
-    return !p
-      .split('.')
-      .pop()!
-      .match(/[^\/]*/gm);
+    return !p.split('.').pop()?.match(/[^/]*/gm);
   }
   return !p.match(/\/$/);
 };
@@ -39,7 +36,7 @@ export const mkFileDirSync = async (p: string) => {
   }
 };
 
-export const existsJSONOrDefaultSync = (p: string, defaultValue: any) =>
+export const existsJSONOrDefaultSync = <T>(p: string, defaultValue: T) =>
   fs.existsSync(p)
     ? JSON.parse(fs.readFileSync(p).toString('utf-8'))
     : defaultValue;

@@ -1,8 +1,8 @@
-import { preBuild } from '@/build';
-import { readConfig } from '@/config';
-import { isMd, isStaticFile } from '@/fsAddons';
-import { pathIn } from '@/paths';
-import { copyStaticFiles, transformFiles } from '@/transform';
+import { preBuild } from '@/build.js';
+import { readConfig } from '@/config.js';
+import { isMd, isStaticFile } from '@/fsAddons.js';
+import { pathIn } from '@/paths.js';
+import { copyStaticFiles, transformFiles } from '@/transform.js';
 import chokidar from 'chokidar';
 import fs from 'fs';
 
@@ -15,7 +15,7 @@ export const watch = async () => {
     config,
   });
   chokidar
-    .watch(pathIn(config)(`**/*.{jpeg,gif,mp4,png,jpg,md}`), {
+    .watch(pathIn(config)(`**/*.{md}`), {
       interval: 0, // No delay
       ignoreInitial: true,
     })
@@ -32,7 +32,6 @@ export const watch = async () => {
           block = true;
           await transformFiles({
             config,
-            fileChanged: p,
           });
           block = false;
         }

@@ -1,10 +1,9 @@
 {
   "compilerOptions": {
     "sourceMap": true,
-    "target": "es6",
-    "module": "commonjs",
-    "jsx": "react",
-    "moduleResolution": "node",
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "NodeNext",
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "declaration": true,

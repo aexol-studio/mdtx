@@ -1,4 +1,4 @@
 {
-    "out": "./src",
-    "in": "./content"
+    "in": "./content",
+    "out": "./src"
 }

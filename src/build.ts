@@ -1,5 +1,5 @@
-import { ConfigFile, readConfig } from '@/config';
-import { cleanBuild, transformFiles, copyStaticFiles } from '@/transform';
+import { ConfigFile, readConfig } from '@/config.js';
+import { cleanBuild, transformFiles, copyStaticFiles } from '@/transform.js';
 
 export const preBuild = async (config: ConfigFile) => {
   cleanBuild(config);

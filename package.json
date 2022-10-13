@@ -19,6 +19,7 @@
   "bin": {
     "mdtx": "lib/CLI.js"
   },
+  "type": "module",
   "author": "Aexol <aexol@aexol.com> (http://aexol.com)",
   "license": "MIT",
   "bugs": {

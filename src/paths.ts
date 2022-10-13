@@ -1,7 +1,11 @@
-import { ConfigFile } from '@/config';
+import { ConfigFile } from '@/config.js';
 import path from 'path';
-export const pathIn = (config: ConfigFile) => (...args: string[]) =>
-  path.join(config.in, ...args);
+export const pathIn =
+  (config: ConfigFile) =>
+  (...args: string[]) =>
+    path.join(config.in, ...args);
 
-export const pathOut = (config: ConfigFile) => (...args: string[]) =>
-  path.join(config.out, ...args);
+export const pathOut =
+  (config: ConfigFile) =>
+  (...args: string[]) =>
+    path.join(config.out, ...args);
