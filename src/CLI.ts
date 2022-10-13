@@ -24,11 +24,17 @@ const args = yargs
     describe: 'Build project',
     boolean: true,
   })
-  .demandCommand(0).argv;
+  .demandCommand(0).argv as {
+  [x: string]: unknown;
+  init: boolean | undefined;
+  build: boolean | undefined;
+  _: (string | number)[];
+  $0: string;
+};
 
-if (args.build) {
+if (args?.build) {
   build();
-} else if (args.init) {
+} else if (args?.init) {
   initConfig();
 } else {
   watch();
