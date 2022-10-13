@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rimraf lib tsconfig.build.tsbuildinfo && ttsc --build tsconfig.build.json",
     "watch": "npm run build && ttsc --watch --project tsconfig.build.json",
-    "test": "jest"
+    "test": "jest --passWithNoTests"
   },
   "repository": {
     "type": "git",
