@@ -4,7 +4,7 @@
   "description": "Elm inspired markdown parser and stritcly typed files generator. Generate TS files from markdown",
   "main": "lib/index.js",
   "scripts": {
-    "build": "ttsc --build tsconfig.build.json",
+    "build": "rimraf lib tsconfig.build.tsbuildinfo && ttsc --build tsconfig.build.json",
     "watch": "npm run build && ttsc --watch --project tsconfig.build.json",
     "test": "jest"
   },
