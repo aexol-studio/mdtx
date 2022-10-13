@@ -1,4 +1,3 @@
-import { preBuild } from '@/build.js';
 import { readConfig } from '@/config.js';
 import { isMd, isStaticFile } from '@/fsAddons.js';
 import { pathIn } from '@/paths.js';
@@ -9,7 +8,6 @@ import fs from 'fs';
 export const watch = async () => {
   let block = true;
   const config = readConfig('./mdtx.json');
-  await preBuild(config);
   await copyStaticFiles(config);
   await transformFiles({
     config,

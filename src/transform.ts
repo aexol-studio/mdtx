@@ -67,9 +67,3 @@ export const copyStaticFiles = async (config: ConfigFile) => {
       .map((f) => copyFile(config)(f)),
   );
 };
-
-export const cleanBuild = (config: ConfigFile) => {
-  if (fs.existsSync(config.out)) {
-    fs.rmSync(config.out, { recursive: true });
-  }
-};
