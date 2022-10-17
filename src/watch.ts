@@ -13,7 +13,7 @@ export const watch = async () => {
     config,
   });
   chokidar
-    .watch(pathIn(config)(`**/*.{md}`), {
+    .watch(pathIn(config)(`**/*.md`), {
       interval: 0, // No delay
       ignoreInitial: true,
     })

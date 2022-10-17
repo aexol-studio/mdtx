@@ -1,6 +1,6 @@
 {
   "name": "mdtx",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Elm inspired markdown parser and stritcly typed files generator. Generate TS files from markdown",
   "main": "lib/index.js",
   "scripts": {
