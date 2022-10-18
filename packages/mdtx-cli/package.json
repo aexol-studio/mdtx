@@ -1,9 +1,24 @@
 {
-  "name": "mdtx-cli",
-  "description": "MDTX CLI",
+  "name": "mdtx",
+  "version": "0.0.31",
+  "private": false,
+  "license": "MIT",
+  "description": "Mdtx generate Typescript Files from Markdown. - CLI",
+  "homepage": "https://github.com/aexol-studio/mdtx#readme",
   "main": "lib/CLI.js",
+  "type": "module",
   "scripts": {
     "build": "rimraf tsconfig.build.tsbuildinfo lib && ttsc --build tsconfig.build.json"
   },
-  "type": "module"
+  "dependencies": {
+    "mdtx-core": "*",
+    "yargs": "^17.6.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aexol-studio/mdtx.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aexol-studio/mdtx/issues"
+  }
 }

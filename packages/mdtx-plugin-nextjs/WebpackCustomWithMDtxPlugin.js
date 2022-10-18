@@ -1,4 +1,4 @@
-const watchMDtx = import('../mdtx-core/lib/watch.js');
+const watchMDtx = import('mdtx-core/lib/watch.js');
 
 class WebpackCustomWithMDtxPlugin {
   apply(compiler) {

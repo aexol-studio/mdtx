@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/mdtx-core"
+    },
+    {
+      "path": "./packages/mdtx-cli"
+    }
+  ]
+}

@@ -14,11 +14,12 @@
     "esModuleInterop": true,
     "allowJs": true,
     "strict": true,
+    "composite": true,
     "outDir": "./lib",
     "lib": ["es6", "es7", "esnext", "dom"],
     "rootDir": ".",
     "paths": {
-      "@/*": ["../mdtx-core/*"]
+      "@/*": ["./*"]
     },
     "plugins": [
       {

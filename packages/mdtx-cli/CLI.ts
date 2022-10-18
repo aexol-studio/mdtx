@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { build } from '@/lib/build.js';
-import { initConfig } from '@/lib/config.js';
-import { message } from '@/lib/console.js';
-import { watch } from '@/lib/watch.js';
+import { build } from 'mdtx-core/lib/build.js';
+import { initConfig } from 'mdtx-core/lib/config.js';
+import { message } from 'mdtx-core/lib/console.js';
+import { watch } from 'mdtx-core/lib/watch.js';
 import yargs from 'yargs';
 process.on('SIGINT', function () {
   message('Exiting...', 'redBright');

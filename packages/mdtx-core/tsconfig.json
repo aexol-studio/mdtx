@@ -14,6 +14,7 @@
     "esModuleInterop": true,
     "allowJs": true,
     "strict": true,
+    "composite": true,
     "outDir": "./lib",
     "lib": ["es6", "es7", "esnext", "dom"],
     "rootDir": "./src",
@@ -34,7 +35,7 @@
   "exclude": [
     "node_modules",
     "example",
-    "core",
+    "lib",
     "examples",
     "out",
     "coverage",
