@@ -1,17 +1,17 @@
 export const htmlContent = {
-    "Changelog.md": {
-        "content": "\r\n## 0.0.1\r\n\r\nFirst msd\r\n",
+    "basics\\HowToStart.md": {
+        "content": "<h1>Hello world</h1>",
         "data": {
-            "link": "changelog",
-            "title": "Changelog",
-            "order": 99
+            "title": "How to start"
         },
         "excerpt": ""
     },
-    "basics\\HowToStart.md": {
-        "content": "\r\n# Hello world\r\n",
+    "Changelog.md": {
+        "content": "<h2>0.0.1</h2>\n<p>First msd</p>",
         "data": {
-            "title": "How to start"
+            "link": "changelog",
+            "title": "Changelo",
+            "order": 99
         },
         "excerpt": ""
     }

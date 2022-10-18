@@ -1,6 +1,6 @@
 ---
 link: changelog
-title: Changelog
+title: Changelo
 order: 99
 ---
 
