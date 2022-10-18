@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "lib",
+    "node_modules",
+    "src/__tests__/**/*",
+    "examples",
+    "example",
+    "landing",
+    "out",
+    "jest.config.ts",
+    "src/serve/renderer.js",
+    "src/serve/watcher.js",
+    "coverage"
+  ]
+}

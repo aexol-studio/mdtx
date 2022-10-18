@@ -2,11 +2,19 @@
   "name": "mdtx",
   "version": "0.0.31",
   "description": "Elm inspired markdown parser and stritcly typed files generator. Generate TS files from markdown",
-  "main": "lib/index.js",
+  "main": "packages/mdtx-core/lib/index.js",
+  "bin": {
+    "mdtx": "packages/mdtx-cli/lib/CLI.js"
+  },
+  "workspaces": [
+    "./packages/mdtx-core",
+    "./packages/mdtx-cli",
+    "./packages/mdtx-nextjs-plugin"
+  ],
   "scripts": {
-    "build": "rimraf lib tsconfig.build.tsbuildinfo && ttsc --build tsconfig.build.json",
-    "watch": "npm run build && ttsc --watch --project tsconfig.build.json",
-    "test": "jest --passWithNoTests"
+    "build": "npm run build --ws --if-present",
+    "examplestart": "node packages/mdtx-cli/lib/CLI.js",
+    "exampleinit": "node packages/mdtx-cli/lib/CLI.js init"
   },
   "repository": {
     "type": "git",
@@ -16,10 +24,6 @@
     "react",
     "graphql"
   ],
-  "bin": {
-    "mdtx": "lib/CLI.js"
-  },
-  "type": "module",
   "author": "Aexol <aexol@aexol.com> (http://aexol.com)",
   "license": "MIT",
   "bugs": {

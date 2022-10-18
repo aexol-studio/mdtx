@@ -1,0 +1,8 @@
+{
+  "name": "mdtx-nextjs-plugin",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "mdtx-core": "*"
+  }
+}

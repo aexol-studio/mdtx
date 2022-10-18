@@ -1,6 +1,6 @@
 export const htmlContent = {
     "Changelog.md": {
-        "content": "\n## 0.0.1\n\nFirst mdtx version\n",
+        "content": "\r\n## 0.0.1\r\n\r\nFirst msd\r\n",
         "data": {
             "link": "changelog",
             "title": "Changelog",
@@ -8,8 +8,8 @@ export const htmlContent = {
         },
         "excerpt": ""
     },
-    "basics/HowToStart.md": {
-        "content": "\n# Hello world\n",
+    "basics\\HowToStart.md": {
+        "content": "\r\n# Hello world\r\n",
         "data": {
             "title": "How to start"
         },

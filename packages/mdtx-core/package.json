@@ -1,0 +1,10 @@
+{
+  "name": "mdtx-core",
+  "description": "MDTX CORE",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "rimraf lib tsconfig.build.tsbuildinfo && ttsc --build tsconfig.build.json",
+    "test": "jest --passWithNoTests"
+  },
+  "type": "module"
+}

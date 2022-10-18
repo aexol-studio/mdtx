@@ -16,9 +16,9 @@
     "strict": true,
     "outDir": "./lib",
     "lib": ["es6", "es7", "esnext", "dom"],
-    "rootDir": "./src",
+    "rootDir": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["../mdtx-core/*"]
     },
     "plugins": [
       {
@@ -29,10 +29,11 @@
         "afterDeclarations": true
       }
     ],
-    "baseUrl": "./src/"
+    "baseUrl": "./"
   },
   "exclude": [
     "lib",
+    "core",
     "node_modules",
     "example",
     "examples",

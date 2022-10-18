@@ -1,0 +1,9 @@
+{
+  "name": "mdtx-cli",
+  "description": "MDTX CLI",
+  "main": "lib/CLI.js",
+  "scripts": {
+    "build": "rimraf tsconfig.build.tsbuildinfo lib && ttsc --build tsconfig.build.json"
+  },
+  "type": "module"
+}

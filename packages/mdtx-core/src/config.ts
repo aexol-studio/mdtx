@@ -3,6 +3,7 @@ import fs from 'fs';
 export const GLOBAL_CONFIG_FILE = {
   out: './src',
   in: './content',
+  markdownToHtml: false,
 };
 
 export type ConfigFile = typeof GLOBAL_CONFIG_FILE;
