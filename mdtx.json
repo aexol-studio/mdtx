@@ -1,0 +1,5 @@
+{
+  "in": "./example/content",
+  "out": "./example/src",
+  "markdownToHtml": true
+}

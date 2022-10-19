@@ -1,37 +1,21 @@
 {
-  "name": "mdtx",
-  "version": "0.0.31",
+  "name": "mdtx-repo",
+  "version": "0.0.1",
+  "private": false,
+  "license": "MIT",
   "description": "Elm inspired markdown parser and stritcly typed files generator. Generate TS files from markdown",
-  "main": "lib/index.js",
+  "homepage": "https://github.com/aexol-studio/mdtx#readme",
   "scripts": {
-    "build": "rimraf lib tsconfig.build.tsbuildinfo && ttsc --build tsconfig.build.json",
-    "watch": "npm run build && ttsc --watch --project tsconfig.build.json",
-    "test": "jest --passWithNoTests"
+    "build": "npm run build --ws --if-present",
+    "examplestart": "node packages/mdtx-cli/lib/CLI.js",
+    "exampleinit": "node packages/mdtx-cli/lib/CLI.js init"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aexol-studio/mdtx.git"
   },
-  "keywords": [
-    "react",
-    "graphql"
-  ],
-  "bin": {
-    "mdtx": "lib/CLI.js"
-  },
-  "type": "module",
-  "author": "Aexol <aexol@aexol.com> (http://aexol.com)",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/aexol-studio/mdtx/issues"
-  },
-  "homepage": "https://github.com/aexol-studio/mdtx#readme",
-  "dependencies": {
-    "chalk": "^5.1.2",
-    "chokidar": "^3.5.3",
-    "gray-matter": "^4.0.3",
-    "typescript": "^4.8.4",
-    "yargs": "^17.6.0"
   },
   "devDependencies": {
     "@types/jest": "^29.1.2",
@@ -47,5 +31,10 @@
     "ts-node": "^10.9.1",
     "ttypescript": "^1.5.13",
     "typescript-transform-paths": "^3.3.1"
-  }
+  },
+  "workspaces": [
+    "./packages/mdtx-core",
+    "./packages/mdtx-cli",
+    "./packages/mdtx-nextjs-plugin"
+  ]
 }

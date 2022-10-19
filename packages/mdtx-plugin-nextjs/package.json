@@ -1,0 +1,12 @@
+{
+  "name": "mdtx-nextjs-plugin",
+  "version": "0.0.31",
+  "private": false,
+  "license": "MIT",
+  "description": "Mdtx generate Typescript Files from Markdown. - NextJS Plugin",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "dependencies": {
+    "mdtx-core": "*"
+  }
+}

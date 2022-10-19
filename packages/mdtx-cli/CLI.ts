@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { build } from '@/build.js';
-import { initConfig } from '@/config.js';
-import { message } from '@/console.js';
-import { watch } from '@/watch.js';
+import { build } from 'mdtx-core/lib/build.js';
+import { initConfig } from 'mdtx-core/lib/config.js';
+import { message } from 'mdtx-core/lib/console.js';
+import { watch } from 'mdtx-core/lib/watch.js';
 import yargs from 'yargs';
 process.on('SIGINT', function () {
   message('Exiting...', 'redBright');
@@ -46,15 +46,21 @@ yargs(process.argv.slice(2))
           describe: 'Folder to output generated markdown.ts file',
           type: 'string',
         },
+        markdownToHtml: {
+          default: false,
+          describe: 'Boolean to active markdown conversion',
+          type: 'boolean',
+        }
       });
     },
     async (argv) => {
-      const args = argv as unknown as { in: string; out: string };
+      const args = argv as unknown as { in: string; out: string; markdownToHtml: boolean };
       console.log(args);
       if ('in' in argv && 'out' in argv) {
         await initConfig({
           in: args.in,
           out: args.out,
+          markdownToHtml: args.markdownToHtml,
         });
       }
     },
