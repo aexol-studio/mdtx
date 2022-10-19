@@ -34,11 +34,7 @@
   },
   "exclude": [
     "lib",
-    "core",
     "node_modules",
-    "example",
-    "examples",
-    "out",
     "coverage",
     "jest.config.ts"
   ]

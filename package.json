@@ -5,10 +5,6 @@
   "license": "MIT",
   "description": "Elm inspired markdown parser and stritcly typed files generator. Generate TS files from markdown",
   "homepage": "https://github.com/aexol-studio/mdtx#readme",
-  "main": "packages/mdtx-core/lib/index.js",
-  "bin": {
-    "mdtx": "packages/mdtx-cli/lib/CLI.js"
-  },
   "scripts": {
     "build": "npm run build --ws --if-present",
     "examplestart": "node packages/mdtx-cli/lib/CLI.js",
@@ -21,7 +17,6 @@
   "bugs": {
     "url": "https://github.com/aexol-studio/mdtx/issues"
   },
-  "dependencies": {},
   "devDependencies": {
     "@types/jest": "^29.1.2",
     "@types/ws": "^8.5.3",

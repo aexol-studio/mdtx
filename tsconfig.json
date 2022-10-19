@@ -6,6 +6,9 @@
     },
     {
       "path": "./packages/mdtx-cli"
+    },
+    {
+      "path": "./packages/mdtx-plugin-nextjs"
     }
   ]
 }

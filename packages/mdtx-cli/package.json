@@ -6,6 +6,9 @@
   "description": "Mdtx generate Typescript Files from Markdown. - CLI",
   "homepage": "https://github.com/aexol-studio/mdtx#readme",
   "main": "lib/CLI.js",
+  "bin": {
+    "mdtx": "lib/CLI.js"
+  },
   "type": "module",
   "scripts": {
     "build": "rimraf tsconfig.build.tsbuildinfo lib && ttsc --build tsconfig.build.json"

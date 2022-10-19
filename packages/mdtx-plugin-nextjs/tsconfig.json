@@ -3,7 +3,6 @@
     "sourceMap": true,
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "NodeNext",
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "declaration": true,
@@ -17,7 +16,7 @@
     "composite": true,
     "outDir": "./lib",
     "lib": ["es6", "es7", "esnext", "dom"],
-    "rootDir": "./src",
+    "rootDir": ".",
     "paths": {
       "@/*": ["./*"]
     },
@@ -30,7 +29,7 @@
         "afterDeclarations": true
       }
     ],
-    "baseUrl": "./src/"
+    "baseUrl": "./"
   },
   "exclude": [
     "node_modules",
