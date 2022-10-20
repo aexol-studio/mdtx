@@ -9,7 +9,7 @@
     "start": "mdtx"
   },
   "dependencies": {
-    "mdtx-core": "*"
+    "mdtx": "*"
   },
   "author": "",
   "license": "ISC"
