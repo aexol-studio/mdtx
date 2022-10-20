@@ -1,13 +1,13 @@
-import { readConfig } from '@/config.js';
+import { ConfigFile, readConfig } from '@/config.js';
 import { isMd, isStaticFile } from '@/fsAddons.js';
 import { pathIn } from '@/paths.js';
 import { copyStaticFiles, transformFiles } from '@/transform.js';
 import chokidar from 'chokidar';
 import fs from 'fs';
 
-export const watch = async () => {
+export const watch = async (pluginConfig?: ConfigFile) => {
   let block = true;
-  const config = readConfig('./mdtx.json');
+  const config = pluginConfig ? pluginConfig : readConfig('./mdtx.json');
   await copyStaticFiles(config);
   await transformFiles({
     config,

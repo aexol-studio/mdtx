@@ -45,7 +45,7 @@ export const readFiles =
   };
 
 export const transformFiles = async ({ config }: { config: ConfigFile }) => {
-  const { end } = calcTime('Build time', 'blueBright');
+  const { end } = calcTime(`Build time`, 'blueBright');
   const mdFiles = await readFiles(isMd)(config.in);
   await transformMarkdownFiles(config)(mdFiles);
   message('Code render successful', 'greenBright');

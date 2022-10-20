@@ -7,15 +7,10 @@
     "skipLibCheck": true,
     "declaration": true,
     "incremental": true,
-    "removeComments": true,
     "noUnusedLocals": true,
     "strictNullChecks": true,
-    "esModuleInterop": true,
     "allowJs": true,
-    "strict": true,
-    "composite": true,
     "outDir": "./lib",
-    "lib": ["es6", "es7", "esnext", "dom"],
     "rootDir": ".",
     "paths": {
       "@/*": ["./*"]
@@ -31,10 +26,5 @@
     ],
     "baseUrl": "./"
   },
-  "exclude": [
-    "node_modules",
-    "lib",
-    "coverage",
-    "jest.config.ts"
-  ]
+  "exclude": ["node_modules", "lib", "coverage", "jest.config.ts"]
 }

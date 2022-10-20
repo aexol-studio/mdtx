@@ -1,0 +1,16 @@
+{
+  "name": "mdtx-example",
+  "version": "1.0.0",
+  "private": false,
+  "description": "Mdtx generate Typescript Files from Markdown. - Simple example",
+  "main": "index.js",
+  "scripts": {
+    "init": "mdtx init",
+    "start": "mdtx"
+  },
+  "dependencies": {
+    "mdtx": "*"
+  },
+  "author": "",
+  "license": "ISC"
+}
