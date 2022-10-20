@@ -1,6 +1,6 @@
 {
   "name": "mdtx-plugin-nextjs",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "license": "MIT",
   "description": "Mdtx generate Typescript Files from Markdown. - NextJS Plugin",
