@@ -1,6 +1,6 @@
 {
   "name": "mdtx",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "private": false,
   "license": "MIT",
   "description": "Mdtx generate Typescript Files from Markdown. - CLI",
