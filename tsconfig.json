@@ -9,6 +9,12 @@
     },
     {
       "path": "./packages/mdtx-plugin-nextjs"
+    },
+    {
+      "path": "./sandbox/mdtx-example"
+    },
+    {
+      "path": "./sandbox/mdtx-nextjs-example"
     }
   ]
 }

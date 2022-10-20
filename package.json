@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@types/jest": "^29.1.2",
+    "@types/node": "^18.11.2",
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.40.0",
     "@typescript-eslint/parser": "^5.40.0",
@@ -35,6 +36,8 @@
   "workspaces": [
     "./packages/mdtx-core",
     "./packages/mdtx-cli",
-    "./packages/mdtx-nextjs-plugin"
+    "./packages/mdtx-plugin-nextjs",
+    "./sandbox/mdtx-example",
+    "./sandbox/mdtx-nextjs-example"
   ]
 }

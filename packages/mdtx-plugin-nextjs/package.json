@@ -1,12 +1,16 @@
 {
-  "name": "mdtx-nextjs-plugin",
+  "name": "mdtx-plugin-nextjs",
   "version": "0.0.4",
   "private": false,
   "license": "MIT",
   "description": "Mdtx generate Typescript Files from Markdown. - NextJS Plugin",
-  "main": "index.js",
+  "main": "lib/index.js",
   "types": "index.d.ts",
   "dependencies": {
     "mdtx-core": "*"
+  },
+  "scripts": {
+    "build": "rimraf lib tsconfig.build.tsbuildinfo && ttsc --build tsconfig.build.json",
+    "test": "jest --passWithNoTests"
   }
 }
