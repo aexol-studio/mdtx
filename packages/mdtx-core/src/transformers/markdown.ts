@@ -11,22 +11,51 @@ import rehypeRaw from 'rehype-raw';
 import rehypeStringify from 'rehype-stringify';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { unified } from 'unified';
+import { unified, Processor } from 'unified';
 
-const covertToHtml = async (m: matter.GrayMatterFile<Buffer>) => {
-  const processedContent = await unified()
-    .use(remarkParse)
-    .use(remarkRehype, { allowDangerousHtml: true })
-    .use(rehypeRaw)
-    .use(remarkGfm)
-    .use(rehypeHighlight)
-    .use(rehypeStringify)
-    .process(m.content);
+type Plugins = {
+  markdown?: (uni: Processor) => Processor;
+  rehype?: (uni: Processor) => Processor;
+  raw?: (uni: Processor) => Processor;
+  gfm?: (uni: Processor) => Processor;
+  highlight?: (uni: Processor) => Processor;
+  stringify?: (uni: Processor) => Processor;
+};
+
+const convertToHtml = async (
+  m: matter.GrayMatterFile<Buffer>,
+  plugins?: Plugins,
+) => {
+  const processUni = (k: keyof Plugins, p: Processor) => plugins?.[k]?.(p) || p;
+
+  const markdownContent = processUni('markdown', unified().use(remarkParse));
+
+  const rehypeContent = processUni(
+    'rehype',
+    markdownContent.use(remarkRehype, { allowDangerousHtml: true }),
+  );
+
+  const rawContent = processUni('raw', rehypeContent.use(rehypeRaw));
+
+  const gfmContent = processUni('gfm', rawContent.use(remarkGfm));
+
+  const highlightContent = processUni(
+    'highlight',
+    gfmContent.use(rehypeHighlight),
+  );
+
+  const stringifyContent = processUni(
+    'stringify',
+    highlightContent.use(rehypeStringify),
+  );
+
+  const processedContent = await stringifyContent.process(m.content);
+
   return processedContent.toString();
 };
 
 export const transformMarkdownFiles =
-  (config: ConfigFile) => async (mdFiles: string[]) => {
+  (config: ConfigFile) => async (mdFiles: string[], plugins?: Plugins) => {
     try {
       const generatedMdLib: generatedMdLibType = {};
       await Promise.all(
@@ -34,7 +63,9 @@ export const transformMarkdownFiles =
           const m = matter(await fs.promises.readFile(pathIn(config)(mdFile)));
 
           generatedMdLib[mdFile] = {
-            content: config.markdownToHtml ? await covertToHtml(m) : m.content,
+            content: config.markdownToHtml
+              ? await convertToHtml(m, plugins)
+              : m.content,
             data: m.data,
             excerpt: m.excerpt,
           };
