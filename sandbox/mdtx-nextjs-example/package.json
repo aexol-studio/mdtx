@@ -8,8 +8,10 @@
     "start": "next start"
   },
   "dependencies": {
+    "@uiw/react-md-editor": "^3.19.3",
     "mdtx-plugin-nextjs": "*",
     "next": "latest",
+    "next-remove-imports": "^1.0.8",
     "react": "18.1.0",
     "react-dom": "18.1.0"
   },

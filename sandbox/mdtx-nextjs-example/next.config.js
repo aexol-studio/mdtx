@@ -1,7 +1,8 @@
+const removeImports = require('next-remove-imports')();
 const withMDtx = require('mdtx-plugin-nextjs')({
   in: './content',
   out: './src',
-  markdownToHtml: true,
+  markdownToHtml: false,
 });
 
 /** @type {import('next').NextConfig} */
@@ -9,4 +10,4 @@ const nextConfig = {
   swcMinify: true,
   reactStrictMode: false,
 };
-module.exports = withMDtx(nextConfig);
+module.exports = removeImports(withMDtx(nextConfig));

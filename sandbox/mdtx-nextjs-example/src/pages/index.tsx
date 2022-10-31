@@ -1,25 +1,25 @@
-import type { NextPage } from 'next';
+import '@uiw/react-md-editor/markdown-editor.css';
+import '@uiw/react-markdown-preview/markdown.css';
+import dynamic from 'next/dynamic';
+import { useEffect, useState } from 'react';
 import { htmlContent } from '../mdtx';
+const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
-const Home: NextPage = () => {
+function HomePage() {
+  const [value, setValue] = useState<string | undefined>(
+    htmlContent['mdTestFile.md'].content,
+  );
+
+  useEffect(() => {
+    setValue(htmlContent['mdTestFile.md'].content);
+  }, [htmlContent]);
+
   return (
-    <div className="my-[1.6rem] container w-full xl:max-w-[1168px] mx-auto">
-      <div className="bg-blue-200 xl:rounded-[2.4rem] py-[1.6rem] px-[3.2rem]">
-        <p className="font-bold text-[2.4rem] text-center">
-          {htmlContent['mdTestFile.md'].data.title}
-        </p>
-        <p className="font-normal text-[1.6rem] text-left">
-          {htmlContent['mdTestFile.md'].data.link}
-        </p>
-        <div
-          className="mt-[1.6rem] prose md:prose-lg lg:prose-xl"
-          dangerouslySetInnerHTML={{
-            __html: htmlContent['mdTestFile.md'].content,
-          }}
-        />
-      </div>
+    <div className="relative w-screen h-screen">
+      <div className="w-[2.4rem] h-[2.4rem] bg-red-900" onClick={() => {}} />
+      <MDEditor data-color-mode="dark" value={value} onChange={setValue} />
     </div>
   );
-};
+}
 
-export default Home;
+export default HomePage;
