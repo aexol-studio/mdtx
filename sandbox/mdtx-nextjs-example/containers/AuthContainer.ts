@@ -1,47 +1,51 @@
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
+import { UserType } from '../backend/selectors/user.selector';
+
+
 
 const useAuth = () => {
   const [token, _setToken] = useState<string | undefined>();
-  const [userName, setUserName] = useState<string>();
-  const [isLoggedIn, setIsLoggedIn] = useState<'yes' | 'no'>('no');
+  const [loggedData, setLoggedData] = useState<UserType>();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
-  useEffect(() => {
-    const tok = window.localStorage.getItem('token');
-    if (tok) {
-      setToken(tok);
-      setIsLoggedIn('yes');
-    }
-  }, []);
+  // useEffect(() => {
+  //   const tok = window.localStorage.getItem('token');
+  //   if (tok) {
+  //     setToken(tok);
+  //     setIsLoggedIn(true);
+  //   }
+  // }, []);
 
-  const setTokenWithLocal = (value: string) => {
-    _setToken(value);
-    setIsLoggedIn('yes');
-    window.localStorage.setItem('token', value);
-  };
+  // const setTokenWithLocal = (value: string) => {
+  //   _setToken(value);
+  //   setIsLoggedIn(true);
+  //   window.localStorage.setItem('token', value);
+  // };
 
   const setToken = (value: string) => {
     _setToken(value);
-    setIsLoggedIn('yes');
+    setIsLoggedIn(true);
   };
 
   const logOut = () => {
-    setIsLoggedIn('no');
+    setIsLoggedIn(false);
     _setToken(undefined);
-    setUserName(undefined);
+    setLoggedData(undefined);
     window.localStorage.removeItem('token');
     window.document.location.reload();
+    window.location.href = "/"
   };
 
   return {
     token,
     setToken,
-    setTokenWithLocal,
-    logOut,
     isLoggedIn,
     setIsLoggedIn,
-    userName,
-    setUserName,
+    loggedData,
+    setLoggedData,
+    logOut,
   };
 };
 

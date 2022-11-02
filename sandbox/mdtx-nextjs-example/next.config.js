@@ -9,5 +9,8 @@ const withMDtx = require('mdtx-plugin-nextjs')({
 const nextConfig = {
   swcMinify: true,
   reactStrictMode: false,
+  images: {
+    domains: ['avatars.githubusercontent.com', 'github.githubassets.com'],
+  },
 };
 module.exports = removeImports(withMDtx(nextConfig));
