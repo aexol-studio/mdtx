@@ -5,15 +5,20 @@
   "description": "Mdtx generate Typescript Files from Markdown. - NextJS plugin example (with tailwindcss)",
   "scripts": {
     "dev": "next dev",
-    "start": "next start"
+    "start": "next start",
+    "zeus": "zeus schema.docs.graphql ./src"
   },
   "dependencies": {
     "@uiw/react-md-editor": "^3.19.3",
+    "graphql": "^16.6.0",
+    "graphql-zeus": "^5.2.0",
     "mdtx-plugin-nextjs": "*",
     "next": "latest",
     "next-remove-imports": "^1.0.8",
     "react": "18.1.0",
-    "react-dom": "18.1.0"
+    "react-dom": "18.1.0",
+    "react-spinners": "^0.13.6",
+    "unstated-next": "^1.1.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.7",
