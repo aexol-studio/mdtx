@@ -3,26 +3,24 @@ import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
 import { UserType } from '../backend/selectors/user.selector';
 
-
-
 const useAuth = () => {
   const [token, _setToken] = useState<string | undefined>();
   const [loggedData, setLoggedData] = useState<UserType>();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
-  // useEffect(() => {
-  //   const tok = window.localStorage.getItem('token');
-  //   if (tok) {
-  //     setToken(tok);
-  //     setIsLoggedIn(true);
-  //   }
-  // }, []);
+  useEffect(() => {
+    const tok = window.localStorage.getItem('token');
+    if (tok) {
+      setToken(tok);
+      setIsLoggedIn(true);
+    }
+  }, []);
 
-  // const setTokenWithLocal = (value: string) => {
-  //   _setToken(value);
-  //   setIsLoggedIn(true);
-  //   window.localStorage.setItem('token', value);
-  // };
+  const setTokenWithLocal = (value: string) => {
+    _setToken(value);
+    setIsLoggedIn(true);
+    window.localStorage.setItem('token', value);
+  };
 
   const setToken = (value: string) => {
     _setToken(value);
@@ -35,7 +33,7 @@ const useAuth = () => {
     setLoggedData(undefined);
     window.localStorage.removeItem('token');
     window.document.location.reload();
-    window.location.href = "/"
+    window.location.href = '/';
   };
 
   return {
@@ -45,6 +43,7 @@ const useAuth = () => {
     setIsLoggedIn,
     loggedData,
     setLoggedData,
+    setTokenWithLocal,
     logOut,
   };
 };

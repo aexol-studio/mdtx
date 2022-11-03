@@ -1,6 +1,6 @@
 import '../styles/globals.css';
 import type { AppProps } from 'next/app';
-import { AuthConatiner } from '../../containers/AuthContainer';
+import { AuthConatiner } from '../containers/AuthContainer';
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (

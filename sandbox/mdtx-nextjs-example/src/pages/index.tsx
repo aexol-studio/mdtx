@@ -2,18 +2,26 @@ import React, { useEffect, useState } from 'react';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import dynamic from 'next/dynamic';
-import { AuthConatiner } from '../../containers/AuthContainer';
+import { AuthConatiner } from '../containers/AuthContainer';
 import Image from 'next/image';
-import { useBackend } from '../../backend/useBackend';
 import { Layout } from '../layouts';
-import { RepositoriesType } from '../../backend/selectors/repositories.selector';
 import Link from 'next/link';
-import { RepositoryType } from '../../backend/selectors/repository.selector';
+import { RepositoriesType } from '../backend/selectors/repositories.selector';
+import { RepositoryType } from '../backend/selectors/repository.selector';
+import { useBackend } from '../backend/useBackend';
+import { ArrowLeft, FileIcon, FolderIcon, RepoIcon } from '../assets';
+import { ClipLoader } from 'react-spinners';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 const HomePage = () => {
-  const [markdown, setMarkdown] = useState<string | undefined>('Pick Markdown');
+  const [markdownEdit, setMarkdownEdit] = useState<string | undefined>(
+    'Pick Markdown',
+  );
+  const [markdownBase, setMarkdownBase] = useState<string | undefined>(
+    'Pick Markdown',
+  );
+  const [editingMD, setEditingMD] = useState(false);
   let {
-    setToken,
+    setTokenWithLocal,
     token,
     isLoggedIn,
     setIsLoggedIn,
@@ -22,7 +30,8 @@ const HomePage = () => {
     logOut,
   } = AuthConatiner.useContainer();
   const [choosedRepo, setChoosedRepo] = useState('');
-  const [choosedFolder, setChoosedFolder] = useState('');
+  const [refreshingTree, setRefreshingTree] = useState(false);
+  const [path, setPath] = useState('');
   const [repositories, setRepositories] = useState<RepositoriesType>();
   const [repoContent, setRepoContent] = useState<RepositoryType>();
   const {
@@ -48,7 +57,7 @@ const HomePage = () => {
         .then((response) => response.json())
         .then((data) => {
           if (data) {
-            setToken(data);
+            setTokenWithLocal(data);
             setIsLoggedIn(true);
           } else {
             setIsLoggedIn(false);
@@ -62,12 +71,56 @@ const HomePage = () => {
   useEffect(() => {
     if (isLoggedIn && !loggedData) {
       getUserInfo().then((res) => setLoggedData(res));
-      getUserRepositories({ first: 10 }).then((res) => setRepositories(res));
+      getUserRepositories({ last: 20 }).then((res) => {
+        setRepositories(res);
+      });
     }
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    getFolderContentFromRepository(choosedRepo, path).then((res) => {
+      setRefreshingTree(false);
+      setRepoContent(res);
+    });
+  }, [path]);
+
+  const handlePress = (pathx: string, filetype?: string) => {
+    switch (filetype) {
+      case '.md': {
+        setEditingMD(true);
+        console.log(pathx);
+        getFileContentFromRepository(choosedRepo, path + '/' + pathx).then(
+          (res) => {
+            setMarkdownEdit(res?.object?.text);
+            setMarkdownBase(res?.object?.text);
+          },
+        );
+        break;
+      }
+      case '': {
+        setPath((prev) => {
+          if (prev === '') {
+            return `${pathx}`;
+          } else {
+            return prev + `/${pathx}`;
+          }
+        });
+        setRefreshingTree(true);
+
+        break;
+      }
+      case undefined:
+        break;
+    }
+  };
+  console.log(path);
   return (
     <Layout>
+      {markdownBase !== markdownEdit && editingMD && (
+        <div className="cursor-pointer fixed bottom-[2.4rem] right-[2.4rem] bg-[#FFA23A] rounded-full px-[1.2rem] py-[0.8rem] z-[999]">
+          <p className="text-white select-none">Commit</p>
+        </div>
+      )}
       {!token && !isLoggedIn ? (
         <div className="bg-[#13131C] w-full h-full flex flex-col justify-center items-center">
           <div className="flex flex-col justify-center items-center bg-white px-[1.2rem] py-[1.6rem] rounded-[2.4rem]">
@@ -94,7 +147,7 @@ const HomePage = () => {
         </div>
       ) : (
         <>
-          <div className="select-none w-[20vw] h-screen bg-[#13131C] border-r-[2px] border-r-solid border-r-white flex flex-col items-center px-[3.2rem] pt-[2.4rem]">
+          <div className="select-none w-[20vw] max-w-[90%] overflow-x-hidden overflow-y-scroll h-screen bg-[#13131C] border-r-[2px] border-r-solid border-r-white flex flex-col items-center px-[3.2rem] pt-[2.4rem]">
             <div
               onClick={() => {
                 logOut();
@@ -126,48 +179,89 @@ const HomePage = () => {
               </div>
             </div>
 
-            <div className="self-start flex flex-col items-start gap-[0.8rem]">
-              {repositories?.nodes?.map((repo) => (
-                <>
-                  <div
-                    onClick={() => {
-                      getUserRepository(repo.name).then((x) => {
-                        setChoosedRepo(repo.name);
-                        setRepoContent(x);
-                      });
-                    }}
-                  >
-                    <p className="text-white">{repo.name}</p>
+            <div className="self-start w-full flex flex-col items-start gap-[0.8rem]">
+              <>
+                {refreshingTree ? (
+                  <div className="mt-[3.2rem] flex w-full items-center justify-center">
+                    <ClipLoader color="#FFF" size={64} />
                   </div>
-                </>
-              ))}
+                ) : (
+                  <>
+                    {repositories?.nodes?.map((repo) => (
+                      <>
+                        <div
+                          id={repo.name}
+                          className="flex gap-[0.8rem]"
+                          onClick={(e) => {
+                            const pickedRepo = (e.target as Element).id;
+                            console.log(pickedRepo, choosedRepo);
+                            if (choosedRepo !== pickedRepo) {
+                              setChoosedRepo(repo.name);
+                              setRefreshingTree(true);
+                              getUserRepository(repo.name).then((x) => {
+                                setPath('');
+                                setRefreshingTree(false);
+                                setRepoContent(x);
+                              });
+                            } else {
+                              setPath('');
+                              setChoosedRepo('');
+                              setRepoContent(undefined);
+                            }
+                          }}
+                        >
+                          <RepoIcon />
+                          <p className="text-white">{repo.name}</p>
+                        </div>
+                        {choosedRepo === repo.name && (
+                          <div className="flex flex-col gap-[0.8rem] pl-[3.2rem]">
+                            {path !== '' && (
+                              <div
+                                className="flex gap-[0.8rem]"
+                                onClick={() => {
+                                  setPath((prev) => {
+                                    if (prev.lastIndexOf('/') === -1) {
+                                      return '';
+                                    } else {
+                                      return prev.slice(
+                                        0,
+                                        prev.lastIndexOf('/'),
+                                      );
+                                    }
+                                  });
+                                }}
+                              >
+                                <ArrowLeft />
+                                <p className="text-white">Wróc</p>
+                              </div>
+                            )}
+                            {repoContent?.object?.entries?.map((x) => (
+                              <div
+                                className="flex gap-[0.8rem]"
+                                onClick={() => {
+                                  console.log(x);
+                                  handlePress(x.name, x.extension);
+                                }}
+                              >
+                                {x.extension === '.md' && <FileIcon />}
+                                {x.extension === '' && <FolderIcon />}
+                                <p className="text-white">{x.name}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ))}
+                  </>
+                )}
+              </>
             </div>
-            {repoContent?.object?.entries?.map((x) => (
-              <div
-                onClick={() => {
-                  setChoosedFolder(x.name);
-                  console.log(choosedRepo, x.name);
-                  if (x.extension === '') {
-                    getFolderContentFromRepository(choosedRepo, x.name).then(
-                      (res) => console.log(res),
-                    );
-                  }
-                  if (x.extension === '.md') {
-                    getFileContentFromRepository(choosedRepo, x.name).then(
-                      (res) => setMarkdown(res?.object?.text),
-                    );
-                  }
-                }}
-              >
-                <p>{x.name}</p>
-              </div>
-            ))}
           </div>
           <div className="w-full">
             <MDEditor
               height={'100vh'}
-              value={markdown}
-              onChange={setMarkdown}
+              value={markdownEdit}
+              onChange={setMarkdownEdit}
             />
           </div>
         </>
