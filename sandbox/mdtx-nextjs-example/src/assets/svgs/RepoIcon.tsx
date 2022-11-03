@@ -1,15 +1,8 @@
 import * as React from 'react';
-import { SVGProps } from 'react';
 
-export const RepoIcon = (props: SVGProps<SVGSVGElement>) => (
-  <svg
-    width={24}
-    height={24}
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    {...props}
-  >
-    <g fill="#FFF">
+export const RepoIcon: React.FC<{ color?: string }> = ({ color = '#FFF' }) => (
+  <svg width={24} height={24} fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g fill={color}>
       <path d="M21 13.5H3A1.5 1.5 0 0 0 1.5 15v1.5A1.5 1.5 0 0 0 3 18h18a1.5 1.5 0 0 0 1.5-1.5V15a1.5 1.5 0 0 0-1.5-1.5ZM3 12a3 3 0 0 0-3 3v1.5a3 3 0 0 0 3 3h18a3 3 0 0 0 3-3V15a3 3 0 0 0-3-3H3Z" />
       <path d="M7.5 15.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm-3 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
       <path d="M6.141 6a.75.75 0 0 0-.66.39l-3.705 6.798c-.18.33-.276.7-.276 1.077v1.485H0v-1.485c0-.627.158-1.245.458-1.796l3.707-6.796A2.25 2.25 0 0 1 6.141 4.5h11.718a2.25 2.25 0 0 1 1.975 1.173l3.709 6.795c.3.552.457 1.17.457 1.797v1.485h-1.5v-1.485a2.25 2.25 0 0 0-.274-1.077L18.517 6.39A.75.75 0 0 0 17.86 6H6.141Z" />

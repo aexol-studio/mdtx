@@ -11,6 +11,7 @@ import { RepositoryType } from '../backend/selectors/repository.selector';
 import { useBackend } from '../backend/useBackend';
 import { ArrowLeft, FileIcon, FolderIcon, RepoIcon } from '../assets';
 import { ClipLoader } from 'react-spinners';
+import { ModelTypes } from '../zeus';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 const HomePage = () => {
   const [markdownEdit, setMarkdownEdit] = useState<string | undefined>(
@@ -32,6 +33,7 @@ const HomePage = () => {
   const [choosedRepo, setChoosedRepo] = useState('');
   const [refreshingTree, setRefreshingTree] = useState(false);
   const [path, setPath] = useState('');
+  const [oid, setOid] = useState('');
   const [repositories, setRepositories] = useState<RepositoriesType>();
   const [repoContent, setRepoContent] = useState<RepositoryType>();
   const {
@@ -40,6 +42,7 @@ const HomePage = () => {
     getUserRepository,
     getFolderContentFromRepository,
     getFileContentFromRepository,
+    createCommitOnBranch,
   } = useBackend();
   useEffect(() => {
     const url = window.location.href;
@@ -72,6 +75,7 @@ const HomePage = () => {
     if (isLoggedIn && !loggedData) {
       getUserInfo().then((res) => setLoggedData(res));
       getUserRepositories({ last: 20 }).then((res) => {
+        console.log(res);
         setRepositories(res);
       });
     }
@@ -84,17 +88,23 @@ const HomePage = () => {
     });
   }, [path]);
 
+  const handleCommit = (input: ModelTypes['CreateCommitOnBranchInput']) => {
+    createCommitOnBranch(input).then((x) => {
+      console.log(x);
+    });
+  };
+
   const handlePress = (pathx: string, filetype?: string) => {
     switch (filetype) {
       case '.md': {
         setEditingMD(true);
-        console.log(pathx);
-        getFileContentFromRepository(choosedRepo, path + '/' + pathx).then(
-          (res) => {
-            setMarkdownEdit(res?.object?.text);
-            setMarkdownBase(res?.object?.text);
-          },
-        );
+        getFileContentFromRepository(
+          choosedRepo,
+          path !== '' ? path + '/' + pathx : pathx,
+        ).then((res) => {
+          setMarkdownEdit(res?.object?.text);
+          setMarkdownBase(res?.object?.text);
+        });
         break;
       }
       case '': {
@@ -113,11 +123,31 @@ const HomePage = () => {
         break;
     }
   };
-  console.log(path);
   return (
     <Layout>
       {markdownBase !== markdownEdit && editingMD && (
-        <div className="cursor-pointer fixed bottom-[2.4rem] right-[2.4rem] bg-[#FFA23A] rounded-full px-[1.2rem] py-[0.8rem] z-[999]">
+        <div
+          onClick={() => {
+            if (markdownEdit) {
+              handleCommit({
+                branch: { branchName: '' },
+                expectedHeadOid: '',
+                message: { headline: path },
+                fileChanges: {
+                  additions: [
+                    {
+                      path: path,
+                      contents: Buffer.from(markdownEdit, 'utf8').toString(
+                        'base64',
+                      ),
+                    },
+                  ],
+                },
+              });
+            }
+          }}
+          className="cursor-pointer fixed bottom-[2.4rem] right-[2.4rem] bg-[#FFA23A] rounded-full px-[1.2rem] py-[0.8rem] z-[999]"
+        >
           <p className="text-white select-none">Commit</p>
         </div>
       )}
@@ -179,10 +209,10 @@ const HomePage = () => {
               </div>
             </div>
 
-            <div className="self-start w-full flex flex-col items-start gap-[0.8rem]">
+            <div className="mt-[3.2rem] self-start w-full flex flex-col items-start gap-[0.8rem]">
               <>
                 {refreshingTree ? (
-                  <div className="mt-[3.2rem] flex w-full items-center justify-center">
+                  <div className="flex w-full items-center justify-center">
                     <ClipLoader color="#FFF" size={64} />
                   </div>
                 ) : (
@@ -190,15 +220,15 @@ const HomePage = () => {
                     {repositories?.nodes?.map((repo) => (
                       <>
                         <div
-                          id={repo.name}
                           className="flex gap-[0.8rem]"
                           onClick={(e) => {
-                            const pickedRepo = (e.target as Element).id;
-                            console.log(pickedRepo, choosedRepo);
-                            if (choosedRepo !== pickedRepo) {
+                            const { id } = e.target as HTMLDivElement;
+
+                            if (id !== choosedRepo) {
                               setChoosedRepo(repo.name);
                               setRefreshingTree(true);
                               getUserRepository(repo.name).then((x) => {
+                                console.log(x);
                                 setPath('');
                                 setRefreshingTree(false);
                                 setRepoContent(x);
@@ -210,8 +240,19 @@ const HomePage = () => {
                             }
                           }}
                         >
-                          <RepoIcon />
-                          <p className="text-white">{repo.name}</p>
+                          <div
+                            id={repo.name}
+                            className="min-w-[2.4rem] min-h-[2.4rem]"
+                          >
+                            <RepoIcon
+                              color={
+                                choosedRepo === repo.name ? '#bfdbfe' : '#FFF'
+                              }
+                            />
+                          </div>
+                          <p id={repo.name} className="text-white">
+                            {repo.name}
+                          </p>
                         </div>
                         {choosedRepo === repo.name && (
                           <div className="flex flex-col gap-[0.8rem] pl-[3.2rem]">
@@ -239,12 +280,13 @@ const HomePage = () => {
                               <div
                                 className="flex gap-[0.8rem]"
                                 onClick={() => {
-                                  console.log(x);
                                   handlePress(x.name, x.extension);
                                 }}
                               >
                                 {x.extension === '.md' && <FileIcon />}
-                                {x.extension === '' && <FolderIcon />}
+                                {x.extension === '' && x.type === 'tree' && (
+                                  <FolderIcon />
+                                )}
                                 <p className="text-white">{x.name}</p>
                               </div>
                             ))}

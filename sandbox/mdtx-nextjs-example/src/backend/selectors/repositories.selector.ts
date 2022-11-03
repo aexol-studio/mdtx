@@ -8,6 +8,19 @@ export const BranchesSelector = Selector('Ref')({
 export const repositoriesSelector = Selector('RepositoryConnection')({
   nodes: {
     name: true,
+    defaultBranchRef: {
+      target: {
+        "...on Commit": {
+          history: [{ first: 1 }, {
+            nodes: {
+              oid: true
+            }
+          }]
+        }
+      }
+    },
+    refs: [{}, { nodes: BranchesSelector }]
+
   },
 });
 

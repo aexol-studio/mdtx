@@ -36,14 +36,25 @@ export const useBackend = () => {
           {
             nodes: {
               name: true,
-              refs: [
-                { first: 10, refPrefix: 'refs/heads/' },
-                {
-                  nodes: {
-                    name: true,
-                  },
-                },
-              ],
+              defaultBranchRef: {
+                target: {
+                  "...on Commit": {
+                    history: [{ first: 1 }, {
+                      nodes: {
+                        oid: true
+                      }
+                    }]
+                  }
+                }
+              },
+              // refs: [
+              //   { first: 10, refPrefix: 'refs/heads/' },
+              //   {
+              //     nodes: {
+              //       name: true,
+              //     },
+              //   },
+              // ],
             },
           },
         ],
@@ -120,11 +131,26 @@ export const useBackend = () => {
     return response.viewer.repository;
   };
 
+  const createCommitOnBranch = async (input: ModelTypes['CreateCommitOnBranchInput']) => {
+    const response = await chain("mutation", token!)({
+      createCommitOnBranch: [{ input: input }, {
+        commit: {
+          oid: true
+        }
+      }]
+    })
+    if (!response.createCommitOnBranch)
+      throw new Error('Bad response from createCommitOnBranch()');
+    return response.createCommitOnBranch
+  }
+
+
   return {
     getUserInfo,
     getUserRepositories,
     getUserRepository,
     getFolderContentFromRepository,
     getFileContentFromRepository,
+    createCommitOnBranch
   };
 };

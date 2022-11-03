@@ -1,15 +1,6 @@
 export const htmlContent = {
-    "Changelog.md": {
-        "content": "\n## 0.0.1\n\nFirst msd\n",
-        "data": {
-            "link": "changelog",
-            "title": "Changes",
-            "order": 99
-        },
-        "excerpt": ""
-    },
     "mdTestFile.md": {
-        "content": "\n# Markdown syntax guide\n\n## Headers\n\n# This is a Heading h1\n\n## This is a Heading h2\n\n### This is a\n\n#### This is a Heading h4\n\n##### This is a test Heading h5\n\n###### This is a Heading h6\n\n## Emphasis\n\n_This text will be italic_  \n_This will also be italic_\n\n**This text will be bold**  \n**This will also be bold**\n\n_You **can** combine them_\n\n## Lists\n\n### Unordered\n\n- Item 1\n- Item 2\n- Item 2a\n- Item 2b\n\n### Ordered\n\n1. Item 1\n1. Item 2\n1. Item 3\n1. Item 3a\n1. Item 3b\n\n## Images\n\n![This is a alt text.](/aexol_full_logo.png 'This is a sample image.')\n\n## Links\n\nYou may be using [Markdown Live Preview](https://markdownlivepreview.com/).\n\n## Blockquotes\n\n> Markdown is a lightweight markup language with plain-text-formatting syntax, created in 2004 by John Gruber with Aaron Swartz.\n>\n> > Markdown is often used to format readme files, for writing messages in online discussion forums, and to create rich text using a plain text editor.\n\n## Tables\n\n| Syntax    | Description |\n| --------- | ----------- |\n| Header    | Title       |\n| Paragraph | Text        |\n\n## Blocks of code\n\n```\nlet message = 'Hello world';\nalert(message);\n```\n\n## Inline code\n\nThis web site is using `aexol-studio/mdtx`.\n",
+        "content": "\r\n# Markdown syntax guide\r\n\r\n## Headers\r\n\r\n# This is a Heading h1\r\n\r\n## This is a Heading h2\r\n\r\n### This is a\r\n\r\n#### This is a Heading h4\r\n\r\n##### This is a test Heading h5\r\n\r\n###### This is a Heading h6\r\n\r\n## Emphasis\r\n\r\n_This text will be italic_  \r\n_This will also be italic_\r\n\r\n**This text will be bold**  \r\n**This will also be bold**\r\n\r\n_You **can** combine them_\r\n\r\n## Lists\r\n\r\n### Unordered\r\n\r\n- Item 1\r\n- Item 2\r\n- Item 2a\r\n- Item 2b\r\n\r\n### Ordered\r\n\r\n1. Item 1\r\n1. Item 2\r\n1. Item 3\r\n1. Item 3a\r\n1. Item 3b\r\n\r\n## Images\r\n\r\n![This is a alt text.](/aexol_full_logo.png 'This is a sample image.')\r\n\r\n## Links\r\n\r\nYou may be using [Markdown Live Preview](https://markdownlivepreview.com/).\r\n\r\n## Blockquotes\r\n\r\n> Markdown is a lightweight markup language with plain-text-formatting syntax, created in 2004 by John Gruber with Aaron Swartz.\r\n>\r\n> > Markdown is often used to format readme files, for writing messages in online discussion forums, and to create rich text using a plain text editor.\r\n\r\n## Tables\r\n\r\n| Syntax    | Description |\r\n| --------- | ----------- |\r\n| Header    | Title       |\r\n| Paragraph | Text        |\r\n\r\n## Blocks of code\r\n\r\n```\r\nlet message = 'Hello world';\r\nalert(message);\r\n```\r\n\r\n## Inline code\r\n\r\nThis web site is using `aexol-studio/mdtx`.\r\n",
         "data": {
             "link": "changelog",
             "title": "Changelog",
@@ -17,8 +8,17 @@ export const htmlContent = {
         },
         "excerpt": ""
     },
-    "basics/HowToStart.md": {
-        "content": "\n# Hello world\n",
+    "Changelog.md": {
+        "content": "\r\n## 0.0.1\r\n\r\nFirst msd\r\n",
+        "data": {
+            "link": "changelog",
+            "title": "Changes",
+            "order": 99
+        },
+        "excerpt": ""
+    },
+    "basics\\HowToStart.md": {
+        "content": "\r\n# Hello world\r\n",
         "data": {
             "title": "How to start"
         },

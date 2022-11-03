@@ -9,6 +9,7 @@ export const FolderSelector = Selector('Tree')({
   entries: {
     name: true,
     extension: true,
+    type: true,
   },
 });
 
