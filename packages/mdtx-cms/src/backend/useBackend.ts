@@ -218,7 +218,7 @@ export const useBackend = () => {
           { name: repoName },
           {
             object: [
-              { expression: `${branchName}:${path}` },
+              { expression: `${branchName}${path}` },
               { '...on Tree': FolderSelector },
             ],
           },
