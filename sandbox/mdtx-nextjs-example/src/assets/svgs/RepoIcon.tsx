@@ -1,7 +1,16 @@
 import * as React from 'react';
 
-export const RepoIcon: React.FC<{ color?: string }> = ({ color = '#FFF' }) => (
-  <svg width={24} height={24} fill="none" xmlns="http://www.w3.org/2000/svg">
+export const RepoIcon: React.FC<{ id: string; color?: string }> = ({
+  id,
+  color = '#FFF',
+}) => (
+  <svg
+    id={id}
+    width={24}
+    height={24}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <g fill={color}>
       <path d="M21 13.5H3A1.5 1.5 0 0 0 1.5 15v1.5A1.5 1.5 0 0 0 3 18h18a1.5 1.5 0 0 0 1.5-1.5V15a1.5 1.5 0 0 0-1.5-1.5ZM3 12a3 3 0 0 0-3 3v1.5a3 3 0 0 0 3 3h18a3 3 0 0 0 3-3V15a3 3 0 0 0-3-3H3Z" />
       <path d="M7.5 15.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm-3 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />

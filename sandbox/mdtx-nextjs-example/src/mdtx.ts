@@ -8,19 +8,19 @@ export const htmlContent = {
         },
         "excerpt": ""
     },
+    "basics\\HowToStart.md": {
+        "content": "\r\n# Hello world\r\n",
+        "data": {
+            "title": "How to start"
+        },
+        "excerpt": ""
+    },
     "Changelog.md": {
         "content": "\r\n## 0.0.1\r\n\r\nFirst msd\r\n",
         "data": {
             "link": "changelog",
             "title": "Changes",
             "order": 99
-        },
-        "excerpt": ""
-    },
-    "basics\\HowToStart.md": {
-        "content": "\r\n# Hello world\r\n",
-        "data": {
-            "title": "How to start"
         },
         "excerpt": ""
     }

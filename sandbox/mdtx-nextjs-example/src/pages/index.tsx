@@ -11,7 +11,8 @@ import { RepositoryType } from '../backend/selectors/repository.selector';
 import { useBackend } from '../backend/useBackend';
 import { ArrowLeft, FileIcon, FolderIcon, RepoIcon } from '../assets';
 import { ClipLoader } from 'react-spinners';
-import { ModelTypes } from '../zeus';
+import { ModelTypes, OrderDirection, RepositoryOrderField } from '../zeus';
+import { useRouter } from 'next/router';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 const HomePage = () => {
   const [markdownEdit, setMarkdownEdit] = useState<string | undefined>(
@@ -31,11 +32,16 @@ const HomePage = () => {
     logOut,
   } = AuthConatiner.useContainer();
   const [choosedRepo, setChoosedRepo] = useState('');
+  const [choosedFile, setChoosedFile] = useState({ repo: '', file: '' });
   const [refreshingTree, setRefreshingTree] = useState(false);
+  const [refreshingSubTree, setRefreshingSubTree] = useState(false);
+  const [sendingComming, setSendingCommit] = useState(false);
   const [path, setPath] = useState('');
   const [oid, setOid] = useState('');
   const [repositories, setRepositories] = useState<RepositoriesType>();
   const [repoContent, setRepoContent] = useState<RepositoryType>();
+  const [pathToFile, setPathToFile] = useState('');
+  const router = useRouter();
   const {
     getUserInfo,
     getUserRepositories,
@@ -43,11 +49,12 @@ const HomePage = () => {
     getFolderContentFromRepository,
     getFileContentFromRepository,
     createCommitOnBranch,
+    getOrganizationRepositories,
   } = useBackend();
   useEffect(() => {
     const url = window.location.href;
     const hasCode = url.includes('?code=');
-    if (hasCode) {
+    if (hasCode && !token) {
       const newUrl = url.split('?code=');
       const requestData = {
         code: newUrl[1],
@@ -62,9 +69,7 @@ const HomePage = () => {
           if (data) {
             setTokenWithLocal(data);
             setIsLoggedIn(true);
-          } else {
-            setIsLoggedIn(false);
-            window.location.href = '/';
+            router.replace('/');
           }
         })
         .catch((error) => {});
@@ -73,30 +78,63 @@ const HomePage = () => {
 
   useEffect(() => {
     if (isLoggedIn && !loggedData) {
-      getUserInfo().then((res) => setLoggedData(res));
-      getUserRepositories({ last: 20 }).then((res) => {
+      setRefreshingTree(true);
+      getOrganizationRepositories({ first: 50 }).then((x) => console.log(x));
+      getUserInfo().then((res) => {
+        setLoggedData(res);
+        console.log(res);
+      });
+      getUserRepositories({
+        first: 50,
+        orderBy: {
+          direction: OrderDirection.DESC,
+          field: RepositoryOrderField.PUSHED_AT,
+        },
+      }).then((res) => {
         console.log(res);
         setRepositories(res);
+        setRefreshingTree(false);
       });
     }
   }, [isLoggedIn]);
 
   useEffect(() => {
-    getFolderContentFromRepository(choosedRepo, path).then((res) => {
-      setRefreshingTree(false);
-      setRepoContent(res);
-    });
+    if (isLoggedIn && path !== '/') {
+      getFolderContentFromRepository(choosedRepo, path).then((res) => {
+        setRefreshingSubTree(false);
+        setRepoContent(res);
+      });
+    }
   }, [path]);
 
   const handleCommit = (input: ModelTypes['CreateCommitOnBranchInput']) => {
+    setSendingCommit(true);
     createCommitOnBranch(input).then((x) => {
-      console.log(x);
+      getUserRepositories({
+        first: 50,
+        orderBy: {
+          direction: OrderDirection.DESC,
+          field: RepositoryOrderField.PUSHED_AT,
+        },
+      }).then((res) => {
+        console.log(res);
+        const findedValue = res.nodes?.find((x) => x.name === choosedRepo)
+          ?.defaultBranchRef?.target?.history?.nodes;
+        findedValue && setOid(findedValue[0].oid as string);
+        setMarkdownBase(markdownEdit);
+        setRepositories(res);
+        setSendingCommit(false);
+      });
     });
   };
 
   const handlePress = (pathx: string, filetype?: string) => {
     switch (filetype) {
       case '.md': {
+        setChoosedFile(() => {
+          return { file: pathx, repo: choosedRepo };
+        });
+        setPathToFile(path !== '' ? path + '/' + pathx : pathx);
         setEditingMD(true);
         getFileContentFromRepository(
           choosedRepo,
@@ -115,7 +153,7 @@ const HomePage = () => {
             return prev + `/${pathx}`;
           }
         });
-        setRefreshingTree(true);
+        setRefreshingSubTree(true);
 
         break;
       }
@@ -123,32 +161,41 @@ const HomePage = () => {
         break;
     }
   };
+
   return (
     <Layout>
       {markdownBase !== markdownEdit && editingMD && (
         <div
           onClick={() => {
-            if (markdownEdit) {
+            if (markdownEdit && loggedData) {
+              const doBuffer = Buffer.from(markdownEdit, 'utf-8').toString(
+                'base64',
+              );
               handleCommit({
-                branch: { branchName: '' },
-                expectedHeadOid: '',
-                message: { headline: path },
+                branch: {
+                  branchName: 'main',
+                  repositoryNameWithOwner: `${loggedData.login}/${choosedRepo}`,
+                },
+                expectedHeadOid: oid,
+                message: { headline: pathToFile },
                 fileChanges: {
                   additions: [
                     {
-                      path: path,
-                      contents: Buffer.from(markdownEdit, 'utf8').toString(
-                        'base64',
-                      ),
+                      path: pathToFile,
+                      contents: doBuffer,
                     },
                   ],
                 },
               });
             }
           }}
-          className="cursor-pointer fixed bottom-[2.4rem] right-[2.4rem] bg-[#FFA23A] rounded-full px-[1.2rem] py-[0.8rem] z-[999]"
+          className="cursor-pointer fixed bottom-[2.4rem] right-[2.4rem] bg-[#FFA23A] rounded-full w-[9.6rem] h-[4.2rem] flex justify-center items-center z-[999]"
         >
-          <p className="text-white select-none">Commit</p>
+          {sendingComming ? (
+            <ClipLoader size={'24px'} color="white" />
+          ) : (
+            <p className="text-white select-none">Commit</p>
+          )}
         </div>
       )}
       {!token && !isLoggedIn ? (
@@ -171,14 +218,15 @@ const HomePage = () => {
               className="bg-[#13131C] text-white px-[1.2rem] py-[0.8rem] rounded-[2.4rem]"
               href={`https://github.com/login/oauth/authorize?scope=user&client_id=${process.env.NEXT_PUBLIC_CLIENT_ID}&redirect_uri=${process.env.NEXT_PUBLIC_REDIRECT_URI}`}
             >
-              Login with GitHub
+              Login with GitHub!
             </Link>
           </div>
         </div>
       ) : (
         <>
-          <div className="select-none w-[20vw] max-w-[90%] overflow-x-hidden overflow-y-scroll h-screen bg-[#13131C] border-r-[2px] border-r-solid border-r-white flex flex-col items-center px-[3.2rem] pt-[2.4rem]">
+          <div className="select-none w-[20vw] h-screen bg-[#13131C] border-r-[2px] border-r-solid border-r-white flex flex-col items-center pt-[2.4rem]">
             <div
+              className="bg-blue-200 px-[1.2rem] py-[0.4rem] rounded-[2.4rem]"
               onClick={() => {
                 logOut();
               }}
@@ -186,7 +234,7 @@ const HomePage = () => {
               <p className="hover:underline cursor-pointer">Logout</p>
             </div>
             <div>
-              <div className="flex flex-col">
+              <div className="mt-[0.8rem] flex flex-col">
                 <h1 className="text-[1.8rem] text-center text-white">
                   Welcome to <span className="text-blue-200">MDtx</span> editor!
                 </h1>
@@ -209,7 +257,7 @@ const HomePage = () => {
               </div>
             </div>
 
-            <div className="mt-[3.2rem] self-start w-full flex flex-col items-start gap-[0.8rem]">
+            <div className="border-t-[1px] pt-[0.8rem] border-[#FFF] pl-[1.6rem] min-h-[70vh] scrollbar overflow-x-hidden overflow-y-scroll mt-[3.2rem] self-start w-full flex flex-col items-start gap-[0.8rem]">
               <>
                 {refreshingTree ? (
                   <div className="flex w-full items-center justify-center">
@@ -217,83 +265,137 @@ const HomePage = () => {
                   </div>
                 ) : (
                   <>
-                    {repositories?.nodes?.map((repo) => (
-                      <>
-                        <div
-                          className="flex gap-[0.8rem]"
-                          onClick={(e) => {
-                            const { id } = e.target as HTMLDivElement;
+                    {repositories?.nodes?.map((repo) => {
+                      const ref = React.createRef<HTMLDivElement>();
 
-                            if (id !== choosedRepo) {
-                              setChoosedRepo(repo.name);
-                              setRefreshingTree(true);
-                              getUserRepository(repo.name).then((x) => {
-                                console.log(x);
-                                setPath('');
-                                setRefreshingTree(false);
-                                setRepoContent(x);
-                              });
-                            } else {
-                              setPath('');
-                              setChoosedRepo('');
-                              setRepoContent(undefined);
-                            }
-                          }}
-                        >
+                      const handleClick = () =>
+                        ref.current!.scrollIntoView({
+                          behavior: 'auto',
+                          block: 'start',
+                        });
+                      return (
+                        <React.Fragment key={repo.name}>
                           <div
                             id={repo.name}
-                            className="min-w-[2.4rem] min-h-[2.4rem]"
-                          >
-                            <RepoIcon
-                              color={
-                                choosedRepo === repo.name ? '#bfdbfe' : '#FFF'
+                            className="flex gap-[0.8rem]"
+                            onClick={(e) => {
+                              const { id } = e.target as HTMLDivElement;
+
+                              if (id !== choosedRepo) {
+                                const findedValue = repositories?.nodes?.find(
+                                  (x) => x.name === id,
+                                )?.defaultBranchRef?.target?.history.nodes;
+                                findedValue && setOid(findedValue[0].oid);
+                                setMarkdownEdit('Pick Markdown');
+                                setMarkdownBase('Pick Markdown');
+                                setChoosedRepo(repo.name);
+                                setRefreshingSubTree(true);
+                                handleClick();
+                                getUserRepository(repo.name).then((x) => {
+                                  console.log(x);
+                                  setPath('');
+                                  setRefreshingSubTree(false);
+                                  setRepoContent(x);
+                                });
+                              } else {
+                                setPath('');
+                                setChoosedRepo('');
+                                setRepoContent(undefined);
                               }
-                            />
+                            }}
+                          >
+                            <div
+                              ref={ref}
+                              id={repo.name}
+                              className="min-w-[2.4rem] min-h-[2.4rem]"
+                            >
+                              <RepoIcon
+                                id={repo.name}
+                                color={
+                                  choosedRepo === repo.name ? '#bfdbfe' : '#FFF'
+                                }
+                              />
+                            </div>
+                            <p
+                              id={repo.name}
+                              className="text-white cursor-pointer hover:underline"
+                            >
+                              {repo.name}
+                            </p>
                           </div>
-                          <p id={repo.name} className="text-white">
-                            {repo.name}
-                          </p>
-                        </div>
-                        {choosedRepo === repo.name && (
-                          <div className="flex flex-col gap-[0.8rem] pl-[3.2rem]">
-                            {path !== '' && (
-                              <div
-                                className="flex gap-[0.8rem]"
-                                onClick={() => {
-                                  setPath((prev) => {
-                                    if (prev.lastIndexOf('/') === -1) {
-                                      return '';
-                                    } else {
-                                      return prev.slice(
-                                        0,
-                                        prev.lastIndexOf('/'),
-                                      );
-                                    }
-                                  });
-                                }}
-                              >
-                                <ArrowLeft />
-                                <p className="text-white">Wróc</p>
-                              </div>
-                            )}
-                            {repoContent?.object?.entries?.map((x) => (
-                              <div
-                                className="flex gap-[0.8rem]"
-                                onClick={() => {
-                                  handlePress(x.name, x.extension);
-                                }}
-                              >
-                                {x.extension === '.md' && <FileIcon />}
-                                {x.extension === '' && x.type === 'tree' && (
-                                  <FolderIcon />
+                          {choosedRepo === repo.name && (
+                            <div className="flex flex-col gap-[0.8rem] pl-[3.2rem]">
+                              {path !== '' && (
+                                <div
+                                  className="flex gap-[0.8rem]"
+                                  onClick={() => {
+                                    setRefreshingSubTree(true);
+                                    setPath((prev) => {
+                                      if (prev.lastIndexOf('/') === -1) {
+                                        return '';
+                                      } else {
+                                        return prev.slice(
+                                          0,
+                                          prev.lastIndexOf('/'),
+                                        );
+                                      }
+                                    });
+                                  }}
+                                >
+                                  <ArrowLeft />
+                                  <p className="text-white cursor-pointer hover:underline">
+                                    Wróc
+                                  </p>
+                                </div>
+                              )}
+                              <>
+                                {refreshingSubTree ? (
+                                  <div className="w-full flex justify-center items-center">
+                                    <ClipLoader size={32} color="#FFF" />
+                                  </div>
+                                ) : (
+                                  <>
+                                    {repoContent?.object?.entries?.map((x) => (
+                                      <div
+                                        key={x.name}
+                                        className="flex gap-[0.8rem]"
+                                        onClick={() => {
+                                          handlePress(x.name, x.extension);
+                                        }}
+                                      >
+                                        {x.extension === '.md' && (
+                                          <FileIcon
+                                            color={
+                                              choosedFile.file === x.name &&
+                                              choosedFile.repo === repo.name
+                                                ? '#bfdbfe'
+                                                : '#FFF'
+                                            }
+                                          />
+                                        )}
+                                        {x.extension === '' &&
+                                          x.type === 'tree' && <FolderIcon />}
+                                        <p
+                                          className={`${
+                                            (x.extension === '' &&
+                                              x.type === 'tree') ||
+                                            x.extension === '.md'
+                                              ? 'cursor-pointer hover:underline'
+                                              : ''
+                                          } text-white`}
+                                        >
+                                          {x.name}
+                                        </p>
+                                      </div>
+                                    ))}
+                                  </>
                                 )}
-                                <p className="text-white">{x.name}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    ))}
+                              </>
+                            </div>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
                   </>
                 )}
               </>

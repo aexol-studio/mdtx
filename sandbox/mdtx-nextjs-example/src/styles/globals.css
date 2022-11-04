@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .scrollbar {
+    scrollbar-color: #fff transparent;
+  }
+  .scrollbar::-webkit-scrollbar {
+    width: 0.4rem;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    background: transparent;
+    background: #fff;
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #fff;
+  }
+}
+
 @import url('https://fonts.googleapis.com/css?family=Barlow:100,300,400,500,600,700,800,900&display=swap');
 
 body,

@@ -13,7 +13,7 @@ export const repositoriesSelector = Selector('RepositoryConnection')({
         "...on Commit": {
           history: [{ first: 1 }, {
             nodes: {
-              oid: true
+              oid: [{}, true]
             }
           }]
         }

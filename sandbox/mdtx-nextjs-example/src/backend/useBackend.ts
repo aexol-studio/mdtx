@@ -59,11 +59,60 @@ export const useBackend = () => {
           },
         ],
       },
+
     });
     if (!response.viewer)
       throw new Error('Bad response from getUserRepositories()');
     return response.viewer.repositories;
   };
+
+  const getOrganizationRepositories = async (pagination: {
+    orderBy?: ModelTypes['RepositoryOrder'];
+    first?: number;
+    last?: number;
+  }) => {
+    const response = await chain(
+      'query',
+      token!,
+    )({
+      viewer: {
+        organization: [{ login: "Alek-Team" }, {
+          repositories: [
+            pagination,
+            {
+              nodes: {
+                name: true,
+                defaultBranchRef: {
+                  target: {
+                    "...on Commit": {
+                      history: [{ first: 1 }, {
+                        nodes: {
+                          oid: true
+                        }
+                      }]
+                    }
+                  }
+                },
+                // refs: [
+                //   { first: 10, refPrefix: 'refs/heads/' },
+                //   {
+                //     nodes: {
+                //       name: true,
+                //     },
+                //   },
+                // ],
+              },
+            },
+          ],
+        }]
+      },
+
+    });
+    if (!response.viewer)
+      throw new Error('Bad response from getUserRepositories()');
+    return response.viewer.organization?.repositories;
+  };
+
   const getUserRepository = async (repoName: string) => {
     const response = await chain(
       'query',
@@ -146,6 +195,7 @@ export const useBackend = () => {
 
 
   return {
+    getOrganizationRepositories,
     getUserInfo,
     getUserRepositories,
     getUserRepository,
