@@ -4,8 +4,6 @@ title: Changelog
 order: 99
 ---
 
-:dog: :girl: Elosdfsdaiosdfjgdikjdfgdfgnsdksdjkfj :cat: :dog: :boy:
-
 # Markdown syntax guide
 
 ## Headers
