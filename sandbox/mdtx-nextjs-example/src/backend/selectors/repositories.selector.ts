@@ -9,18 +9,21 @@ export const repositoriesSelector = Selector('RepositoryConnection')({
   nodes: {
     name: true,
     defaultBranchRef: {
+      name: true,
       target: {
-        "...on Commit": {
-          history: [{ first: 1 }, {
-            nodes: {
-              oid: [{}, true]
-            }
-          }]
-        }
-      }
+        '...on Commit': {
+          history: [
+            { first: 1 },
+            {
+              nodes: {
+                oid: [{}, true],
+              },
+            },
+          ],
+        },
+      },
     },
-    refs: [{}, { nodes: BranchesSelector }]
-
+    refs: [{}, { nodes: BranchesSelector }],
   },
 });
 

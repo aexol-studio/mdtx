@@ -13,6 +13,7 @@ import { ArrowLeft, FileIcon, FolderIcon, RepoIcon } from '../assets';
 import { ClipLoader } from 'react-spinners';
 import { ModelTypes, OrderDirection, RepositoryOrderField } from '../zeus';
 import { useRouter } from 'next/router';
+import { UserType } from '../backend/selectors/user.selector';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 const HomePage = () => {
   const [markdownEdit, setMarkdownEdit] = useState<string | undefined>(
@@ -32,6 +33,10 @@ const HomePage = () => {
     logOut,
   } = AuthConatiner.useContainer();
   const [choosedRepo, setChoosedRepo] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState({
+    repo: '',
+    branch: '',
+  });
   const [choosedFile, setChoosedFile] = useState({ repo: '', file: '' });
   const [refreshingTree, setRefreshingTree] = useState(false);
   const [refreshingSubTree, setRefreshingSubTree] = useState(false);
@@ -41,6 +46,9 @@ const HomePage = () => {
   const [repositories, setRepositories] = useState<RepositoriesType>();
   const [repoContent, setRepoContent] = useState<RepositoryType>();
   const [pathToFile, setPathToFile] = useState('');
+  const [selectedOrganization, setSelectedOrganization] = useState('---');
+  const [organizationList, setOrganizationList] =
+    useState<Pick<UserType, 'organizations'>>();
   const router = useRouter();
   const {
     getUserInfo,
@@ -50,6 +58,9 @@ const HomePage = () => {
     getFileContentFromRepository,
     createCommitOnBranch,
     getOrganizationRepositories,
+    getOrganizationRepository,
+    getFileContentFromOrganization,
+    getFolderContentFromOrganization,
   } = useBackend();
   useEffect(() => {
     const url = window.location.href;
@@ -79,9 +90,9 @@ const HomePage = () => {
   useEffect(() => {
     if (isLoggedIn && !loggedData) {
       setRefreshingTree(true);
-      getOrganizationRepositories({ first: 50 }).then((x) => console.log(x));
       getUserInfo().then((res) => {
         setLoggedData(res);
+        setOrganizationList(res);
         console.log(res);
       });
       getUserRepositories({
@@ -99,17 +110,14 @@ const HomePage = () => {
   }, [isLoggedIn]);
 
   useEffect(() => {
-    if (isLoggedIn && path !== '/') {
-      getFolderContentFromRepository(choosedRepo, path).then((res) => {
-        setRefreshingSubTree(false);
-        setRepoContent(res);
-      });
-    }
-  }, [path]);
-
-  const handleCommit = (input: ModelTypes['CreateCommitOnBranchInput']) => {
-    setSendingCommit(true);
-    createCommitOnBranch(input).then((x) => {
+    if (selectedOrganization !== '---') {
+      getOrganizationRepositories({ first: 50 }, selectedOrganization).then(
+        (x) => {
+          setRepositories(x);
+          setRefreshingTree(false);
+        },
+      );
+    } else {
       getUserRepositories({
         first: 50,
         orderBy: {
@@ -118,13 +126,77 @@ const HomePage = () => {
         },
       }).then((res) => {
         console.log(res);
-        const findedValue = res.nodes?.find((x) => x.name === choosedRepo)
-          ?.defaultBranchRef?.target?.history?.nodes;
-        findedValue && setOid(findedValue[0].oid as string);
-        setMarkdownBase(markdownEdit);
         setRepositories(res);
-        setSendingCommit(false);
+        setRefreshingTree(false);
       });
+    }
+  }, [selectedOrganization]);
+
+  useEffect(() => {
+    if (isLoggedIn && path !== '/') {
+      if (selectedOrganization !== '---') {
+        getFolderContentFromOrganization(
+          choosedRepo,
+          path,
+          selectedOrganization,
+        ).then((res) => {
+          setRefreshingSubTree(false);
+          setRepoContent(res);
+        });
+      } else {
+        getFolderContentFromRepository(
+          choosedRepo,
+          path,
+          selectedBranch.repo === choosedRepo && selectedBranch.branch
+            ? selectedBranch.branch
+            : 'HEAD:',
+        ).then((res) => {
+          setRefreshingSubTree(false);
+          setRepoContent(res);
+        });
+      }
+    }
+  }, [path, selectedBranch]);
+
+  const handleCommit = (input: ModelTypes['CreateCommitOnBranchInput']) => {
+    setSendingCommit(true);
+    createCommitOnBranch(input).then((x) => {
+      if (selectedOrganization !== '---') {
+        getOrganizationRepositories(
+          {
+            first: 50,
+            orderBy: {
+              direction: OrderDirection.DESC,
+              field: RepositoryOrderField.PUSHED_AT,
+            },
+          },
+          selectedOrganization,
+        ).then((res) => {
+          console.log(res);
+          const findedValue = res?.nodes?.find((x) => x.name === choosedRepo)
+            ?.defaultBranchRef?.target?.history?.nodes;
+          findedValue && setOid(findedValue[0].oid);
+          setMarkdownBase(markdownEdit);
+          setRepositories(res);
+          setSendingCommit(false);
+        });
+      } else {
+        getUserRepositories({
+          first: 50,
+          orderBy: {
+            direction: OrderDirection.DESC,
+            field: RepositoryOrderField.PUSHED_AT,
+          },
+        }).then((res) => {
+          console.log(res);
+          const findedValue = res.nodes?.find((x) => x.name === choosedRepo)
+            ?.defaultBranchRef?.target?.history?.nodes;
+          findedValue && setOid(findedValue[0].oid);
+          setMarkdownBase(markdownEdit);
+          setRepositories(res);
+          setSendingCommit(false);
+        });
+      }
     });
   };
 
@@ -136,13 +208,25 @@ const HomePage = () => {
         });
         setPathToFile(path !== '' ? path + '/' + pathx : pathx);
         setEditingMD(true);
-        getFileContentFromRepository(
-          choosedRepo,
-          path !== '' ? path + '/' + pathx : pathx,
-        ).then((res) => {
-          setMarkdownEdit(res?.object?.text);
-          setMarkdownBase(res?.object?.text);
-        });
+        if (selectedOrganization !== '---') {
+          getFileContentFromOrganization(
+            choosedRepo,
+            path !== '' ? path + '/' + pathx : pathx,
+            selectedOrganization,
+          ).then((res) => {
+            setMarkdownEdit(res?.object?.text);
+            setMarkdownBase(res?.object?.text);
+          });
+        } else {
+          getFileContentFromRepository(
+            choosedRepo,
+            path !== '' ? path + '/' + pathx : pathx,
+          ).then((res) => {
+            setMarkdownEdit(res?.object?.text);
+            setMarkdownBase(res?.object?.text);
+          });
+        }
+
         break;
       }
       case '': {
@@ -174,7 +258,11 @@ const HomePage = () => {
               handleCommit({
                 branch: {
                   branchName: 'main',
-                  repositoryNameWithOwner: `${loggedData.login}/${choosedRepo}`,
+                  repositoryNameWithOwner: `${
+                    selectedOrganization !== '---'
+                      ? selectedOrganization
+                      : loggedData.login
+                  }/${choosedRepo}`,
                 },
                 expectedHeadOid: oid,
                 message: { headline: pathToFile },
@@ -254,6 +342,19 @@ const HomePage = () => {
                 <p className="text-center font-[400] text-white">
                   {loggedData?.name}
                 </p>
+                {organizationList?.organizations?.nodes && (
+                  <select
+                    onChange={(e) => {
+                      setSelectedOrganization(e.target.value);
+                      setRefreshingTree(true);
+                    }}
+                  >
+                    <option>---</option>
+                    {organizationList.organizations.nodes.map((x) => {
+                      return <option value={x.name}>{x.name}</option>;
+                    })}
+                  </select>
+                )}
               </div>
             </div>
 
@@ -290,13 +391,32 @@ const HomePage = () => {
                                 setMarkdownBase('Pick Markdown');
                                 setChoosedRepo(repo.name);
                                 setRefreshingSubTree(true);
+                                setSelectedBranch({ branch: '', repo: '' });
                                 handleClick();
-                                getUserRepository(repo.name).then((x) => {
-                                  console.log(x);
-                                  setPath('');
-                                  setRefreshingSubTree(false);
-                                  setRepoContent(x);
-                                });
+                                if (selectedOrganization !== '---') {
+                                  getOrganizationRepository(
+                                    repo.name,
+                                    selectedOrganization,
+                                  ).then((x) => {
+                                    console.log(x);
+                                    setPath('');
+                                    setRefreshingSubTree(false);
+                                    setRepoContent(x);
+                                  });
+                                } else {
+                                  getUserRepository(
+                                    repo.name,
+                                    selectedBranch.repo === choosedRepo &&
+                                      selectedBranch.branch
+                                      ? selectedBranch.branch
+                                      : 'HEAD:',
+                                  ).then((x) => {
+                                    console.log(x);
+                                    setPath('');
+                                    setRefreshingSubTree(false);
+                                    setRepoContent(x);
+                                  });
+                                }
                               } else {
                                 setPath('');
                                 setChoosedRepo('');
@@ -322,6 +442,21 @@ const HomePage = () => {
                             >
                               {repo.name}
                             </p>
+                            {choosedRepo === repo.name && (
+                              <select
+                                defaultValue={repo.defaultBranchRef?.name}
+                                onChange={(e) => {
+                                  setSelectedBranch({
+                                    branch: e.target.value,
+                                    repo: repo.name,
+                                  });
+                                }}
+                              >
+                                {repo.refs?.nodes?.map((branch) => (
+                                  <option>{branch.name}</option>
+                                ))}
+                              </select>
+                            )}
                           </div>
                           {choosedRepo === repo.name && (
                             <div className="flex flex-col gap-[0.8rem] pl-[3.2rem]">

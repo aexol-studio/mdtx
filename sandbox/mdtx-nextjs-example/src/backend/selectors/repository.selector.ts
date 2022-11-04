@@ -14,7 +14,7 @@ export const FolderSelector = Selector('Tree')({
 });
 
 export const repositorySelector = Selector('Repository')({
-  object: [{ expression: 'HEAD:' }, { '...on Tree': FolderSelector }],
+  object: [{}, { '...on Tree': FolderSelector }],
 });
 
 export type RepositoryType = InputType<
