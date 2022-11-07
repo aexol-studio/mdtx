@@ -11,6 +11,9 @@
       "path": "./packages/mdtx-plugin-nextjs"
     },
     {
+      "path": "./packages/mdtx-cms",
+    },
+    {
       "path": "./sandbox/mdtx-example"
     },
     {
