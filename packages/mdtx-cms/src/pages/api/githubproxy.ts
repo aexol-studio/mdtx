@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default (req: NextApiRequest, res: NextApiResponse) => {
-
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     switch (req.method) {
-      case "POST":
+      case 'POST':
         res.setHeader('Access-Control-Allow-Origin', '*');
         const trueReq = JSON.parse(req.body);
         fetch(`https://github.com/login/oauth/access_token`, {
@@ -32,5 +31,5 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
             return res.status(400).json(error);
           });
     }
-  })
+  });
 };

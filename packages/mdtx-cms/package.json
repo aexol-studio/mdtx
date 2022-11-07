@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "start": "next start",
-    "zeus": "zeus schema.docs.graphql ./src"
+    "zeus": "zeus schema.docs.graphql ./src --ts"
   },
   "dependencies": {
     "mdtx-core": "*",

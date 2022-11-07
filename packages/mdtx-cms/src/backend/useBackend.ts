@@ -1,8 +1,12 @@
+import { VariableDefinition } from './../zeus/index';
 import { AuthConatiner } from '../containers';
 import { GraphQLTypes, InputType, ModelTypes } from '../zeus';
 import { chain } from './chain';
 import { scalars } from './scalars';
-import { repositoriesSelector } from './selectors/repositories.selector';
+import {
+  repositoriesSelector,
+  BranchesSelector,
+} from './selectors/repositories.selector';
 import {
   FileSelector,
   FolderSelector,
@@ -38,28 +42,16 @@ export const useBackend = () => {
             nodes: {
               id: true,
               name: true,
-              defaultBranchRef: {
-                name: true,
-                target: {
-                  '...on Commit': {
-                    history: [
-                      { first: 1 },
-                      {
-                        nodes: {
-                          oid: true,
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
+              defaultBranchRef: BranchesSelector,
               refs: [
                 { first: 10, refPrefix: 'refs/heads/' },
                 {
-                  nodes: {
-                    name: true,
-                  },
+                  nodes: BranchesSelector,
                 },
+              ],
+              pullRequests: [
+                { first: 50 },
+                { nodes: { baseRefName: true, headRefName: true } },
               ],
             },
           },
@@ -93,28 +85,17 @@ export const useBackend = () => {
                 nodes: {
                   name: true,
                   id: true,
-                  defaultBranchRef: {
-                    name: true,
-                    target: {
-                      '...on Commit': {
-                        history: [
-                          { first: 1 },
-                          {
-                            nodes: {
-                              oid: true,
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  },
+                  defaultBranchRef: BranchesSelector,
+
                   refs: [
                     { first: 10, refPrefix: 'refs/heads/' },
                     {
-                      nodes: {
-                        name: true,
-                      },
+                      nodes: BranchesSelector,
                     },
+                  ],
+                  pullRequests: [
+                    { first: 50 },
+                    { nodes: { baseRefName: true, headRefName: true } },
                   ],
                 },
               },
@@ -238,7 +219,7 @@ export const useBackend = () => {
     repoName: string,
     path: string,
     organizationName: string,
-    branchName: string
+    branchName: string,
   ) => {
     const response = await chain(
       'query',
@@ -267,7 +248,7 @@ export const useBackend = () => {
   const getFileContentFromRepository = async (
     repoName: string,
     path: string,
-    branchName: string
+    branchName: string,
   ) => {
     const response = await chain(
       'query',
@@ -318,7 +299,10 @@ export const useBackend = () => {
       'mutation',
       token!,
     )({
-      createPullRequest: [{ input }, { pullRequest: { author: { login: true } } }],
+      createPullRequest: [
+        { input },
+        { pullRequest: { author: { login: true } } },
+      ],
     });
     if (!response.createPullRequest)
       throw new Error('Bad response from createPullRequest()');
@@ -332,13 +316,28 @@ export const useBackend = () => {
   >;
 
   const createBranch = async (input: CreateBranchInput) => {
-    const response = await chain('mutation', token!)({
-      createRef: [{ input }, { ref: { name: true, target: { "...on Commit": { history: [{ first: 1 }, { nodes: { oid: true } }] } } } }]
-    })
+    const response = await chain(
+      'mutation',
+      token!,
+    )({
+      createRef: [
+        { input },
+        {
+          ref: {
+            name: true,
+            target: {
+              '...on Commit': {
+                history: [{ first: 1 }, { nodes: { oid: true } }],
+              },
+            },
+          },
+        },
+      ],
+    });
     if (!response.createRef)
       throw new Error('Bad response from createPullRequest()');
     return response.createRef;
-  }
+  };
 
   return {
     getOrganizationRepositories,

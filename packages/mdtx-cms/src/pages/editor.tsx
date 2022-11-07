@@ -104,6 +104,7 @@ const editor = () => {
   );
 
   const [sendingToGIT, setSendingToGIT] = useState(false);
+  const [leaveWithChanges, setLeaveWithChanges] = useState(false);
 
   const [repositoriesList, setRepositoriesList] = useState<RepositoriesType>();
   const [organizationList, setOrganizationList] =
@@ -252,6 +253,8 @@ const editor = () => {
           },
           selectedOrganization,
         ).then((res) => {
+          console.log(res);
+
           setRepositoriesList(res);
           setLoadingFullTree(false);
         });
@@ -263,8 +266,9 @@ const editor = () => {
             field: RepositoryOrderField.PUSHED_AT,
           },
         }).then((res) => {
-          setRepositoriesList(res);
+          console.log(res);
 
+          setRepositoriesList(res);
           setLoadingFullTree(false);
         });
       }
@@ -320,8 +324,10 @@ const editor = () => {
     setSendingToGIT(true);
     if (loggedData && markdownEdit) {
       const doBuffer = Buffer.from(markdownEdit, 'utf-8').toString('base64');
-      const oidArray =
-        selectedRepository?.defaultBranchRef?.target?.history.nodes;
+      const oidArray = selectedRepository?.refs?.nodes?.find(
+        (x) => x.name === selectedBranch,
+      )?.target?.history.nodes;
+
       if (oidArray && contentPath) {
         createCommitOnBranch({
           branch: {
@@ -377,8 +383,10 @@ const editor = () => {
     setSendingToGIT(true);
     if (loggedData && markdownEdit && selectedRepository && contentPath) {
       const doBuffer = Buffer.from(markdownEdit, 'utf-8').toString('base64');
-      const oidArray =
-        selectedRepository.defaultBranchRef?.target?.history.nodes;
+      const oidArray = selectedRepository?.refs?.nodes?.find(
+        (x) => x.name === selectedBranch,
+      )?.target?.history.nodes;
+
       if (oidArray)
         createBranch({
           name: `refs/heads/${data.newBranchName!}`, // uniwersalna nazwa brancha !!!
@@ -452,18 +460,6 @@ const editor = () => {
             contentPath ? contentPath + '/' + input.name : input.name,
             selectedBranch!,
           ).then((res) => {
-            if (res?.object?.text?.includes('.png')) {
-              const someString = res.object.text.slice(
-                0,
-                res.object.text.search('.png') + 4,
-              );
-              console.log(
-                '![](' +
-                  `https://github.com/${loggedData?.login}/${selectedRepository?.name}/blob/${selectedBranch}/public` +
-                  someString.slice(someString.indexOf('/'), Infinity) +
-                  '?raw=true)',
-              );
-            }
             setMarkdownEdit(res?.object?.text);
             setMarkdownBase(res?.object?.text);
           });
@@ -496,7 +492,7 @@ const editor = () => {
             </p>
           )}
           <div
-            className="bg-blue-200 px-[2.4rem] py-[0.4rem] rounded-[2.4rem] flex justify-center items-center w-fit mx-auto"
+            className="bg-[#0A58CA] px-[2.4rem] py-[0.4rem] rounded-[2.4rem] flex justify-center items-center w-fit mx-auto"
             onClick={() => {
               logOut();
             }}
@@ -506,7 +502,7 @@ const editor = () => {
           <div>
             <div className="mt-[0.8rem] flex flex-col">
               <h1 className="text-[1.8rem] text-center text-white">
-                Welcome to <span className="text-blue-200">MDtx</span> editor!
+                Welcome to <span className="text-[#0A58CA]">MDtx</span> editor!
               </h1>
               {loggedData?.avatarUrl && (
                 <div className="my-[0.8rem] relative w-[6.4rem] h-[6.4rem] rounded-full self-center">
@@ -556,7 +552,45 @@ const editor = () => {
             </div>
           </div>
         </div>
-        <div className="relative pt-[1.6rem] pl-[1.6rem] min-h-[70%] scrollbar overflow-x-hidden overflow-y-scroll w-full gap-[0.8rem]">
+        <div className="relative pt-[1.6rem] pl-[1.6rem] min-h-[70%] scrollbar stroke-current overflow-x-hidden overflow-y-scroll w-full gap-[0.8rem]">
+          {leaveWithChanges && selectedFile && (
+            <div className="z-[10] left-0 top-0 absolute w-full h-full bg-[#31313CF2] px-[.8rem] py-[.4rem]">
+              <p className="mt-[9.6rem] text-white text-center font-bold">
+                Are you sure? You got uncommited changes
+              </p>
+              <div className="mt-[3.2rem] w-[80%] mx-auto gap-[1.6rem] flex justify-between">
+                <div
+                  onClick={() => {
+                    setLeaveWithChanges(false);
+                    setSelectedFile(undefined);
+                    setMarkdownBase('Pick markdown');
+                    setMarkdownEdit('Pick markdown');
+                    setLoadingSubTree(true);
+                    setContentPath((prev) => {
+                      if (prev) {
+                        if (prev.lastIndexOf('/') === -1) {
+                          return undefined;
+                        } else {
+                          return prev.slice(0, prev.lastIndexOf('/'));
+                        }
+                      } else {
+                        return undefined;
+                      }
+                    });
+                  }}
+                  className="w-1/2 bg-[#0A58CA] rounded-[3.6rem] flex justify-center items-center"
+                >
+                  <p className="text-white">Yes</p>
+                </div>
+                <div
+                  onClick={() => setLeaveWithChanges(false)}
+                  className="w-1/2 flex justify-center items-center bg-[#13131C] rounded-[3.6rem]"
+                >
+                  <p className="text-white">No</p>
+                </div>
+              </div>
+            </div>
+          )}
           <>
             {loadingFullTree ? (
               <div className="flex w-full items-center justify-center">
@@ -622,24 +656,28 @@ const editor = () => {
                     <div className="flex w-full">
                       {contentPath?.length ? (
                         <div
-                          className="w-full flex"
                           onClick={() => {
-                            setSelectedFile(undefined);
-                            setMarkdownBase('Pick markdown');
-                            setMarkdownEdit('Pick markdown');
-                            setLoadingSubTree(true);
-                            setContentPath((prev) => {
-                              if (prev) {
-                                if (prev.lastIndexOf('/') === -1) {
-                                  return undefined;
+                            if (markdownBase === markdownEdit) {
+                              setSelectedFile(undefined);
+                              setMarkdownBase('Pick markdown');
+                              setMarkdownEdit('Pick markdown');
+                              setLoadingSubTree(true);
+                              setContentPath((prev) => {
+                                if (prev) {
+                                  if (prev.lastIndexOf('/') === -1) {
+                                    return undefined;
+                                  } else {
+                                    return prev.slice(0, prev.lastIndexOf('/'));
+                                  }
                                 } else {
-                                  return prev.slice(0, prev.lastIndexOf('/'));
+                                  return undefined;
                                 }
-                              } else {
-                                return undefined;
-                              }
-                            });
+                              });
+                            } else {
+                              setLeaveWithChanges(true);
+                            }
                           }}
+                          className="relative w-full flex"
                         >
                           <BackIcon />
                           <p className="ml-[1.6rem] text-white">
@@ -757,7 +795,9 @@ const editor = () => {
                                         Commit
                                       </p>
                                       <input
-                                        {...registerCommit('commitMessage')}
+                                        {...registerCommit('commitMessage', {
+                                          required: true,
+                                        })}
                                         placeholder="Commit message"
                                       />
                                       {markdownBase !== markdownEdit ? (
@@ -791,6 +831,7 @@ const editor = () => {
                                           <select
                                             {...registerPullRequest(
                                               'selectedTargetBranch',
+                                              { required: true },
                                             )}
                                           >
                                             {selectedRepository.refs?.nodes
@@ -812,24 +853,28 @@ const editor = () => {
                                           <input
                                             {...registerPullRequest(
                                               'newBranchName',
+                                              { required: true },
                                             )}
                                             placeholder="New branch name"
                                           />
                                           <input
                                             {...registerPullRequest(
                                               'pullRequestTitle',
+                                              { required: true },
                                             )}
                                             placeholder="Pull request title"
                                           />
                                           <input
                                             {...registerPullRequest(
                                               'pullRequestMessage',
+                                              { required: true },
                                             )}
                                             placeholder="Pull request message"
                                           />
                                           <input
                                             {...registerPullRequest(
                                               'commitMessage',
+                                              { required: true },
                                             )}
                                             placeholder="Commit message"
                                           />
