@@ -1,0 +1,884 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import '@uiw/react-md-editor/markdown-editor.css';
+import '@uiw/react-markdown-preview/markdown.css';
+import dynamic from 'next/dynamic';
+import { AuthConatiner } from '../containers/AuthContainer';
+import Image from 'next/image';
+import { Layout } from '../layouts';
+import {
+  RepositoriesType,
+  RepositoryType,
+} from '../backend/selectors/repositories.selector';
+import { useBackend } from '../backend/useBackend';
+import { BackIcon } from '../assets';
+import { ClipLoader } from 'react-spinners';
+import {
+  ModelTypes,
+  OrderDirection,
+  RepositoryOrderField,
+  ValueTypes,
+} from '../zeus';
+import { useRouter } from 'next/router';
+import { UserType } from '../backend/selectors/user.selector';
+import {
+  RepositoryContentType,
+  SingleFileType,
+} from '../backend/selectors/repositorycontent.selector';
+import { useForm, SubmitHandler } from 'react-hook-form';
+const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
+enum CommitingModes {
+  COMMIT,
+  PULL_REQUEST,
+}
+
+type CommitInput = {
+  commitMessage: string;
+};
+
+type PullRequestInput = {
+  selectedTargetBranch: string;
+  pullRequestMessage: string;
+  pullRequestTitle: string;
+  commitMessage: string;
+  newBranchName?: string; /// i think it is good idea to generate it
+};
+
+const editor = () => {
+  const {
+    register: registerCommit,
+    handleSubmit: handleSubmitCommit,
+    watch: watchCommit,
+    reset: resetCommitForm,
+    formState: { errors: errorsCommit },
+  } = useForm<CommitInput>();
+
+  const {
+    register: registerPullRequest,
+    handleSubmit: handleSubmitPullRequest,
+    watch: watchPullRequest,
+    reset: resetPullRequestForm,
+    formState: { errors: errorsPullRequest },
+  } = useForm<PullRequestInput>();
+
+  const router = useRouter();
+  const {
+    token,
+    isLoggedIn,
+    setLoggedData,
+    loggedData,
+    logOut,
+    setTokenWithLocal,
+    setIsLoggedIn,
+  } = AuthConatiner.useContainer();
+  const {
+    getUserInfo,
+    getUserRepositories,
+    getUserRepository,
+    getFolderContentFromRepository,
+    getFileContentFromRepository,
+    createCommitOnBranch,
+    createPullRequest,
+    createBranch,
+    getOrganizationRepositories,
+    getOrganizationRepository,
+    getFileContentFromOrganization,
+    getFolderContentFromOrganization,
+  } = useBackend();
+  ///////////////////////
+  /// Markdown States ///
+  ///////////////////////
+
+  const [markdownEdit, setMarkdownEdit] = useState<string | undefined>(
+    'Pick Markdown',
+  );
+  const [markdownBase, setMarkdownBase] = useState<string | undefined>(
+    'Pick Markdown',
+  );
+
+  ///////////////////////
+  ///      States     ///
+  ///////////////////////
+
+  const [commitingMode, setCommitingMode] = useState<CommitingModes>(
+    CommitingModes.PULL_REQUEST,
+  );
+
+  const [sendingToGIT, setSendingToGIT] = useState(false);
+
+  const [repositoriesList, setRepositoriesList] = useState<RepositoriesType>();
+  const [organizationList, setOrganizationList] =
+    useState<Pick<UserType, 'organizations'>>();
+
+  const [selectedOrganization, setSelectedOrganization] = useState('---');
+
+  const [autoCompleteValue, setAutoCompleteValue] = useState<
+    string | undefined
+  >();
+
+  const [selectedRepository, setSelectedRepository] =
+    useState<RepositoryType>();
+
+  const [selectedRepositoryContent, setSelectedRepositoryContent] =
+    useState<RepositoryContentType>();
+
+  const [selectedBranch, setSelectedBranch] = useState<string | undefined>();
+  const [selectedFile, setSelectedFile] = useState<SingleFileType>();
+  const [contentPath, setContentPath] = useState<string | undefined>();
+
+  const [loadingFullTree, setLoadingFullTree] = useState(false);
+  const [loadingSubTree, setLoadingSubTree] = useState(false);
+
+  ///////////////////////
+
+  const filteredRepositories = useMemo(() => {
+    if (!autoCompleteValue) return repositoriesList;
+    if (autoCompleteValue.length) {
+      const regex = new RegExp(
+        `^${autoCompleteValue.toLocaleLowerCase()}`,
+        `i`,
+      );
+      const filteredData = {
+        nodes: repositoriesList?.nodes?.filter((x) => regex.test(x.name)),
+      };
+      return filteredData;
+    }
+  }, [autoCompleteValue, repositoriesList]);
+
+  ///////////////////////
+
+  /// utilFunctions ///
+  const makeId = (length: number) => {
+    let result = '';
+    const characters =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+  };
+
+  const cleanRepositoryContentAndSort = (
+    repositoryContent: RepositoryContentType,
+  ) => {
+    return {
+      object: {
+        entries: repositoryContent?.object?.entries
+          ?.filter(
+            (file) =>
+              file.extension === '.md' ||
+              (file.extension === '' && file.type === 'tree'),
+          )
+          .sort((file) => {
+            if (file.extension === '.md') {
+              return -1;
+            }
+            return 0;
+          }),
+      },
+    };
+  };
+
+  /// utilFunctions ///
+
+  /// gettingToken ///
+
+  useEffect(() => {
+    const url = window.location.href;
+    const hasCode = url.includes('?code=');
+    if (!token && hasCode) {
+      const newUrl = url.split('?code=');
+      const requestData = {
+        code: newUrl[1],
+      };
+      const proxy_url = process.env.NEXT_PUBLIC_PROXY || '';
+      fetch(proxy_url, {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data) {
+            setTokenWithLocal(data);
+            setIsLoggedIn(true);
+          }
+        });
+    }
+  }, []);
+
+  /// gettingToken ///
+
+  /// First Load ///
+
+  useEffect(() => {
+    if (isLoggedIn && token !== '' && !loggedData) {
+      setLoadingFullTree(true);
+      getUserInfo()
+        .then((res) => {
+          setLoggedData(res);
+          setOrganizationList(res);
+        })
+        .catch(() => logOut());
+
+      getUserRepositories({
+        first: 50,
+        orderBy: {
+          direction: OrderDirection.DESC,
+          field: RepositoryOrderField.PUSHED_AT,
+        },
+      })
+        .then((res) => {
+          setRepositoriesList(res);
+          setLoadingFullTree(false);
+        })
+        .catch(() => logOut());
+    }
+  }, [isLoggedIn]);
+
+  /// First Load ///
+
+  /// Repositories refetch ///
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      if (selectedOrganization !== '---') {
+        getOrganizationRepositories(
+          {
+            first: 50,
+            orderBy: {
+              direction: OrderDirection.DESC,
+              field: RepositoryOrderField.PUSHED_AT,
+            },
+          },
+          selectedOrganization,
+        ).then((res) => {
+          setRepositoriesList(res);
+          setLoadingFullTree(false);
+        });
+      } else {
+        getUserRepositories({
+          first: 50,
+          orderBy: {
+            direction: OrderDirection.DESC,
+            field: RepositoryOrderField.PUSHED_AT,
+          },
+        }).then((res) => {
+          setRepositoriesList(res);
+
+          setLoadingFullTree(false);
+        });
+      }
+    }
+  }, [selectedOrganization]);
+
+  useEffect(() => {
+    if (isLoggedIn && selectedRepository) {
+      setCommitingMode(CommitingModes.PULL_REQUEST);
+      resetCommitForm();
+      resetPullRequestForm();
+      if (selectedOrganization !== '---') {
+        getFolderContentFromOrganization(
+          selectedRepository.name,
+          contentPath ? contentPath : '',
+          selectedOrganization,
+          selectedBranch!,
+        ).then((repositoryContent) => {
+          if (repositoryContent) {
+            setSelectedRepositoryContent(
+              cleanRepositoryContentAndSort(repositoryContent),
+            );
+            setLoadingSubTree(false);
+          } else {
+            setSelectedRepositoryContent(undefined); // Empty Repository State !
+          }
+        });
+      } else {
+        getFolderContentFromRepository(
+          selectedRepository.name,
+          contentPath ? contentPath : '',
+          selectedBranch!,
+        ).then((repositoryContent) => {
+          if (repositoryContent) {
+            setSelectedRepositoryContent(
+              cleanRepositoryContentAndSort(repositoryContent),
+            );
+            setLoadingSubTree(false);
+          } else {
+            setSelectedRepositoryContent(undefined); // Empty Repository State !
+          }
+        });
+      }
+    }
+  }, [contentPath, selectedBranch]);
+
+  /// Repositories refetch ///
+
+  //COMMITS
+
+  const onCommitSubmit: SubmitHandler<CommitInput> = (data) => {
+    console.log(data);
+    setSendingToGIT(true);
+    if (loggedData && markdownEdit) {
+      const doBuffer = Buffer.from(markdownEdit, 'utf-8').toString('base64');
+      const oidArray =
+        selectedRepository?.defaultBranchRef?.target?.history.nodes;
+      if (oidArray && contentPath) {
+        createCommitOnBranch({
+          branch: {
+            branchName: selectedBranch,
+            repositoryNameWithOwner: `${
+              selectedOrganization !== '---'
+                ? selectedOrganization
+                : loggedData.login
+            }/${selectedRepository?.name}`,
+          },
+          expectedHeadOid: oidArray[0].oid,
+          message: {
+            headline: data.commitMessage.length
+              ? data.commitMessage
+              : contentPath,
+          },
+          fileChanges: {
+            additions: [
+              {
+                path: contentPath,
+                contents: doBuffer,
+              },
+            ],
+          },
+        }).then((x) => {
+          setMarkdownBase(markdownEdit);
+          setSendingToGIT(false);
+          setSelectedRepository((prev) => {
+            if (
+              prev &&
+              prev.defaultBranchRef &&
+              prev.defaultBranchRef.name &&
+              x.commit?.oid
+            ) {
+              return {
+                ...prev,
+                defaultBranchRef: {
+                  name: prev.defaultBranchRef.name,
+                  target: { history: { nodes: [{ oid: x.commit.oid }] } },
+                },
+              };
+            } else {
+              return prev;
+            }
+          });
+        });
+      }
+    }
+  };
+
+  const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {
+    console.log(data);
+    setSendingToGIT(true);
+    if (loggedData && markdownEdit && selectedRepository && contentPath) {
+      const doBuffer = Buffer.from(markdownEdit, 'utf-8').toString('base64');
+      const oidArray =
+        selectedRepository.defaultBranchRef?.target?.history.nodes;
+      if (oidArray)
+        createBranch({
+          name: `refs/heads/${data.newBranchName!}`, // uniwersalna nazwa brancha !!!
+          oid: oidArray[0].oid, //////// lepiej wygenerować id jakąś libką - imo narazie wskazuje na ostatniego commita na branchu może to jest git
+          repositoryId: selectedRepository.id,
+        }).then((createdBranch) => {
+          const oidArray = createdBranch.ref?.target?.history.nodes;
+
+          if (createdBranch && oidArray) {
+            createCommitOnBranch({
+              branch: {
+                branchName: createdBranch.ref?.name,
+                repositoryNameWithOwner: `${
+                  selectedOrganization !== '---'
+                    ? selectedOrganization
+                    : loggedData.login
+                }/${selectedRepository?.name}`,
+              },
+              expectedHeadOid: oidArray[0].oid,
+              message: {
+                headline: data.commitMessage.length
+                  ? data.commitMessage
+                  : contentPath,
+              },
+              fileChanges: {
+                additions: [
+                  {
+                    path: contentPath,
+                    contents: doBuffer,
+                  },
+                ],
+              },
+            }).then((x) => {
+              if (createdBranch && createdBranch.ref)
+                createPullRequest({
+                  baseRefName: data.selectedTargetBranch,
+                  headRefName: createdBranch.ref.name,
+                  repositoryId: selectedRepository.id,
+                  title: data.pullRequestTitle,
+                  body: data.pullRequestMessage,
+                }).then(() => {
+                  setSendingToGIT(false);
+                  setMarkdownBase(markdownEdit);
+                });
+            });
+          }
+        });
+    }
+  };
+
+  const handlePress = (input: SingleFileType) => {
+    switch (input.extension) {
+      case '.md': {
+        setSelectedFile(input);
+        setContentPath(
+          contentPath ? contentPath + '/' + input.name : input.name,
+        );
+        if (selectedOrganization !== '---') {
+          getFileContentFromOrganization(
+            selectedRepository!.name,
+            contentPath ? contentPath + '/' + input.name : input.name,
+            selectedOrganization,
+            selectedBranch!,
+          ).then((res) => {
+            setMarkdownEdit(res?.object?.text);
+            setMarkdownBase(res?.object?.text);
+          });
+        } else {
+          getFileContentFromRepository(
+            selectedRepository!.name,
+            contentPath ? contentPath + '/' + input.name : input.name,
+            selectedBranch!,
+          ).then((res) => {
+            if (res?.object?.text?.includes('.png')) {
+              const someString = res.object.text.slice(
+                0,
+                res.object.text.search('.png') + 4,
+              );
+              console.log(
+                '![](' +
+                  `https://github.com/${loggedData?.login}/${selectedRepository?.name}/blob/${selectedBranch}/public` +
+                  someString.slice(someString.indexOf('/'), Infinity) +
+                  '?raw=true)',
+              );
+            }
+            setMarkdownEdit(res?.object?.text);
+            setMarkdownBase(res?.object?.text);
+          });
+        }
+        break;
+      }
+      case '': {
+        setContentPath((prev) => {
+          if (!prev) {
+            return `${input.name}`;
+          } else {
+            return prev + `/${input.name}`;
+          }
+        });
+        setLoadingSubTree(true);
+        break;
+      }
+      case undefined:
+        break;
+    }
+  };
+
+  return (
+    <Layout pageTitle="MDtx Editor">
+      <div className="select-none w-full max-w-[20vw] h-screen bg-[#13131C] border-r-[2px] border-r-solid border-r-white flex flex-col items-center">
+        <div className="w-full border-b-[1px] border-white relative min-h-[30%] pt-[2.4rem]">
+          {selectedRepository && (
+            <p className="text-white absolute bottom-[.8rem] right-[.8rem]">
+              Current branch
+            </p>
+          )}
+          <div
+            className="bg-blue-200 px-[2.4rem] py-[0.4rem] rounded-[2.4rem] flex justify-center items-center w-fit mx-auto"
+            onClick={() => {
+              logOut();
+            }}
+          >
+            <p className="hover:underline cursor-pointer">Logout</p>
+          </div>
+          <div>
+            <div className="mt-[0.8rem] flex flex-col">
+              <h1 className="text-[1.8rem] text-center text-white">
+                Welcome to <span className="text-blue-200">MDtx</span> editor!
+              </h1>
+              {loggedData?.avatarUrl && (
+                <div className="my-[0.8rem] relative w-[6.4rem] h-[6.4rem] rounded-full self-center">
+                  <Image
+                    priority
+                    width={128}
+                    height={128}
+                    className="rounded-full"
+                    alt="User Logo"
+                    src={loggedData.avatarUrl}
+                  />
+                </div>
+              )}
+              <p className="text-center font-[700] text-white">Welcome!</p>
+              <p className="text-center font-[400] text-white">
+                {loggedData?.name}
+              </p>
+              <div className="max-w-[12.8rem] flex items-center justify-center flex-col mx-auto gap-[0.4rem]">
+                {!selectedRepository && organizationList?.organizations?.nodes && (
+                  <select
+                    defaultValue={selectedOrganization}
+                    onChange={(e) => {
+                      setSelectedOrganization(e.target.value);
+                      setLoadingFullTree(true);
+                    }}
+                  >
+                    <option>---</option>
+                    {organizationList.organizations.nodes.map((x) => {
+                      return (
+                        <option key={x.name} value={x.name}>
+                          {x.name}
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
+                {!selectedRepository && (
+                  <input
+                    placeholder="Type to search"
+                    value={autoCompleteValue}
+                    onChange={(e) => {
+                      setAutoCompleteValue(e.target.value);
+                    }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="relative pt-[1.6rem] pl-[1.6rem] min-h-[70%] scrollbar overflow-x-hidden overflow-y-scroll w-full gap-[0.8rem]">
+          <>
+            {loadingFullTree ? (
+              <div className="flex w-full items-center justify-center">
+                <ClipLoader color="#FFF" size={64} />
+              </div>
+            ) : (
+              <div className="mt-[.8rem] flex flex-col items-start">
+                {!selectedRepository ? (
+                  <>
+                    {filteredRepositories?.nodes?.map((repository) => {
+                      return (
+                        <div
+                          onClick={() => {
+                            setLoadingSubTree(true);
+                            setSelectedRepository(repository);
+                            setSelectedBranch(
+                              repository.defaultBranchRef?.name,
+                            );
+                            if (selectedOrganization !== '---') {
+                              getOrganizationRepository(
+                                repository.name,
+                                `${selectedBranch!}:`,
+                                selectedOrganization,
+                              ).then((repositoryContent) => {
+                                if (repositoryContent) {
+                                  setSelectedRepositoryContent(
+                                    cleanRepositoryContentAndSort(
+                                      repositoryContent,
+                                    ),
+                                  );
+                                } else {
+                                  setSelectedRepositoryContent(undefined); // Empty Repository State !
+                                }
+                                setLoadingSubTree(false);
+                              });
+                            } else {
+                              getUserRepository(
+                                repository.name,
+                                `${selectedBranch!}:`,
+                              ).then((repositoryContent) => {
+                                if (repositoryContent) {
+                                  setSelectedRepositoryContent(
+                                    cleanRepositoryContentAndSort(
+                                      repositoryContent,
+                                    ),
+                                  );
+                                } else {
+                                  setSelectedRepositoryContent(undefined); // Empty Repository State !
+                                }
+                                setLoadingSubTree(false);
+                              });
+                            }
+                          }}
+                          key={repository.name}
+                        >
+                          <p className="text-[#FFF]">{repository.name}</p>
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <>
+                    <div className="flex w-full">
+                      {contentPath?.length ? (
+                        <div
+                          className="w-full flex"
+                          onClick={() => {
+                            setSelectedFile(undefined);
+                            setMarkdownBase('Pick markdown');
+                            setMarkdownEdit('Pick markdown');
+                            setLoadingSubTree(true);
+                            setContentPath((prev) => {
+                              if (prev) {
+                                if (prev.lastIndexOf('/') === -1) {
+                                  return undefined;
+                                } else {
+                                  return prev.slice(0, prev.lastIndexOf('/'));
+                                }
+                              } else {
+                                return undefined;
+                              }
+                            });
+                          }}
+                        >
+                          <BackIcon />
+                          <p className="ml-[1.6rem] text-white">
+                            {contentPath}
+                          </p>
+                        </div>
+                      ) : (
+                        <div
+                          className="w-full flex"
+                          onClick={() => {
+                            setSelectedRepository(undefined);
+                          }}
+                        >
+                          <BackIcon />
+                          <p className="ml-[1.6rem] text-white">
+                            {selectedRepository.name}
+                          </p>
+                        </div>
+                      )}
+
+                      {!contentPath ? (
+                        <div className="w-[9.6rem]">
+                          <select
+                            className="w-full"
+                            defaultValue={
+                              selectedBranch
+                                ? selectedBranch
+                                : selectedRepository.defaultBranchRef?.name
+                            }
+                            onChange={(e) => {
+                              setLoadingSubTree(true);
+                              setSelectedBranch(e.target.value);
+                            }}
+                          >
+                            {selectedRepository.refs?.nodes?.map((branch) => (
+                              <option key={branch.name} value={branch.name}>
+                                {branch.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        <p className="text-white">{selectedBranch}</p>
+                      )}
+                    </div>
+                    {loadingSubTree ? (
+                      <div className="flex w-full items-center justify-center">
+                        <ClipLoader color="#FFF" size={64} />
+                      </div>
+                    ) : (
+                      <div className="mt-[1.6rem]">
+                        {!selectedFile ? (
+                          <>
+                            {selectedRepositoryContent &&
+                            selectedRepositoryContent.object &&
+                            selectedRepositoryContent.object.entries &&
+                            selectedRepositoryContent.object.entries.length >
+                              0 ? (
+                              selectedRepositoryContent?.object?.entries?.map(
+                                (content) => {
+                                  return (
+                                    <div
+                                      onClick={() => {
+                                        handlePress(content);
+                                      }}
+                                      key={content.name}
+                                    >
+                                      <p className="text-white">
+                                        {content.name}
+                                      </p>
+                                    </div>
+                                  );
+                                },
+                              )
+                            ) : (
+                              <div>
+                                <p className="text-white">Nothing there :P</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div
+                              className="flex justify-center items-center relative w-[4.8rem] h-[2.4rem] rounded-[3.2rem] border-[2px] border-[#FFF]"
+                              onClick={() => {
+                                commitingMode === CommitingModes.COMMIT &&
+                                  setCommitingMode(CommitingModes.PULL_REQUEST);
+                                commitingMode === CommitingModes.PULL_REQUEST &&
+                                  setCommitingMode(CommitingModes.COMMIT);
+                              }}
+                            >
+                              <div
+                                className={`${
+                                  commitingMode === CommitingModes.PULL_REQUEST
+                                    ? 'translate-x-[-70%]'
+                                    : 'translate-x-[70%]'
+                                } transition-all ease-in-out duration-300 absolute bg-[#FFF] w-[1.6rem] h-[1.6rem] rounded-full`}
+                              />
+                            </div>
+                            {sendingToGIT ? (
+                              <div>
+                                <ClipLoader color="#FFF" size={48} />
+                              </div>
+                            ) : (
+                              <div>
+                                {commitingMode === CommitingModes.COMMIT ? (
+                                  <div>
+                                    <form
+                                      className="flex flex-col"
+                                      onSubmit={handleSubmitCommit(
+                                        onCommitSubmit,
+                                      )}
+                                    >
+                                      <p className="text-white italic font-bold">
+                                        Commit
+                                      </p>
+                                      <input
+                                        {...registerCommit('commitMessage')}
+                                        placeholder="Commit message"
+                                      />
+                                      {markdownBase !== markdownEdit ? (
+                                        <input
+                                          className="text-white"
+                                          type="submit"
+                                        />
+                                      ) : (
+                                        <div>
+                                          <p className="text-white">
+                                            There are no changes to commit
+                                          </p>
+                                        </div>
+                                      )}
+                                    </form>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    {selectedRepository!.refs!.nodes!.length >
+                                    1 ? (
+                                      <>
+                                        <p className="text-white italic font-bold">
+                                          Pull request
+                                        </p>
+                                        <form
+                                          className="flex flex-col"
+                                          onSubmit={handleSubmitPullRequest(
+                                            onPullRequestSubmit,
+                                          )}
+                                        >
+                                          <select
+                                            {...registerPullRequest(
+                                              'selectedTargetBranch',
+                                            )}
+                                          >
+                                            {selectedRepository.refs?.nodes
+                                              ?.filter(
+                                                (x) =>
+                                                  x.name !== selectedBranch,
+                                              )
+                                              .map((branch) => {
+                                                return (
+                                                  <option
+                                                    key={branch.name}
+                                                    value={branch.name}
+                                                  >
+                                                    {branch.name}
+                                                  </option>
+                                                );
+                                              })}
+                                          </select>
+                                          <input
+                                            {...registerPullRequest(
+                                              'newBranchName',
+                                            )}
+                                            placeholder="New branch name"
+                                          />
+                                          <input
+                                            {...registerPullRequest(
+                                              'pullRequestTitle',
+                                            )}
+                                            placeholder="Pull request title"
+                                          />
+                                          <input
+                                            {...registerPullRequest(
+                                              'pullRequestMessage',
+                                            )}
+                                            placeholder="Pull request message"
+                                          />
+                                          <input
+                                            {...registerPullRequest(
+                                              'commitMessage',
+                                            )}
+                                            placeholder="Commit message"
+                                          />
+                                          {markdownBase !== markdownEdit ? (
+                                            <input
+                                              className="text-white"
+                                              type="submit"
+                                            />
+                                          ) : (
+                                            <div>
+                                              <p className="text-white">
+                                                There are no changes
+                                              </p>
+                                            </div>
+                                          )}
+                                        </form>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <p className="text-white">
+                                          There are no branch to make pull
+                                          request to
+                                        </p>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        </div>
+      </div>
+      <div className="w-full">
+        <MDEditor
+          height={'100vh'}
+          value={markdownEdit}
+          onChange={setMarkdownEdit}
+        />
+      </div>
+    </Layout>
+  );
+};
+
+export default editor;

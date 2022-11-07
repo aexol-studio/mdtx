@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default (req: NextApiRequest, res: NextApiResponse) => {
+
   return new Promise(resolve => {
     switch (req.method) {
       case "POST":

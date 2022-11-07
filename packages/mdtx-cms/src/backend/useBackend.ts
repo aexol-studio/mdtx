@@ -1,12 +1,13 @@
 import { AuthConatiner } from '../containers';
-import { ModelTypes } from '../zeus';
+import { GraphQLTypes, InputType, ModelTypes } from '../zeus';
 import { chain } from './chain';
+import { scalars } from './scalars';
 import { repositoriesSelector } from './selectors/repositories.selector';
 import {
   FileSelector,
   FolderSelector,
   repositorySelector,
-} from './selectors/repository.selector';
+} from './selectors/repositorycontent.selector';
 import { userSelector } from './selectors/user.selector';
 
 export const useBackend = () => {
@@ -35,6 +36,7 @@ export const useBackend = () => {
           pagination,
           {
             nodes: {
+              id: true,
               name: true,
               defaultBranchRef: {
                 name: true,
@@ -90,6 +92,7 @@ export const useBackend = () => {
               {
                 nodes: {
                   name: true,
+                  id: true,
                   defaultBranchRef: {
                     name: true,
                     target: {
@@ -127,6 +130,7 @@ export const useBackend = () => {
 
   const getOrganizationRepository = async (
     repoName: string,
+    branchName: string,
     organizationName: string,
   ) => {
     const response = await chain(
@@ -140,7 +144,7 @@ export const useBackend = () => {
             { name: repoName, followRenames: true },
             {
               object: [
-                { expression: 'HEAD:' },
+                { expression: branchName },
                 { '...on Tree': FolderSelector },
               ],
             },
@@ -175,35 +179,6 @@ export const useBackend = () => {
     return response.viewer.repository;
   };
 
-  const getFolderContentFromOrganization = async (
-    repoName: string,
-    path: string,
-    organizationName: string,
-  ) => {
-    const response = await chain(
-      'query',
-      token!,
-    )({
-      organization: [
-        { login: organizationName },
-        {
-          repository: [
-            { name: repoName },
-            {
-              object: [
-                { expression: `HEAD:${path}` },
-                { '...on Tree': FolderSelector },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-    if (!response.organization)
-      throw new Error('Bad response from getFolderContentFromOrganization()');
-    return response.organization.repository;
-  };
-
   const getFolderContentFromRepository = async (
     repoName: string,
     path: string,
@@ -218,7 +193,7 @@ export const useBackend = () => {
           { name: repoName },
           {
             object: [
-              { expression: `${branchName}${path}` },
+              { expression: `${branchName}:${path}` },
               { '...on Tree': FolderSelector },
             ],
           },
@@ -229,11 +204,11 @@ export const useBackend = () => {
       throw new Error('Bad response from getFolderContentFromRepository()');
     return response.viewer.repository;
   };
-
-  const getFileContentFromOrganization = async (
+  const getFolderContentFromOrganization = async (
     repoName: string,
     path: string,
     organizationName: string,
+    branchName: string,
   ) => {
     const response = await chain(
       'query',
@@ -246,7 +221,37 @@ export const useBackend = () => {
             { name: repoName },
             {
               object: [
-                { expression: `HEAD:${path}` },
+                { expression: `${branchName}:${path}` },
+                { '...on Tree': FolderSelector },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    if (!response.organization)
+      throw new Error('Bad response from getFolderContentFromOrganization()');
+    return response.organization.repository;
+  };
+
+  const getFileContentFromOrganization = async (
+    repoName: string,
+    path: string,
+    organizationName: string,
+    branchName: string
+  ) => {
+    const response = await chain(
+      'query',
+      token!,
+    )({
+      organization: [
+        { login: organizationName },
+        {
+          repository: [
+            { name: repoName },
+            {
+              object: [
+                { expression: `${branchName}:${path}` },
                 { '...on Blob': FileSelector },
               ],
             },
@@ -255,13 +260,14 @@ export const useBackend = () => {
       ],
     });
     if (!response.organization)
-      throw new Error('Bad response from getFolderContentFromRepository()');
+      throw new Error('Bad response from getFileContentFromOrganization()');
     return response.organization.repository;
   };
 
   const getFileContentFromRepository = async (
     repoName: string,
     path: string,
+    branchName: string
   ) => {
     const response = await chain(
       'query',
@@ -272,7 +278,7 @@ export const useBackend = () => {
           { name: repoName },
           {
             object: [
-              { expression: `HEAD:${path}` },
+              { expression: `${branchName}:${path}` },
               { '...on Blob': FileSelector },
             ],
           },
@@ -292,7 +298,7 @@ export const useBackend = () => {
       token!,
     )({
       createCommitOnBranch: [
-        { input: input },
+        { input },
         {
           commit: {
             oid: true,
@@ -305,6 +311,35 @@ export const useBackend = () => {
     return response.createCommitOnBranch;
   };
 
+  const createPullRequest = async (
+    input: ModelTypes['CreatePullRequestInput'],
+  ) => {
+    const response = await chain(
+      'mutation',
+      token!,
+    )({
+      createPullRequest: [{ input }, { pullRequest: { author: { login: true } } }],
+    });
+    if (!response.createPullRequest)
+      throw new Error('Bad response from createPullRequest()');
+    return response.createPullRequest;
+  };
+
+  type CreateBranchInput = InputType<
+    GraphQLTypes['CreateRefInput'],
+    ModelTypes['CreateRefInput'],
+    typeof scalars
+  >;
+
+  const createBranch = async (input: CreateBranchInput) => {
+    const response = await chain('mutation', token!)({
+      createRef: [{ input }, { ref: { name: true, target: { "...on Commit": { history: [{ first: 1 }, { nodes: { oid: true } }] } } } }]
+    })
+    if (!response.createRef)
+      throw new Error('Bad response from createPullRequest()');
+    return response.createRef;
+  }
+
   return {
     getOrganizationRepositories,
     getUserInfo,
@@ -313,6 +348,8 @@ export const useBackend = () => {
     getFolderContentFromRepository,
     getFileContentFromRepository,
     createCommitOnBranch,
+    createPullRequest,
+    createBranch,
     getOrganizationRepository,
     getFolderContentFromOrganization,
     getFileContentFromOrganization,

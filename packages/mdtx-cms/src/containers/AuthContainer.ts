@@ -5,7 +5,7 @@ import { UserType } from '../backend/selectors/user.selector';
 
 const useAuth = () => {
   const [token, _setToken] = useState<string | undefined>();
-  const [loggedData, setLoggedData] = useState<UserType>();
+  const [loggedData, setLoggedData] = useState<Omit<UserType, 'organizations'>>();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {

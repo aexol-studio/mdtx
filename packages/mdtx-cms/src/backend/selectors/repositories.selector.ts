@@ -1,31 +1,41 @@
-import { Selector, InputType, GraphQLTypes } from '../../zeus';
+import { Selector, InputType, GraphQLTypes, ModelTypes } from '../../zeus';
 import { scalars } from '../scalars';
 
 export const BranchesSelector = Selector('Ref')({
   name: true,
 });
 
-export const repositoriesSelector = Selector('RepositoryConnection')({
-  nodes: {
+export const repositorySelector = Selector('Repository')({
+  id: true,
+  name: true,
+  defaultBranchRef: {
     name: true,
-    defaultBranchRef: {
-      name: true,
-      target: {
-        '...on Commit': {
-          history: [
-            { first: 1 },
-            {
-              nodes: {
-                oid: [{}, true],
-              },
+    target: {
+      '...on Commit': {
+        history: [
+          { first: 1 },
+          {
+            nodes: {
+              oid: true,
             },
-          ],
-        },
+          },
+        ],
       },
     },
-    refs: [{}, { nodes: BranchesSelector }],
   },
+  refs: [{}, { nodes: BranchesSelector }],
+})
+
+export const repositoriesSelector = Selector('RepositoryConnection')({
+  nodes: repositorySelector
 });
+
+export type RepositoryType = InputType<
+  GraphQLTypes['Repository'],
+  typeof repositorySelector,
+  typeof scalars
+>;
+
 
 export type RepositoriesType = InputType<
   GraphQLTypes['RepositoryConnection'],

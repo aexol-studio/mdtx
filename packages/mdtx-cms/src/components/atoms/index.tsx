@@ -1,1 +1,1 @@
-export * from './SampleAtom';
+export * from './CustomHelmet';
