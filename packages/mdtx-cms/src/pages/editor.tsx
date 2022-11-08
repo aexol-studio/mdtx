@@ -225,10 +225,14 @@ const editor = () => {
           direction: OrderDirection.DESC,
           field: RepositoryOrderField.PUSHED_AT,
         },
-      }).then((res) => {
-        setRepositoriesList(res);
-        setLoadingFullTree(false);
-      });
+      })
+        .then((res) => {
+          setRepositoriesList(res);
+          setLoadingFullTree(false);
+        })
+        .catch(() => {
+          router.push('https://github.com/apps/mdtx-cms');
+        });
     }
   }, [isLoggedIn]);
 
@@ -726,58 +730,71 @@ const editor = () => {
                           </p>
                         </div>
                         <div>
-                          {selectedRepository.pullRequests.nodes?.map(
-                            (pullRequest, idx) => (
-                              <div
-                                key={pullRequest.headRefName}
-                                onClick={() => {
-                                  setSelectedFile(undefined);
-                                  setMarkdownEdit('Pick markdown');
-                                  setMarkdownBase('Pick markdown');
-                                  setSelectedBranch(pullRequest.headRefName);
-                                  setWatchingModeOnRepository(
-                                    WatchingModeOnRepository.REPOSITORY,
-                                  );
-                                }}
-                                className={`${
-                                  idx === 0 && 'border-t-[1px]'
-                                } border-b-[1px]`}
-                              >
-                                <div className="flex items-center gap-[.8rem]">
-                                  {pullRequest?.author?.avatarUrl && (
-                                    <div className="my-[0.8rem] relative w-[3.2rem] h-[3.2rem] rounded-full self-center">
-                                      <Image
-                                        priority
-                                        width={64}
-                                        height={64}
-                                        className="rounded-full"
-                                        alt="User Logo"
-                                        src={pullRequest.author.avatarUrl}
-                                      />
+                          {selectedRepository.pullRequests?.nodes &&
+                          selectedRepository.pullRequests?.nodes?.length > 0 ? (
+                            <>
+                              {selectedRepository.pullRequests.nodes?.map(
+                                (pullRequest, idx) => (
+                                  <div
+                                    key={pullRequest.headRefName}
+                                    onClick={() => {
+                                      setSelectedFile(undefined);
+                                      setMarkdownEdit('Pick markdown');
+                                      setMarkdownBase('Pick markdown');
+                                      setSelectedBranch(
+                                        pullRequest.headRefName,
+                                      );
+                                      setWatchingModeOnRepository(
+                                        WatchingModeOnRepository.REPOSITORY,
+                                      );
+                                    }}
+                                    className={`${
+                                      idx === 0 && 'border-t-[1px]'
+                                    } border-b-[1px]`}
+                                  >
+                                    <div className="flex items-center gap-[.8rem]">
+                                      {pullRequest?.author?.avatarUrl && (
+                                        <div className="my-[0.8rem] relative w-[3.2rem] h-[3.2rem] rounded-full self-center">
+                                          <Image
+                                            priority
+                                            width={64}
+                                            height={64}
+                                            className="rounded-full"
+                                            alt="User Logo"
+                                            src={pullRequest.author.avatarUrl}
+                                          />
+                                        </div>
+                                      )}
+                                      <p className="text-white">
+                                        {pullRequest.author?.login}
+                                      </p>
                                     </div>
-                                  )}
-                                  <p className="text-white">
-                                    {pullRequest.author?.login}
-                                  </p>
-                                </div>
-                                <p className="text-white">
-                                  Branch: {pullRequest.headRefName}
-                                </p>
-                                <p className="text-white">
-                                  Target to: {pullRequest.baseRefName}
-                                </p>
-                                <p className="text-white">
-                                  {pullRequest.bodyText}
-                                </p>
+                                    <p className="text-white">
+                                      Branch: {pullRequest.headRefName}
+                                    </p>
+                                    <p className="text-white">
+                                      Target to: {pullRequest.baseRefName}
+                                    </p>
+                                    <p className="text-white">
+                                      {pullRequest.bodyText}
+                                    </p>
 
-                                <p className="text-white">
-                                  {dateFormatter(
-                                    pullRequest.updatedAt,
-                                    'dd.MM.yyyy hh:mm',
-                                  )}
-                                </p>
-                              </div>
-                            ),
+                                    <p className="text-white">
+                                      {dateFormatter(
+                                        pullRequest.updatedAt,
+                                        'dd.MM.yyyy hh:mm',
+                                      )}
+                                    </p>
+                                  </div>
+                                ),
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-white">
+                                No pull requests on this repository
+                              </p>
+                            </>
                           )}
                         </div>
                       </div>
@@ -964,7 +981,7 @@ const editor = () => {
                                     ) : (
                                       <div>
                                         {selectedRepository!.refs!.nodes!
-                                          .length > 1 ? (
+                                          .length > 0 ? (
                                           <>
                                             <p className="text-white italic font-bold">
                                               Pull request
@@ -981,12 +998,8 @@ const editor = () => {
                                                   { required: true },
                                                 )}
                                               >
-                                                {selectedRepository.refs?.nodes
-                                                  ?.filter(
-                                                    (x) =>
-                                                      x.name !== selectedBranch,
-                                                  )
-                                                  .map((branch) => {
+                                                {selectedRepository.refs?.nodes?.map(
+                                                  (branch) => {
                                                     return (
                                                       <option
                                                         key={branch.name}
@@ -995,7 +1008,8 @@ const editor = () => {
                                                         {branch.name}
                                                       </option>
                                                     );
-                                                  })}
+                                                  },
+                                                )}
                                               </select>
                                               <input
                                                 {...registerPullRequest(

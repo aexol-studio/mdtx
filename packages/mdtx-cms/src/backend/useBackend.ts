@@ -1,4 +1,9 @@
-import { IssueOrderField, OrderDirection, SearchType, VariableDefinition } from './../zeus/index';
+import {
+  IssueOrderField,
+  OrderDirection,
+  SearchType,
+  VariableDefinition,
+} from './../zeus/index';
 import { AuthConatiner } from '../containers';
 import { GraphQLTypes, InputType, ModelTypes } from '../zeus';
 import { chain } from './chain';
@@ -51,8 +56,26 @@ export const useBackend = () => {
                 },
               ],
               pullRequests: [
-                { first: 50, orderBy: { direction: OrderDirection.DESC, field: IssueOrderField.UPDATED_AT } },
-                { nodes: { baseRefName: true, headRefName: true, bodyText: true, updatedAt: true, author: { login: true, avatarUrl: [{}, true], "...on User": { name: true } } } },
+                {
+                  first: 50,
+                  orderBy: {
+                    direction: OrderDirection.DESC,
+                    field: IssueOrderField.UPDATED_AT,
+                  },
+                },
+                {
+                  nodes: {
+                    baseRefName: true,
+                    headRefName: true,
+                    bodyText: true,
+                    updatedAt: true,
+                    author: {
+                      login: true,
+                      avatarUrl: [{}, true],
+                      '...on User': { name: true },
+                    },
+                  },
+                },
               ],
             },
           },
@@ -95,8 +118,26 @@ export const useBackend = () => {
                     },
                   ],
                   pullRequests: [
-                    { first: 50, orderBy: { direction: OrderDirection.DESC, field: IssueOrderField.UPDATED_AT } },
-                    { nodes: { baseRefName: true, headRefName: true, bodyText: true, updatedAt: true, author: { login: true, avatarUrl: [{}, true], "...on User": { name: true } } } },
+                    {
+                      first: 50,
+                      orderBy: {
+                        direction: OrderDirection.DESC,
+                        field: IssueOrderField.UPDATED_AT,
+                      },
+                    },
+                    {
+                      nodes: {
+                        baseRefName: true,
+                        headRefName: true,
+                        bodyText: true,
+                        updatedAt: true,
+                        author: {
+                          login: true,
+                          avatarUrl: [{}, true],
+                          '...on User': { name: true },
+                        },
+                      },
+                    },
                   ],
                 },
               },
@@ -300,10 +341,7 @@ export const useBackend = () => {
       'mutation',
       token!,
     )({
-      createPullRequest: [
-        { input },
-        { pullRequest: { headRefName: true } },
-      ],
+      createPullRequest: [{ input }, { pullRequest: { headRefName: true } }],
     });
     if (!response.createPullRequest)
       throw new Error('Bad response from createPullRequest()');
