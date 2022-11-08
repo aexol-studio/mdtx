@@ -25,10 +25,16 @@ import {
   SingleFileType,
 } from '../backend/selectors/repositorycontent.selector';
 import { useForm, SubmitHandler } from 'react-hook-form';
+import { dateFormatter } from '../utils/dateFormatter';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 enum CommitingModes {
   COMMIT,
   PULL_REQUEST,
+}
+
+enum WatchingModeOnRepository {
+  REPOSITORY,
+  PULL_REQUESTS,
 }
 
 type CommitInput = {
@@ -99,6 +105,9 @@ const editor = () => {
   ///      States     ///
   ///////////////////////
 
+  const [watchingModeOnRepository, setWatchingModeOnRepository] =
+    useState<WatchingModeOnRepository>(WatchingModeOnRepository.REPOSITORY);
+
   const [commitingMode, setCommitingMode] = useState<CommitingModes>(
     CommitingModes.PULL_REQUEST,
   );
@@ -148,16 +157,6 @@ const editor = () => {
   ///////////////////////
 
   /// utilFunctions ///
-  const makeId = (length: number) => {
-    let result = '';
-    const characters =
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    for (var i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
-  };
 
   const cleanRepositoryContentAndSort = (
     repositoryContent: RepositoryContentType,
@@ -212,14 +211,13 @@ const editor = () => {
   /// First Load ///
 
   useEffect(() => {
-    if (isLoggedIn && token !== '' && !loggedData) {
+    if (isLoggedIn && !loggedData) {
       setLoadingFullTree(true);
-      getUserInfo()
-        .then((res) => {
-          setLoggedData(res);
-          setOrganizationList(res);
-        })
-        .catch(() => logOut());
+      getUserInfo().then((res) => {
+        setLoggedData(res);
+        setOrganizationList(res);
+        setIsLoggedIn(true);
+      });
 
       getUserRepositories({
         first: 50,
@@ -232,7 +230,9 @@ const editor = () => {
           setRepositoriesList(res);
           setLoadingFullTree(false);
         })
-        .catch(() => logOut());
+        .catch(() => {
+          router.push('https://github.com/apps/mdtx-cms');
+        });
     }
   }, [isLoggedIn]);
 
@@ -294,6 +294,7 @@ const editor = () => {
             setLoadingSubTree(false);
           } else {
             setSelectedRepositoryContent(undefined); // Empty Repository State !
+            setLoadingSubTree(false);
           }
         });
       } else {
@@ -309,6 +310,7 @@ const editor = () => {
             setLoadingSubTree(false);
           } else {
             setSelectedRepositoryContent(undefined); // Empty Repository State !
+            setLoadingSubTree(false);
           }
         });
       }
@@ -427,9 +429,24 @@ const editor = () => {
                   repositoryId: selectedRepository.id,
                   title: data.pullRequestTitle,
                   body: data.pullRequestMessage,
-                }).then(() => {
+                }).then((x) => {
                   setSendingToGIT(false);
                   setMarkdownBase(markdownEdit);
+                  setSelectedFile(undefined);
+                  setMarkdownBase('Pick markdown');
+                  setMarkdownEdit('Pick markdown');
+                  setLoadingSubTree(true);
+                  setContentPath((prev) => {
+                    if (prev) {
+                      if (prev.lastIndexOf('/') === -1) {
+                        return undefined;
+                      } else {
+                        return prev.slice(0, prev.lastIndexOf('/'));
+                      }
+                    } else {
+                      return undefined;
+                    }
+                  });
                 });
             });
           }
@@ -486,6 +503,48 @@ const editor = () => {
     <Layout pageTitle="MDtx Editor">
       <div className="select-none w-full max-w-[20vw] h-screen bg-[#13131C] border-r-[2px] border-r-solid border-r-white flex flex-col items-center">
         <div className="w-full border-b-[1px] border-white relative min-h-[30%] pt-[2.4rem]">
+          {selectedRepository && (
+            <>
+              {!selectedFile && (
+                <div className="bottom-[0.8rem] left-[0.8rem] absolute flex gap-[.8rem]">
+                  <div
+                    className="flex justify-center items-center relative w-[4.8rem] h-[2.4rem] rounded-[3.2rem] border-[2px] border-[#FFF]"
+                    onClick={() => {
+                      watchingModeOnRepository ===
+                        WatchingModeOnRepository.REPOSITORY &&
+                        setWatchingModeOnRepository(
+                          WatchingModeOnRepository.PULL_REQUESTS,
+                        );
+                      watchingModeOnRepository ===
+                        WatchingModeOnRepository.PULL_REQUESTS &&
+                        setWatchingModeOnRepository(
+                          WatchingModeOnRepository.REPOSITORY,
+                        );
+                    }}
+                  >
+                    <div
+                      className={`${
+                        watchingModeOnRepository ===
+                        WatchingModeOnRepository.REPOSITORY
+                          ? 'translate-x-[-70%]'
+                          : 'translate-x-[70%]'
+                      } transition-all ease-in-out duration-300 absolute bg-[#FFF] w-[1.6rem] h-[1.6rem] rounded-full`}
+                    />
+                  </div>
+                  <p className="text-[#FFF]">
+                    {watchingModeOnRepository ===
+                    WatchingModeOnRepository.REPOSITORY
+                      ? 'Repository'
+                      : 'Pull requests'}
+                  </p>
+                </div>
+              )}
+
+              <p className="text-white absolute bottom-[.8rem] right-[.8rem]">
+                Current branch
+              </p>
+            </>
+          )}
           {selectedRepository && (
             <p className="text-white absolute bottom-[.8rem] right-[.8rem]">
               Current branch
@@ -653,42 +712,16 @@ const editor = () => {
                   </>
                 ) : (
                   <>
-                    <div className="flex w-full">
-                      {contentPath?.length ? (
-                        <div
-                          onClick={() => {
-                            if (markdownBase === markdownEdit) {
-                              setSelectedFile(undefined);
-                              setMarkdownBase('Pick markdown');
-                              setMarkdownEdit('Pick markdown');
-                              setLoadingSubTree(true);
-                              setContentPath((prev) => {
-                                if (prev) {
-                                  if (prev.lastIndexOf('/') === -1) {
-                                    return undefined;
-                                  } else {
-                                    return prev.slice(0, prev.lastIndexOf('/'));
-                                  }
-                                } else {
-                                  return undefined;
-                                }
-                              });
-                            } else {
-                              setLeaveWithChanges(true);
-                            }
-                          }}
-                          className="relative w-full flex"
-                        >
-                          <BackIcon />
-                          <p className="ml-[1.6rem] text-white">
-                            {contentPath}
-                          </p>
-                        </div>
-                      ) : (
+                    {watchingModeOnRepository ===
+                    WatchingModeOnRepository.PULL_REQUESTS ? (
+                      <div className="w-full flex flex-col">
                         <div
                           className="w-full flex"
                           onClick={() => {
                             setSelectedRepository(undefined);
+                            setWatchingModeOnRepository(
+                              WatchingModeOnRepository.REPOSITORY,
+                            );
                           }}
                         >
                           <BackIcon />
@@ -696,185 +729,238 @@ const editor = () => {
                             {selectedRepository.name}
                           </p>
                         </div>
-                      )}
-
-                      {!contentPath ? (
-                        <div className="w-[9.6rem]">
-                          <select
-                            className="w-full"
-                            defaultValue={
-                              selectedBranch
-                                ? selectedBranch
-                                : selectedRepository.defaultBranchRef?.name
-                            }
-                            onChange={(e) => {
-                              setLoadingSubTree(true);
-                              setSelectedBranch(e.target.value);
-                            }}
-                          >
-                            {selectedRepository.refs?.nodes?.map((branch) => (
-                              <option key={branch.name} value={branch.name}>
-                                {branch.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : (
-                        <p className="text-white">{selectedBranch}</p>
-                      )}
-                    </div>
-                    {loadingSubTree ? (
-                      <div className="flex w-full items-center justify-center">
-                        <ClipLoader color="#FFF" size={64} />
-                      </div>
-                    ) : (
-                      <div className="mt-[1.6rem]">
-                        {!selectedFile ? (
-                          <>
-                            {selectedRepositoryContent &&
-                            selectedRepositoryContent.object &&
-                            selectedRepositoryContent.object.entries &&
-                            selectedRepositoryContent.object.entries.length >
-                              0 ? (
-                              selectedRepositoryContent?.object?.entries?.map(
-                                (content) => {
-                                  return (
-                                    <div
-                                      onClick={() => {
-                                        handlePress(content);
-                                      }}
-                                      key={content.name}
-                                    >
-                                      <p className="text-white">
-                                        {content.name}
-                                      </p>
-                                    </div>
-                                  );
-                                },
-                              )
-                            ) : (
-                              <div>
-                                <p className="text-white">Nothing there :P</p>
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <div
-                              className="flex justify-center items-center relative w-[4.8rem] h-[2.4rem] rounded-[3.2rem] border-[2px] border-[#FFF]"
-                              onClick={() => {
-                                commitingMode === CommitingModes.COMMIT &&
-                                  setCommitingMode(CommitingModes.PULL_REQUEST);
-                                commitingMode === CommitingModes.PULL_REQUEST &&
-                                  setCommitingMode(CommitingModes.COMMIT);
-                              }}
-                            >
-                              <div
-                                className={`${
-                                  commitingMode === CommitingModes.PULL_REQUEST
-                                    ? 'translate-x-[-70%]'
-                                    : 'translate-x-[70%]'
-                                } transition-all ease-in-out duration-300 absolute bg-[#FFF] w-[1.6rem] h-[1.6rem] rounded-full`}
-                              />
-                            </div>
-                            {sendingToGIT ? (
-                              <div>
-                                <ClipLoader color="#FFF" size={48} />
-                              </div>
-                            ) : (
-                              <div>
-                                {commitingMode === CommitingModes.COMMIT ? (
-                                  <div>
-                                    <form
-                                      className="flex flex-col"
-                                      onSubmit={handleSubmitCommit(
-                                        onCommitSubmit,
-                                      )}
-                                    >
-                                      <p className="text-white italic font-bold">
-                                        Commit
-                                      </p>
-                                      <input
-                                        {...registerCommit('commitMessage', {
-                                          required: true,
-                                        })}
-                                        placeholder="Commit message"
-                                      />
-                                      {markdownBase !== markdownEdit ? (
-                                        <input
-                                          className="text-white"
-                                          type="submit"
-                                        />
-                                      ) : (
-                                        <div>
-                                          <p className="text-white">
-                                            There are no changes to commit
-                                          </p>
+                        <div>
+                          {selectedRepository.pullRequests?.nodes &&
+                          selectedRepository.pullRequests?.nodes?.length > 0 ? (
+                            <>
+                              {selectedRepository.pullRequests.nodes?.map(
+                                (pullRequest, idx) => (
+                                  <div
+                                    key={pullRequest.headRefName}
+                                    onClick={() => {
+                                      setSelectedFile(undefined);
+                                      setMarkdownEdit('Pick markdown');
+                                      setMarkdownBase('Pick markdown');
+                                      setSelectedBranch(
+                                        pullRequest.headRefName,
+                                      );
+                                      setWatchingModeOnRepository(
+                                        WatchingModeOnRepository.REPOSITORY,
+                                      );
+                                    }}
+                                    className={`${
+                                      idx === 0 && 'border-t-[1px]'
+                                    } border-b-[1px]`}
+                                  >
+                                    <div className="flex items-center gap-[.8rem]">
+                                      {pullRequest?.author?.avatarUrl && (
+                                        <div className="my-[0.8rem] relative w-[3.2rem] h-[3.2rem] rounded-full self-center">
+                                          <Image
+                                            priority
+                                            width={64}
+                                            height={64}
+                                            className="rounded-full"
+                                            alt="User Logo"
+                                            src={pullRequest.author.avatarUrl}
+                                          />
                                         </div>
                                       )}
-                                    </form>
+                                      <p className="text-white">
+                                        {pullRequest.author?.login}
+                                      </p>
+                                    </div>
+                                    <p className="text-white">
+                                      Branch: {pullRequest.headRefName}
+                                    </p>
+                                    <p className="text-white">
+                                      Target to: {pullRequest.baseRefName}
+                                    </p>
+                                    <p className="text-white">
+                                      {pullRequest.bodyText}
+                                    </p>
+
+                                    <p className="text-white">
+                                      {dateFormatter(
+                                        pullRequest.updatedAt,
+                                        'dd.MM.yyyy hh:mm',
+                                      )}
+                                    </p>
+                                  </div>
+                                ),
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-white">
+                                No pull requests on this repository
+                              </p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col w-full">
+                        <div className="flex w-full">
+                          {contentPath?.length ? (
+                            <div
+                              onClick={() => {
+                                if (markdownBase === markdownEdit) {
+                                  setSelectedFile(undefined);
+                                  setMarkdownBase('Pick markdown');
+                                  setMarkdownEdit('Pick markdown');
+                                  setLoadingSubTree(true);
+                                  setContentPath((prev) => {
+                                    if (prev) {
+                                      if (prev.lastIndexOf('/') === -1) {
+                                        return undefined;
+                                      } else {
+                                        return prev.slice(
+                                          0,
+                                          prev.lastIndexOf('/'),
+                                        );
+                                      }
+                                    } else {
+                                      return undefined;
+                                    }
+                                  });
+                                } else {
+                                  setLeaveWithChanges(true);
+                                }
+                              }}
+                              className="relative w-full flex"
+                            >
+                              <BackIcon />
+                              <p className="ml-[1.6rem] text-white">
+                                {contentPath}
+                              </p>
+                            </div>
+                          ) : (
+                            <div
+                              className="w-full flex"
+                              onClick={() => {
+                                setSelectedRepository(undefined);
+                              }}
+                            >
+                              <BackIcon />
+                              <p className="ml-[1.6rem] text-white">
+                                {selectedRepository.name}
+                              </p>
+                            </div>
+                          )}
+
+                          {!contentPath ? (
+                            <div className="w-[9.6rem]">
+                              <select
+                                className="w-full"
+                                defaultValue={
+                                  selectedBranch
+                                    ? selectedBranch
+                                    : selectedRepository.defaultBranchRef?.name
+                                }
+                                onChange={(e) => {
+                                  setLoadingSubTree(true);
+                                  setSelectedBranch(e.target.value);
+                                }}
+                              >
+                                {selectedRepository.refs?.nodes?.map(
+                                  (branch) => (
+                                    <option
+                                      key={branch.name}
+                                      value={branch.name}
+                                    >
+                                      {branch.name}
+                                    </option>
+                                  ),
+                                )}
+                              </select>
+                            </div>
+                          ) : (
+                            <p className="text-white">{selectedBranch}</p>
+                          )}
+                        </div>
+                        {loadingSubTree ? (
+                          <div className="flex w-full items-center justify-center">
+                            <ClipLoader color="#FFF" size={64} />
+                          </div>
+                        ) : (
+                          <div className="mt-[1.6rem]">
+                            {!selectedFile ? (
+                              <>
+                                {selectedRepositoryContent &&
+                                selectedRepositoryContent.object &&
+                                selectedRepositoryContent.object.entries &&
+                                selectedRepositoryContent.object.entries
+                                  .length > 0 ? (
+                                  selectedRepositoryContent?.object?.entries?.map(
+                                    (content) => {
+                                      return (
+                                        <div
+                                          onClick={() => {
+                                            handlePress(content);
+                                          }}
+                                          key={content.name}
+                                        >
+                                          <p className="text-white">
+                                            {content.name}
+                                          </p>
+                                        </div>
+                                      );
+                                    },
+                                  )
+                                ) : (
+                                  <div>
+                                    <p className="text-white">
+                                      Nothing there :P
+                                    </p>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <div
+                                  className="flex justify-center items-center relative w-[4.8rem] h-[2.4rem] rounded-[3.2rem] border-[2px] border-[#FFF]"
+                                  onClick={() => {
+                                    commitingMode === CommitingModes.COMMIT &&
+                                      setCommitingMode(
+                                        CommitingModes.PULL_REQUEST,
+                                      );
+                                    commitingMode ===
+                                      CommitingModes.PULL_REQUEST &&
+                                      setCommitingMode(CommitingModes.COMMIT);
+                                  }}
+                                >
+                                  <div
+                                    className={`${
+                                      commitingMode ===
+                                      CommitingModes.PULL_REQUEST
+                                        ? 'translate-x-[-70%]'
+                                        : 'translate-x-[70%]'
+                                    } transition-all ease-in-out duration-300 absolute bg-[#FFF] w-[1.6rem] h-[1.6rem] rounded-full`}
+                                  />
+                                </div>
+                                {sendingToGIT ? (
+                                  <div>
+                                    <ClipLoader color="#FFF" size={48} />
                                   </div>
                                 ) : (
                                   <div>
-                                    {selectedRepository!.refs!.nodes!.length >
-                                    1 ? (
-                                      <>
-                                        <p className="text-white italic font-bold">
-                                          Pull request
-                                        </p>
+                                    {commitingMode === CommitingModes.COMMIT ? (
+                                      <div>
                                         <form
                                           className="flex flex-col"
-                                          onSubmit={handleSubmitPullRequest(
-                                            onPullRequestSubmit,
+                                          onSubmit={handleSubmitCommit(
+                                            onCommitSubmit,
                                           )}
                                         >
-                                          <select
-                                            {...registerPullRequest(
-                                              'selectedTargetBranch',
-                                              { required: true },
-                                            )}
-                                          >
-                                            {selectedRepository.refs?.nodes
-                                              ?.filter(
-                                                (x) =>
-                                                  x.name !== selectedBranch,
-                                              )
-                                              .map((branch) => {
-                                                return (
-                                                  <option
-                                                    key={branch.name}
-                                                    value={branch.name}
-                                                  >
-                                                    {branch.name}
-                                                  </option>
-                                                );
-                                              })}
-                                          </select>
+                                          <p className="text-white italic font-bold">
+                                            Commit
+                                          </p>
                                           <input
-                                            {...registerPullRequest(
-                                              'newBranchName',
-                                              { required: true },
-                                            )}
-                                            placeholder="New branch name"
-                                          />
-                                          <input
-                                            {...registerPullRequest(
-                                              'pullRequestTitle',
-                                              { required: true },
-                                            )}
-                                            placeholder="Pull request title"
-                                          />
-                                          <input
-                                            {...registerPullRequest(
-                                              'pullRequestMessage',
-                                              { required: true },
-                                            )}
-                                            placeholder="Pull request message"
-                                          />
-                                          <input
-                                            {...registerPullRequest(
+                                            {...registerCommit(
                                               'commitMessage',
-                                              { required: true },
+                                              {
+                                                required: true,
+                                              },
                                             )}
                                             placeholder="Commit message"
                                           />
@@ -886,25 +972,102 @@ const editor = () => {
                                           ) : (
                                             <div>
                                               <p className="text-white">
-                                                There are no changes
+                                                There are no changes to commit
                                               </p>
                                             </div>
                                           )}
                                         </form>
-                                      </>
+                                      </div>
                                     ) : (
-                                      <>
-                                        <p className="text-white">
-                                          There are no branch to make pull
-                                          request to
-                                        </p>
-                                      </>
+                                      <div>
+                                        {selectedRepository!.refs!.nodes!
+                                          .length > 0 ? (
+                                          <>
+                                            <p className="text-white italic font-bold">
+                                              Pull request
+                                            </p>
+                                            <form
+                                              className="flex flex-col"
+                                              onSubmit={handleSubmitPullRequest(
+                                                onPullRequestSubmit,
+                                              )}
+                                            >
+                                              <select
+                                                {...registerPullRequest(
+                                                  'selectedTargetBranch',
+                                                  { required: true },
+                                                )}
+                                              >
+                                                {selectedRepository.refs?.nodes?.map(
+                                                  (branch) => {
+                                                    return (
+                                                      <option
+                                                        key={branch.name}
+                                                        value={branch.name}
+                                                      >
+                                                        {branch.name}
+                                                      </option>
+                                                    );
+                                                  },
+                                                )}
+                                              </select>
+                                              <input
+                                                {...registerPullRequest(
+                                                  'newBranchName',
+                                                  { required: true },
+                                                )}
+                                                placeholder="New branch name"
+                                              />
+                                              <input
+                                                {...registerPullRequest(
+                                                  'pullRequestTitle',
+                                                  { required: true },
+                                                )}
+                                                placeholder="Pull request title"
+                                              />
+                                              <input
+                                                {...registerPullRequest(
+                                                  'pullRequestMessage',
+                                                  { required: true },
+                                                )}
+                                                placeholder="Pull request message"
+                                              />
+                                              <input
+                                                {...registerPullRequest(
+                                                  'commitMessage',
+                                                  { required: true },
+                                                )}
+                                                placeholder="Commit message"
+                                              />
+                                              {markdownBase !== markdownEdit ? (
+                                                <input
+                                                  className="text-white"
+                                                  type="submit"
+                                                />
+                                              ) : (
+                                                <div>
+                                                  <p className="text-white">
+                                                    There are no changes
+                                                  </p>
+                                                </div>
+                                              )}
+                                            </form>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <p className="text-white">
+                                              There are no branch to make pull
+                                              request to
+                                            </p>
+                                          </>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 )}
-                              </div>
+                              </>
                             )}
-                          </>
+                          </div>
                         )}
                       </div>
                     )}
