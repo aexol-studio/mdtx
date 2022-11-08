@@ -8,4 +8,8 @@ export const scalars = ZeusScalars({
   GitObjectID: {
     decode: (e: unknown) => e as string,
   },
+  DateTime: {
+    decode: (e: unknown) => new Date(e as string),
+    encode: (e: unknown) => (e as Date).toISOString(),
+  },
 });

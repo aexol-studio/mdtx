@@ -1,4 +1,4 @@
-import { Selector, InputType, GraphQLTypes, ModelTypes } from '../../zeus';
+import { Selector, InputType, GraphQLTypes, ModelTypes, IssueOrderField, OrderDirection } from '../../zeus';
 import { scalars } from '../scalars';
 
 export const BranchesSelector = Selector('Ref')({
@@ -22,6 +22,11 @@ export const repositorySelector = Selector('Repository')({
   name: true,
   defaultBranchRef: BranchesSelector,
   refs: [{}, { nodes: BranchesSelector }],
+  pullRequests: [
+    { first: 50, orderBy: { direction: OrderDirection.DESC, field: IssueOrderField.UPDATED_AT } },
+    { nodes: { baseRefName: true, headRefName: true, bodyText: true, updatedAt: true, author: { login: true, avatarUrl: [{}, true], "...on User": { name: true } } } },
+
+  ],
 });
 
 export const repositoriesSelector = Selector('RepositoryConnection')({
