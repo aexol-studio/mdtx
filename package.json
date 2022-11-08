@@ -7,9 +7,11 @@
   "homepage": "https://github.com/aexol-studio/mdtx#readme",
   "scripts": {
     "build": "npm run build --ws --if-present",
+    "buildCore": "npm run build -w packages/mdtx-core",
     "cms": "npm run dev -w packages/mdtx-cms",
     "examplestart": "node packages/mdtx-cli/lib/CLI.js",
-    "exampleinit": "node packages/mdtx-cli/lib/CLI.js init"
+    "exampleinit": "node packages/mdtx-cli/lib/CLI.js init",
+    "dev": "npm run dev -w sandbox/mdtx-nextjs-example"
   },
   "repository": {
     "type": "git",

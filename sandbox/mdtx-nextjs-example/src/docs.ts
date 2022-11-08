@@ -1,0 +1,10 @@
+export const htmlContent = {
+  'graphql-editor/graph/create.md': {
+    content:
+      '\n# GraphQL Creator\n\n### Create a node ![](<../../.gitbook/assets/image (12) (2).png>)\n\n1. Click new type/input/interface/union/enum/scalar/directive\n2. Type in the name of the node\n3. Click enter\n\n{% hint style="info" %}\n&#x20;Nodes (aside from scalars) need at least one field to be fully created.&#x20;\n{% endhint %}\n\n### Change node name ![](<../../.gitbook/assets/image (3) (1).png>)\n\n1. Select the node\n2. Edit its name like a simple text input\n\n### Delete node\n\nTo delete a node open the 3 dots menu on top of the active node and click Delete Node:\n\n![](<../../.gitbook/assets/image (10).png>)\n\n### Duplicate node\n\nTo duplicate node open the 3 dots menu on top of the active node and click Duplicate Node:\n\n![](<../../.gitbook/assets/image (9).png>)\n\n### Create a node field\n\n![](<../../.gitbook/assets/image (4) (2).png>)\n\n1. Select a node\n2. Click the **+** button\n3. Type in the name of the field type or select it\n4. Click the **+** button or press enter to submit\n\nAfter that, the node field will be created with a default name (lowercase first letter type name). To change it, just select the created field and edit it like a simple text input.\n\n### List and Non-null type field\n\n![](<../../.gitbook/assets/image (17).png>)\n\n1. Select a node\n2. Click **\\[!]**\n3. Select the desired options&#x20;\n\n### Delete a field\n\n![](<../../.gitbook/assets/image (16).png>)\n\n1. Select a node\n2. Click the 3 dots menu on the desired field.\n3. Click Delete\n\n### Implement Interface\n\n![](<../../.gitbook/assets/image (13).png>)\n\n1. Select a node\n2. Click the **{}** menu\n3. Select the desired interface\n\n### Add directive\n\n![](<../../.gitbook/assets/image (6).png>)\n\n1. Select a node\n2. Click the **@** menu\n3. Select the desired directive\n',
+    data: {
+      description: 'How to create GraphQL nodes and fields',
+    },
+    excerpt: '',
+  },
+};
