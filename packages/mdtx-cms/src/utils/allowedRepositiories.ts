@@ -29,13 +29,13 @@ export const allowedRepositiories = async (accessToken: string) => {
     const organizationNames = organizationsData.map((x: { login: string }) => x.login);
     const installationParse = await responseInstallations.json();
     const installationIds = installationParse.installations.map(
-        (installation: { account: { login: any; }; id: any; target_type: any; }) => (installation.account.login === login || organizationNames.includes(installation.account.login)) && ({
+        (installation: { account: { login: any; }; id: any; target_type: any; }) => (installation.account.login === login || organizationNames.includes(installation.account.login + 1)) && ({
             id: installation.id,
             targetType: installation.target_type,
         }),
     );
     const responseInstalledRepositoried = await Promise.all(
-        installationIds.map(
+        installationIds.filter(Boolean).map(
             async ({ id, targetType }: { id: string; targetType: string }) => {
                 const res = await fetch(
                     `https://api.github.com/user/installations/${id}/repositories`,
