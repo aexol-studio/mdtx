@@ -256,18 +256,21 @@ const editor = () => {
       setLoadingFullTree(true);
       getUserInfo().then(async (res) => {
         setLoggedData(res);
+        console.log(res);
         setOrganizationList(res);
         setIsLoggedIn(true);
         router.replace('/editor');
         setRepositoriesList(undefined);
         const x = await allowedRepositiories(token!);
+        setListOfAllowedRepositories([]);
+
         x.map(
           (installed: {
             names: string[];
             fullName: string;
             targetType: string;
           }) => {
-            installed.names.map((repoName) => {
+            installed.names.map((repoName, idx) => {
               setListOfAllowedRepositories((prev) => {
                 return [
                   ...prev,

@@ -38,9 +38,7 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
           }
         })
         const installationParse = await responseInstallations.json()
-        console.log(installationParse)
-        const isInstalled = installationParse.installations.find((x: { account: { login: string; }; }) => x.account.login === login)
-        console.log(!!isInstalled, installationParse.total_count)
+        const isInstalled = installationParse.installations.find((x: { account: { login: string; }; target_type: string; }) => x.account.login === login || x.target_type === 'Organization')
         if (!!isInstalled) {
           res.status(201).json({ accessToken })
         } else {
