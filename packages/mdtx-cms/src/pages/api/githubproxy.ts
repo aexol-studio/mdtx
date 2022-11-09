@@ -21,6 +21,15 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
         const params = new URLSearchParams(responseText)
         const accessToken = params.get('access_token')
 
+        const user = await fetch('https://api.github.com/user', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        const loginData = await user.json()
+        const { login } = loginData
         const responseInstallations = await fetch('https://api.github.com/user/installations', {
           method: 'GET',
           headers: {
@@ -29,10 +38,13 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
           }
         })
         const installationParse = await responseInstallations.json()
-        if (installationParse.total_count === 0) {
-          res.status(201).json("No_installation")
-        } else {
+        console.log(installationParse)
+        const isInstalled = installationParse.installations.find((x: { account: { login: string; }; }) => x.account.login === login)
+        console.log(!!isInstalled, installationParse.total_count)
+        if (!!isInstalled) {
           res.status(201).json({ accessToken })
+        } else {
+          res.status(201).json("No_installation")
         }
     }
   })
