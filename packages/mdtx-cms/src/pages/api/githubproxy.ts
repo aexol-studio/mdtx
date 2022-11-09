@@ -1,35 +1,39 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-
 export default (req: NextApiRequest, res: NextApiResponse) => {
-  return new Promise((resolve) => {
+  return new Promise(async () => {
     switch (req.method) {
       case 'POST':
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        const trueReq = JSON.parse(req.body);
-        fetch(`https://github.com/login/oauth/access_token`, {
+        res.setHeader('Access-Control-Allow-Origin', '*')
+        const trueReq = JSON.parse(req.body)
+        const responseToken = await fetch('https://github.com/login/oauth/access_token', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             client_id: process.env.NEXT_PUBLIC_CLIENT_ID,
-            client_secret: process.env.NEXT_PUBLIC_CLIENT_SECRET,
+            client_secret: process.env.CLIENT_SECRET,
             code: trueReq.code,
-            redirect_uri: process.env.NEXT_PUBLIC_REDIRECT_URI,
-          }),
+            redirect_uri: process.env.NEXT_PUBLIC_REDIRECT_URI
+          })
         })
-          .then((response) => response.text())
-          .then((paramsString) => {
-            let params = new URLSearchParams(paramsString);
-            const access_token = params.get('access_token');
-            return access_token;
-          })
-          .then((response) => {
-            return res.status(200).json(response);
-          })
-          .catch((error) => {
-            return res.status(400).json(error);
-          });
+        const responseText = await responseToken.text();
+        const params = new URLSearchParams(responseText)
+        const accessToken = params.get('access_token')
+
+        const responseInstallations = await fetch('https://api.github.com/user/installations', {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        const installationParse = await responseInstallations.json()
+        if (installationParse.total_count === 0) {
+          res.status(201).json("No_installation")
+        } else {
+          res.status(201).json({ accessToken })
+        }
     }
-  });
+  })
 };
