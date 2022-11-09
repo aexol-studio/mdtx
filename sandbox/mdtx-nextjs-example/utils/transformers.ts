@@ -1,8 +1,4 @@
-import {
-  baseParserTree,
-  buildTree,
-  stringifyUnifiedProcessor,
-} from 'mdtx-core';
+import { buildTree, stringifyUnifiedProcessor } from 'mdtx-core';
 import { htmlContent } from '../content/docs';
 import { visit } from 'unist-util-visit';
 import { h } from 'hastscript';
@@ -17,8 +13,6 @@ const replaceCustomTagWithMarkdownDirective =
       .replace(endRegex, `:::`);
   };
 
-const renameImgSrcs = (tree: any) => {};
-
 export const getHTMLfile = async () => {
   const content = htmlContent['graphql-editor/graph/create.md'].content;
 
@@ -28,7 +22,7 @@ export const getHTMLfile = async () => {
   const myTree = buildTree({
     t1TreeDirective: (t, r) => {
       return t.use(r).use(() => {
-        return (n: Root) => {
+        return (n) => {
           visit(n, 'containerDirective', (node) => {
             const data = node.data || (node.data = {});
             const hast = h(node.name, node.attributes) as unknown as {

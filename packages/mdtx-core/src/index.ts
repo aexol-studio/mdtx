@@ -1,2 +1,2 @@
-export * from './transformers/index';
-export * from './config';
+export * from './transformers/index.js';
+export * from './config.js';
