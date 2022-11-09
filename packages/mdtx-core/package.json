@@ -9,6 +9,7 @@
   "type": "module",
   "scripts": {
     "build": "rimraf lib tsconfig.build.tsbuildinfo && ttsc --build tsconfig.build.json",
+    "start": "ttsc --watch tsconfig.build.json",
     "test": "jest --passWithNoTests"
   },
   "dependencies": {
