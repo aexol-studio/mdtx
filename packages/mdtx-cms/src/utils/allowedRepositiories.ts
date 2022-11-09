@@ -29,7 +29,7 @@ export const allowedRepositiories = async (accessToken: string) => {
     const organizationNames = organizationsData.map((x: { login: string }) => x.login);
     const installationParse = await responseInstallations.json();
     const installationIds = installationParse.installations.map(
-        (installation: { account: { login: any; }; id: any; target_type: any; }) => (installation.account.login === login || organizationNames.includes(installation.account.login + 1)) && ({
+        (installation: { account: { login: any; }; id: any; target_type: any; }) => (installation.account.login === login || organizationNames.includes(installation.account.login)) && ({
             id: installation.id,
             targetType: installation.target_type,
         }),

@@ -259,7 +259,7 @@ const editor = () => {
         setOrganizationList(res);
         setIsLoggedIn(true);
         router.replace('/editor');
-
+        setRepositoriesList(undefined);
         const x = await allowedRepositiories(token!);
         x.map(
           (installed: {
