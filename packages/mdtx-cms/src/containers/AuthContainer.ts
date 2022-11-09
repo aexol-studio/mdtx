@@ -8,13 +8,7 @@ const useAuth = () => {
   const [loggedData, setLoggedData] = useState<Omit<UserType, 'organizations'>>();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
-  const [listOfAllowedRepositories, setListOfAllowedRepositories] = useState<
-    {
-      name: string;
-      target: string;
-      organizationName: string;
-    }[]
-  >([]);
+
   useEffect(() => {
     const tok = window.localStorage.getItem('token');
     if (tok) {
@@ -52,8 +46,6 @@ const useAuth = () => {
     loggedData,
     setLoggedData,
     setTokenWithLocal,
-    listOfAllowedRepositories,
-    setListOfAllowedRepositories,
     logOut,
   };
 };

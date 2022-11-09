@@ -26,6 +26,7 @@ import {
 } from '../backend/selectors/repositorycontent.selector';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { dateFormatter } from '../utils/dateFormatter';
+import { allowedRepositiories } from '../utils/allowedRepositiories';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 enum CommitingModes {
   COMMIT,
@@ -75,8 +76,6 @@ const editor = () => {
     logOut,
     setTokenWithLocal,
     setIsLoggedIn,
-    listOfAllowedRepositories,
-    setListOfAllowedRepositories,
   } = AuthConatiner.useContainer();
   const {
     getUserInfo,
@@ -142,13 +141,13 @@ const editor = () => {
   const [loadingFullTree, setLoadingFullTree] = useState(false);
   const [loadingSubTree, setLoadingSubTree] = useState(false);
 
-  // const [listOfAllowedRepositories, setListOfAllowedRepositories] = useState<
-  //   {
-  //     name: string;
-  //     target: string;
-  //     organizationName: string;
-  //   }[]
-  // >();
+  const [listOfAllowedRepositories, setListOfAllowedRepositories] = useState<
+    {
+      name: string;
+      target: string;
+      organizationName: string;
+    }[]
+  >([]);
 
   ///////////////////////
 
@@ -214,37 +213,35 @@ const editor = () => {
         body: JSON.stringify(requestData),
       })
         .then((response) => response.json())
-        .then((data) => {
-          data.responseInstalledRepositoried.map(
-            (installed: {
-              names: string[];
-              fullName: string;
-              targetType: string;
-            }) => {
-              installed.names.map((repoName) => {
-                setListOfAllowedRepositories((prev) => {
-                  return [
-                    ...prev,
-                    {
-                      name: repoName,
-                      organizationName: installed.fullName,
-                      target: installed.targetType,
-                    },
-                  ];
+        .then(async (data) => {
+          if (data === 'No_installation') {
+            router.push(process.env.NEXT_PUBLIC_INSTALLATION_LINK!);
+          } else {
+            setTokenWithLocal(data.accessToken);
+            const x = await allowedRepositiories(data.accessToken);
+            x.map(
+              (installed: {
+                names: string[];
+                fullName: string;
+                targetType: string;
+              }) => {
+                installed.names.map((repoName) => {
+                  setListOfAllowedRepositories((prev) => {
+                    return [
+                      ...prev,
+                      {
+                        name: repoName,
+                        organizationName: installed.fullName,
+                        target: installed.targetType,
+                      },
+                    ];
+                  });
                 });
-              });
-            },
-          );
-          setTokenWithLocal(data.accessToken);
-          setIsLoggedIn(true);
+              },
+            );
 
-          // if (parsed[0].accessToken.includes('https')) {
-          //   router.push(parsed[0].accessToken.access_token);
-          // } else {
-          //   setTokenWithLocal(parsed.accessToken);
-          //   setListWithLocal(parsed.addedRepositories);
-          //   setIsLoggedIn(true);
-          // }
+            setIsLoggedIn(true);
+          }
         });
     }
   }, []);
@@ -256,58 +253,75 @@ const editor = () => {
   useEffect(() => {
     if (isLoggedIn && !loggedData) {
       setLoadingFullTree(true);
-      getUserInfo().then((res) => {
+      getUserInfo().then(async (res) => {
         setLoggedData(res);
         setOrganizationList(res);
         setIsLoggedIn(true);
-      });
-      console.log(listOfAllowedRepositories);
-      if (listOfAllowedRepositories?.length) {
-        listOfAllowedRepositories.forEach((x) => {
-          if (x.target === 'Organization' && selectedOrganization !== '---') {
-            getOrganizationRepositoryWithoutTree(
-              x.organizationName,
-              x.name,
-            ).then((res) => {
-              if (res) {
-                setRepositoriesList((prev) => {
-                  if (prev?.nodes) {
-                    return { nodes: [...prev.nodes, res] };
+        router.replace('/editor');
+        const x = await allowedRepositiories(token!);
+        x.map(
+          (installed: {
+            names: string[];
+            fullName: string;
+            targetType: string;
+          }) => {
+            installed.names.map((repoName) => {
+              if (
+                repoName !== '' &&
+                installed.targetType === 'Organization' &&
+                selectedOrganization !== '---'
+              ) {
+                getOrganizationRepositoryWithoutTree(
+                  installed.fullName,
+                  repoName,
+                ).then((res) => {
+                  if (res) {
+                    setRepositoriesList((prev) => {
+                      if (prev?.nodes) {
+                        return { nodes: [...prev.nodes, res] };
+                      }
+                      return { nodes: [res] };
+                    });
+                  } else {
+                    setLoadingFullTree(false);
                   }
-                  return { nodes: [res] };
                 });
-                setLoadingFullTree(false);
+              }
+              if (repoName !== '' && installed.targetType === 'User') {
+                getUserRepositoryWithoutTree(repoName).then((res) => {
+                  if (res) {
+                    setRepositoriesList((prev) => {
+                      if (prev?.nodes) {
+                        return { nodes: [...prev.nodes, res] };
+                      }
+                      return { nodes: [res] };
+                    });
+                  } else {
+                    setLoadingFullTree(false);
+                  }
+                });
               }
             });
-          }
-          if (x.target === 'User')
-            getUserRepositoryWithoutTree(x.name).then((res) => {
-              if (res)
-                setRepositoriesList((prev) => {
-                  if (prev?.nodes) {
-                    return { nodes: [...prev.nodes, res] };
-                  }
-                  return { nodes: [res] };
-                });
-              setLoadingFullTree(false);
-            });
-        });
-      } else {
-        getUserRepositories({
-          first: 50,
-          orderBy: {
-            direction: OrderDirection.DESC,
-            field: RepositoryOrderField.PUSHED_AT,
+            setLoadingFullTree(false);
           },
-        })
-          .then((res) => {
-            setRepositoriesList(res);
-            setLoadingFullTree(false);
-          })
-          .catch(() => {
-            setLoadingFullTree(false);
-          });
-      }
+        );
+      });
+
+      //   getUserRepositories({
+      //     first: 50,
+      //     orderBy: {
+      //       direction: OrderDirection.DESC,
+      //       field: RepositoryOrderField.PUSHED_AT,
+      //     },
+      //   })
+      //     .then((res) => {
+      //       setRepositoriesList(res);
+      //       setLoadingFullTree(false);
+      //     })
+      //     .catch(() => {
+      //       setLoadingFullTree(false);
+      //     });
+      // }
     }
   }, [isLoggedIn]);
 
@@ -317,36 +331,47 @@ const editor = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      console.log(listOfAllowedRepositories);
       setRepositoriesList(undefined);
-
       if (listOfAllowedRepositories?.length) {
         listOfAllowedRepositories.forEach((x) => {
-          console.log(x);
-          if (x.target === 'Organization' && selectedOrganization !== '---') {
+          if (
+            x.name !== '' &&
+            x.target === 'Organization' &&
+            selectedOrganization !== '---'
+          ) {
             getOrganizationRepositoryWithoutTree(
               selectedOrganization,
               x.name,
             ).then((res) => {
-              if (res)
+              if (res) {
                 setRepositoriesList((prev) => {
                   if (prev?.nodes) {
                     return { nodes: [...prev.nodes, res] };
                   }
                   return { nodes: [res] };
                 });
+              } else {
+                setLoadingFullTree(false);
+              }
               setLoadingFullTree(false);
             });
           }
-          if (x.target === 'User' && selectedOrganization === '---') {
+          if (
+            x.name !== '' &&
+            x.target === 'User' &&
+            selectedOrganization === '---'
+          ) {
             getUserRepositoryWithoutTree(x.name).then((res) => {
-              if (res)
+              if (res) {
                 setRepositoriesList((prev) => {
                   if (prev?.nodes) {
                     return { nodes: [...prev.nodes, res] };
                   }
                   return { nodes: [res] };
                 });
+              } else {
+                setLoadingFullTree(false);
+              }
               setLoadingFullTree(false);
             });
           }
@@ -504,7 +529,7 @@ const editor = () => {
       if (oidArray)
         createBranch({
           name: `refs/heads/${data.newBranchName!}`, // uniwersalna nazwa brancha !!!
-          oid: oidArray[0].oid, //////// lepiej wygenerować id jakąś libką - imo narazie wskazuje na ostatniego commita na branchu może to jest git
+          oid: oidArray[0].oid,
           repositoryId: selectedRepository.id,
         }).then((createdBranch) => {
           const oidArray = createdBranch.ref?.target?.history.nodes;
@@ -697,7 +722,7 @@ const editor = () => {
                     defaultValue={selectedOrganization}
                     onChange={(e) => {
                       setSelectedOrganization(e.target.value);
-                      setLoadingFullTree(true);
+                      // setLoadingFullTree(true);
                     }}
                   >
                     <option>---</option>
@@ -771,56 +796,61 @@ const editor = () => {
               <div className="mt-[.8rem] flex flex-col items-start">
                 {!selectedRepository ? (
                   <>
-                    {filteredRepositories?.nodes?.map((repository) => {
-                      return (
-                        <div
-                          onClick={() => {
-                            setLoadingSubTree(true);
-                            setSelectedRepository(repository);
-                            setSelectedBranch(
-                              repository.defaultBranchRef?.name,
-                            );
-                            if (selectedOrganization !== '---') {
-                              getOrganizationRepository(
-                                repository.name,
-                                `${selectedBranch!}:`,
-                                selectedOrganization,
-                              ).then((repositoryContent) => {
-                                if (repositoryContent) {
-                                  setSelectedRepositoryContent(
-                                    cleanRepositoryContentAndSort(
-                                      repositoryContent,
-                                    ),
-                                  );
-                                } else {
-                                  setSelectedRepositoryContent(undefined); // Empty Repository State !
-                                }
-                                setLoadingSubTree(false);
-                              });
-                            } else {
-                              getUserRepository(
-                                repository.name,
-                                `${selectedBranch!}:`,
-                              ).then((repositoryContent) => {
-                                if (repositoryContent) {
-                                  setSelectedRepositoryContent(
-                                    cleanRepositoryContentAndSort(
-                                      repositoryContent,
-                                    ),
-                                  );
-                                } else {
-                                  setSelectedRepositoryContent(undefined); // Empty Repository State !
-                                }
-                                setLoadingSubTree(false);
-                              });
-                            }
-                          }}
-                          key={repository.name}
-                        >
-                          <p className="text-[#FFF]">{repository.name}</p>
-                        </div>
-                      );
-                    })}
+                    {filteredRepositories?.nodes &&
+                    filteredRepositories.nodes.length > 0 ? (
+                      filteredRepositories?.nodes?.map((repository) => {
+                        return (
+                          <div
+                            onClick={() => {
+                              setLoadingSubTree(true);
+                              setSelectedRepository(repository);
+                              setSelectedBranch(
+                                repository.defaultBranchRef?.name,
+                              );
+                              if (selectedOrganization !== '---') {
+                                getOrganizationRepository(
+                                  repository.name,
+                                  `${selectedBranch!}:`,
+                                  selectedOrganization,
+                                ).then((repositoryContent) => {
+                                  if (repositoryContent) {
+                                    setSelectedRepositoryContent(
+                                      cleanRepositoryContentAndSort(
+                                        repositoryContent,
+                                      ),
+                                    );
+                                  } else {
+                                    setSelectedRepositoryContent(undefined); // Empty Repository State !
+                                  }
+                                  setLoadingSubTree(false);
+                                });
+                              } else {
+                                getUserRepository(
+                                  repository.name,
+                                  `${selectedBranch!}:`,
+                                ).then((repositoryContent) => {
+                                  if (repositoryContent) {
+                                    setSelectedRepositoryContent(
+                                      cleanRepositoryContentAndSort(
+                                        repositoryContent,
+                                      ),
+                                    );
+                                  } else {
+                                    setSelectedRepositoryContent(undefined); // Empty Repository State !
+                                  }
+                                  setLoadingSubTree(false);
+                                });
+                              }
+                            }}
+                            key={repository.name}
+                          >
+                            <p className="text-[#FFF]">{repository.name}</p>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-[#FFF]">Nothing there</p>
+                    )}
                   </>
                 ) : (
                   <>
