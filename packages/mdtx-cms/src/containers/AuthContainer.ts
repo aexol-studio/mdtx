@@ -8,12 +8,14 @@ const useAuth = () => {
   const [loggedData, setLoggedData] = useState<Omit<UserType, 'organizations'>>();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
+
   useEffect(() => {
     const tok = window.localStorage.getItem('token');
     if (tok) {
       setToken(tok);
       setIsLoggedIn(true);
     }
+
   }, []);
 
   const setTokenWithLocal = (value: string) => {
