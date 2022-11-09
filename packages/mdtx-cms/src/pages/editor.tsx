@@ -219,6 +219,7 @@ const editor = () => {
           } else {
             setTokenWithLocal(data.accessToken);
             const x = await allowedRepositiories(data.accessToken);
+
             x.map(
               (installed: {
                 names: string[];
@@ -258,6 +259,7 @@ const editor = () => {
         setOrganizationList(res);
         setIsLoggedIn(true);
         router.replace('/editor');
+
         const x = await allowedRepositiories(token!);
         x.map(
           (installed: {
@@ -266,6 +268,16 @@ const editor = () => {
             targetType: string;
           }) => {
             installed.names.map((repoName) => {
+              setListOfAllowedRepositories((prev) => {
+                return [
+                  ...prev,
+                  {
+                    name: repoName,
+                    organizationName: installed.fullName,
+                    target: installed.targetType,
+                  },
+                ];
+              });
               if (
                 repoName !== '' &&
                 installed.targetType === 'Organization' &&
@@ -332,6 +344,7 @@ const editor = () => {
   useEffect(() => {
     if (isLoggedIn) {
       setRepositoriesList(undefined);
+      console.log(listOfAllowedRepositories);
       if (listOfAllowedRepositories?.length) {
         listOfAllowedRepositories.forEach((x) => {
           if (
