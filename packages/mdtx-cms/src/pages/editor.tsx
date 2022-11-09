@@ -75,6 +75,8 @@ const editor = () => {
     logOut,
     setTokenWithLocal,
     setIsLoggedIn,
+    listOfAllowedRepositories,
+    setListOfAllowedRepositories,
   } = AuthConatiner.useContainer();
   const {
     getUserInfo,
@@ -88,6 +90,8 @@ const editor = () => {
     getOrganizationRepositories,
     getOrganizationRepository,
     getFileContentFromOrganization,
+    getUserRepositoryWithoutTree,
+    getOrganizationRepositoryWithoutTree,
     getFolderContentFromOrganization,
   } = useBackend();
   ///////////////////////
@@ -138,6 +142,14 @@ const editor = () => {
   const [loadingFullTree, setLoadingFullTree] = useState(false);
   const [loadingSubTree, setLoadingSubTree] = useState(false);
 
+  // const [listOfAllowedRepositories, setListOfAllowedRepositories] = useState<
+  //   {
+  //     name: string;
+  //     target: string;
+  //     organizationName: string;
+  //   }[]
+  // >();
+
   ///////////////////////
 
   const filteredRepositories = useMemo(() => {
@@ -186,10 +198,15 @@ const editor = () => {
   useEffect(() => {
     const url = window.location.href;
     const hasCode = url.includes('?code=');
+    const hasError = url.includes('?error=');
+    if (hasError) {
+      router.push('/api/githublogin');
+    }
     if (!token && hasCode) {
       const newUrl = url.split('?code=');
+      const newestUrl = newUrl[1].split('&');
       const requestData = {
-        code: newUrl[1],
+        code: newestUrl[0],
       };
       const proxy_url = process.env.NEXT_PUBLIC_PROXY || '';
       fetch(proxy_url, {
@@ -198,10 +215,36 @@ const editor = () => {
       })
         .then((response) => response.json())
         .then((data) => {
-          if (data) {
-            setTokenWithLocal(data);
-            setIsLoggedIn(true);
-          }
+          data.responseInstalledRepositoried.map(
+            (installed: {
+              names: string[];
+              fullName: string;
+              targetType: string;
+            }) => {
+              installed.names.map((repoName) => {
+                setListOfAllowedRepositories((prev) => {
+                  return [
+                    ...prev,
+                    {
+                      name: repoName,
+                      organizationName: installed.fullName,
+                      target: installed.targetType,
+                    },
+                  ];
+                });
+              });
+            },
+          );
+          setTokenWithLocal(data.accessToken);
+          setIsLoggedIn(true);
+
+          // if (parsed[0].accessToken.includes('https')) {
+          //   router.push(parsed[0].accessToken.access_token);
+          // } else {
+          //   setTokenWithLocal(parsed.accessToken);
+          //   setListWithLocal(parsed.addedRepositories);
+          //   setIsLoggedIn(true);
+          // }
         });
     }
   }, []);
@@ -218,21 +261,53 @@ const editor = () => {
         setOrganizationList(res);
         setIsLoggedIn(true);
       });
-
-      getUserRepositories({
-        first: 50,
-        orderBy: {
-          direction: OrderDirection.DESC,
-          field: RepositoryOrderField.PUSHED_AT,
-        },
-      })
-        .then((res) => {
-          setRepositoriesList(res);
-          setLoadingFullTree(false);
-        })
-        .catch(() => {
-          router.push('https://github.com/apps/mdtx-cms');
+      console.log(listOfAllowedRepositories);
+      if (listOfAllowedRepositories?.length) {
+        listOfAllowedRepositories.forEach((x) => {
+          if (x.target === 'Organization' && selectedOrganization !== '---') {
+            getOrganizationRepositoryWithoutTree(
+              x.organizationName,
+              x.name,
+            ).then((res) => {
+              if (res) {
+                setRepositoriesList((prev) => {
+                  if (prev?.nodes) {
+                    return { nodes: [...prev.nodes, res] };
+                  }
+                  return { nodes: [res] };
+                });
+                setLoadingFullTree(false);
+              }
+            });
+          }
+          if (x.target === 'User')
+            getUserRepositoryWithoutTree(x.name).then((res) => {
+              if (res)
+                setRepositoriesList((prev) => {
+                  if (prev?.nodes) {
+                    return { nodes: [...prev.nodes, res] };
+                  }
+                  return { nodes: [res] };
+                });
+              setLoadingFullTree(false);
+            });
         });
+      } else {
+        getUserRepositories({
+          first: 50,
+          orderBy: {
+            direction: OrderDirection.DESC,
+            field: RepositoryOrderField.PUSHED_AT,
+          },
+        })
+          .then((res) => {
+            setRepositoriesList(res);
+            setLoadingFullTree(false);
+          })
+          .catch(() => {
+            setLoadingFullTree(false);
+          });
+      }
     }
   }, [isLoggedIn]);
 
@@ -242,36 +317,73 @@ const editor = () => {
 
   useEffect(() => {
     if (isLoggedIn) {
-      if (selectedOrganization !== '---') {
-        getOrganizationRepositories(
-          {
-            first: 50,
-            orderBy: {
-              direction: OrderDirection.DESC,
-              field: RepositoryOrderField.PUSHED_AT,
-            },
-          },
-          selectedOrganization,
-        ).then((res) => {
-          console.log(res);
+      console.log(listOfAllowedRepositories);
+      setRepositoriesList(undefined);
 
-          setRepositoriesList(res);
-          setLoadingFullTree(false);
-        });
-      } else {
-        getUserRepositories({
-          first: 50,
-          orderBy: {
-            direction: OrderDirection.DESC,
-            field: RepositoryOrderField.PUSHED_AT,
-          },
-        }).then((res) => {
-          console.log(res);
-
-          setRepositoriesList(res);
-          setLoadingFullTree(false);
+      if (listOfAllowedRepositories?.length) {
+        listOfAllowedRepositories.forEach((x) => {
+          console.log(x);
+          if (x.target === 'Organization' && selectedOrganization !== '---') {
+            getOrganizationRepositoryWithoutTree(
+              selectedOrganization,
+              x.name,
+            ).then((res) => {
+              if (res)
+                setRepositoriesList((prev) => {
+                  if (prev?.nodes) {
+                    return { nodes: [...prev.nodes, res] };
+                  }
+                  return { nodes: [res] };
+                });
+              setLoadingFullTree(false);
+            });
+          }
+          if (x.target === 'User' && selectedOrganization === '---') {
+            getUserRepositoryWithoutTree(x.name).then((res) => {
+              if (res)
+                setRepositoriesList((prev) => {
+                  if (prev?.nodes) {
+                    return { nodes: [...prev.nodes, res] };
+                  }
+                  return { nodes: [res] };
+                });
+              setLoadingFullTree(false);
+            });
+          }
         });
       }
+      // else {
+      //   if (selectedOrganization !== '---') {
+      //     getOrganizationRepositories(
+      //       {
+      //         first: 50,
+      //         orderBy: {
+      //           direction: OrderDirection.DESC,
+      //           field: RepositoryOrderField.PUSHED_AT,
+      //         },
+      //       },
+      //       selectedOrganization,
+      //     ).then((res) => {
+      //       console.log(res);
+
+      //       setRepositoriesList(res);
+      //       setLoadingFullTree(false);
+      //     });
+      //   } else {
+      //     getUserRepositories({
+      //       first: 50,
+      //       orderBy: {
+      //         direction: OrderDirection.DESC,
+      //         field: RepositoryOrderField.PUSHED_AT,
+      //       },
+      //     }).then((res) => {
+      //       console.log(res);
+
+      //       setRepositoriesList(res);
+      //       setLoadingFullTree(false);
+      //     });
+      //   }
+      // }
     }
   }, [selectedOrganization]);
 
