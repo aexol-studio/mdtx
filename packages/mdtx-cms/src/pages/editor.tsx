@@ -344,7 +344,6 @@ const editor = () => {
   useEffect(() => {
     if (isLoggedIn) {
       setRepositoriesList(undefined);
-      console.log(listOfAllowedRepositories);
       if (listOfAllowedRepositories?.length) {
         listOfAllowedRepositories.forEach((x) => {
           if (

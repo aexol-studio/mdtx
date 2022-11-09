@@ -16,24 +16,18 @@ export const allowedRepositiories = async (accessToken: string) => {
             'Content-Type': 'application/json',
         },
     });
-    const orgs = await fetch('https://api.github.com/user/orgs', {
-        method: 'GET',
-        headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-        },
-    });
+
     const loginData = await user.json();
     const { login } = loginData;
-    const organizationsData = await orgs.json();
-    const organizationNames = organizationsData.map((x: { login: string }) => x.login);
+
     const installationParse = await responseInstallations.json();
     const installationIds = installationParse.installations.map(
-        (installation: { account: { login: any; }; id: any; target_type: any; }) => (installation.account.login === login || organizationNames.includes(installation.account.login)) && ({
+        (installation: { account: { login: string; }; id: string; target_type: string; }) => (installation.account.login === login || installation.target_type === 'Organization') && ({
             id: installation.id,
             targetType: installation.target_type,
         }),
     );
+    console.log(installationIds)
     const responseInstalledRepositoried = await Promise.all(
         installationIds.filter(Boolean).map(
             async ({ id, targetType }: { id: string; targetType: string }) => {
