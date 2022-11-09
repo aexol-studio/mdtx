@@ -3,7 +3,7 @@
     "sourceMap": true,
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Node",
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "declaration": true,
