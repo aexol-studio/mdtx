@@ -33,53 +33,14 @@ export const useBackend = () => {
   };
 
   const getUserRepositoryWithoutTree = async (name: string) => {
-    const response = await chain('query', token!)({
+    const response = await chain(
+      'query',
+      token!,
+    )({
       viewer: {
-        repository: [{ name: name, followRenames: true }, {
-          id: true,
-          name: true,
-          defaultBranchRef: BranchesSelector,
-          refs: [
-            { first: 10, refPrefix: 'refs/heads/' },
-            {
-              nodes: BranchesSelector,
-            },
-          ],
-          pullRequests: [
-            {
-              first: 50,
-              orderBy: {
-                direction: OrderDirection.DESC,
-                field: IssueOrderField.UPDATED_AT,
-              },
-            },
-            {
-              nodes: {
-                baseRefName: true,
-                headRefName: true,
-                bodyText: true,
-                updatedAt: true,
-                author: {
-                  login: true,
-                  avatarUrl: [{}, true],
-                  '...on User': { name: true },
-                },
-              },
-            },
-          ],
-        }]
-      }
-    })
-    if (!response.viewer)
-      throw new Error('Bad response from getUserRepositoryWithoutTree()');
-    return response.viewer.repository;
-  }
-
-  const getOrganizationRepositoryWithoutTree = async (organizationName: string, name: string) => {
-    const response = await chain('query', token!)({
-      viewer: {
-        organization: [{ login: organizationName }, {
-          repository: [{ name: name, followRenames: true }, {
+        repository: [
+          { name: name, followRenames: true },
+          {
             id: true,
             name: true,
             defaultBranchRef: BranchesSelector,
@@ -111,14 +72,72 @@ export const useBackend = () => {
                 },
               },
             ],
-          }]
-        }]
-      }
-    })
+          },
+        ],
+      },
+    });
+    if (!response.viewer)
+      throw new Error('Bad response from getUserRepositoryWithoutTree()');
+    return response.viewer.repository;
+  };
+
+  const getOrganizationRepositoryWithoutTree = async (
+    organizationName: string,
+    name: string,
+  ) => {
+    const response = await chain(
+      'query',
+      token!,
+    )({
+      viewer: {
+        organization: [
+          { login: organizationName },
+          {
+            repository: [
+              { name: name, followRenames: true },
+              {
+                id: true,
+                name: true,
+                url: true,
+                defaultBranchRef: BranchesSelector,
+                refs: [
+                  { first: 10, refPrefix: 'refs/heads/' },
+                  {
+                    nodes: BranchesSelector,
+                  },
+                ],
+                pullRequests: [
+                  {
+                    first: 50,
+                    orderBy: {
+                      direction: OrderDirection.DESC,
+                      field: IssueOrderField.UPDATED_AT,
+                    },
+                  },
+                  {
+                    nodes: {
+                      baseRefName: true,
+                      headRefName: true,
+                      bodyText: true,
+                      updatedAt: true,
+                      author: {
+                        login: true,
+                        avatarUrl: [{}, true],
+                        '...on User': { name: true },
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
     if (!response.viewer)
       throw new Error('Bad response from getUserRepositoryWithoutTree()');
     return response.viewer.organization?.repository;
-  }
+  };
 
   const getUserRepositories = async (pagination: {
     orderBy?: ModelTypes['RepositoryOrder'];
@@ -480,6 +499,6 @@ export const useBackend = () => {
     getOrganizationRepository,
     getFolderContentFromOrganization,
     getFileContentFromOrganization,
-    getOrganizationRepositoryWithoutTree
+    getOrganizationRepositoryWithoutTree,
   };
 };
