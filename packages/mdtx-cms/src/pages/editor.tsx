@@ -358,6 +358,7 @@ const editor = () => {
               selectedOrganization,
               x.name,
             ).then((res) => {
+              console.log(res);
               if (res) {
                 setRepositoriesList((prev) => {
                   if (prev?.nodes) {
@@ -743,8 +744,8 @@ const editor = () => {
                     <option>---</option>
                     {organizationList.organizations.nodes.map((x) => {
                       return (
-                        <option key={x.name} value={x.name}>
-                          {x.name}
+                        <option key={x.login} value={x.login}>
+                          {x.login}
                         </option>
                       );
                     })}

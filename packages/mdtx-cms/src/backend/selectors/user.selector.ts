@@ -5,7 +5,7 @@ export const userSelector = Selector('User')({
   name: true,
   email: true,
   login: true,
-  organizations: [{ first: 20 }, { nodes: { name: true } }],
+  organizations: [{ first: 20 }, { nodes: { login: true } }],
   avatarUrl: [{}, true],
 });
 
