@@ -9,10 +9,11 @@
     "zeus": "zeus schema.docs.graphql ./src --ts"
   },
   "dependencies": {
-    "mdtx-core": "*",
+    "@next/font": "^13.0.3",
     "@uiw/react-md-editor": "^3.19.3",
     "graphql": "^16.6.0",
     "graphql-zeus": "^5.2.0",
+    "mdtx-core": "*",
     "mdtx-plugin-nextjs": "*",
     "next": "latest",
     "next-remove-imports": "^1.0.8",

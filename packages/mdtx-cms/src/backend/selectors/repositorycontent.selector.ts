@@ -1,5 +1,5 @@
-import { Selector, InputType, GraphQLTypes } from '../../zeus';
-import { scalars } from '../scalars';
+import { Selector, InputType, GraphQLTypes } from '@/src/zeus';
+import { scalars } from '@/src/backend/scalars';
 
 export const FileSelector = Selector('Blob')({
   text: true,
@@ -9,13 +9,13 @@ const SingleFileSelector = Selector('TreeEntry')({
   name: true,
   extension: true,
   type: true,
-})
-
-export const FolderSelector = Selector('Tree')({
-  entries: SingleFileSelector
 });
 
-export const repositorySelector = Selector('Repository')({
+export const FolderSelector = Selector('Tree')({
+  entries: SingleFileSelector,
+});
+
+export const repositoryContentSelector = Selector('Repository')({
   object: [{}, { '...on Tree': FolderSelector }],
 });
 
@@ -33,6 +33,6 @@ export type FolderSelectorType = InputType<
 
 export type RepositoryContentType = InputType<
   GraphQLTypes['Repository'],
-  typeof repositorySelector,
+  typeof repositoryContentSelector,
   typeof scalars
 >;

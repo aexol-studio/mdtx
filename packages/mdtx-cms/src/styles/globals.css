@@ -24,12 +24,9 @@
   }
 }
 
-@import url('https://fonts.googleapis.com/css?family=Barlow:100,300,400,500,600,700,800,900&display=swap');
-
 body,
 button {
   box-sizing: border-box;
-  font-family: 'Barlow', sans-serif;
 }
 
 a:hover {
@@ -43,6 +40,7 @@ select {
 }
 
 html {
+  scroll-behavior: smooth;
   font-size: 62.5%;
   text-size-adjust: none;
   -webkit-text-size-adjust: none;
@@ -50,7 +48,6 @@ html {
 
 input,
 select {
-  font-family: 'Barlow', sans-serif;
   font-size: 1.6rem;
 }
 

@@ -1,5 +1,5 @@
-import { Selector, InputType, GraphQLTypes } from '../../zeus';
-import { scalars } from '../scalars';
+import { Selector, InputType, GraphQLTypes } from '@/src/zeus';
+import { scalars } from '@/src/backend/scalars';
 
 export const userSelector = Selector('User')({
   name: true,

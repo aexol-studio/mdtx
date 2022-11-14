@@ -1,13 +1,12 @@
-import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
-import { UserType } from '../backend/selectors/user.selector';
+import { UserType } from '@/src/backend/selectors/user.selector';
 
-const useAuth = () => {
+const AuthConatiner = createContainer(() => {
   const [token, _setToken] = useState<string | undefined>();
-  const [loggedData, setLoggedData] = useState<Omit<UserType, 'organizations'>>();
+  const [loggedData, setLoggedData] =
+    useState<Omit<UserType, 'organizations'>>();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-
 
   useEffect(() => {
     const tok = window.localStorage.getItem('token');
@@ -15,7 +14,6 @@ const useAuth = () => {
       setToken(tok);
       setIsLoggedIn(true);
     }
-
   }, []);
 
   const setTokenWithLocal = (value: string) => {
@@ -48,6 +46,7 @@ const useAuth = () => {
     setTokenWithLocal,
     logOut,
   };
-};
+});
 
-export const AuthConatiner = createContainer(useAuth);
+export const AuthProvider = AuthConatiner.Provider;
+export const useAuthState = AuthConatiner.useContainer;

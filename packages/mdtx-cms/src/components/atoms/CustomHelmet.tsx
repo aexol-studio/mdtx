@@ -1,14 +1,22 @@
 import Head from 'next/head';
 
-export const CustomHelmet: React.FC<{ pageTitle?: string }> = ({
-  pageTitle,
-}) => {
+export const CustomHelmet: React.FC<{
+  pageTitle?: string;
+  isMainPage?: boolean;
+}> = ({ pageTitle, isMainPage }) => {
   return (
     <Head>
       <title>{pageTitle ? pageTitle : 'Your Title'}</title>
       <meta name="description" content="description." />
       <meta property="keywords" content="keywords" />
-
+      <meta
+        name="viewport"
+        content={
+          isMainPage
+            ? 'width=device-width, initial-scale=1.0'
+            : 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'
+        }
+      />
       <meta
         property="og:image"
         content="https://yourdomain/images/jpg/ogImage.jpg" // public/images/....
