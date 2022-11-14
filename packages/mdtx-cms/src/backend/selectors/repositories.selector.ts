@@ -4,7 +4,6 @@ import {
   GraphQLTypes,
   IssueOrderField,
   OrderDirection,
-  PullRequestState,
 } from '@/src/zeus';
 import { scalars } from '@/src/backend/scalars';
 
@@ -46,7 +45,6 @@ export const repositorySelectorWithoutTree = Selector('Repository')({
   pullRequests: [
     {
       first: 50,
-      states: PullRequestState.OPEN,
       orderBy: {
         direction: OrderDirection.DESC,
         field: IssueOrderField.UPDATED_AT,

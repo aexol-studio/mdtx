@@ -678,7 +678,10 @@ const editor = () => {
                           </p>
                         </div>
                         <div>
-                          {selectedRepository.pullRequests?.nodes ? (
+                          {selectedRepository.pullRequests?.nodes &&
+                          selectedRepository.pullRequests.nodes?.filter(
+                            (x) => !x.closed,
+                          ).length > 0 ? (
                             <>
                               {selectedRepository.pullRequests.nodes
                                 ?.filter((x) => !x.closed)
