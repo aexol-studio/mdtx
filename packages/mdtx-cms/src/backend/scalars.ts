@@ -1,4 +1,4 @@
-import { ZeusScalars } from '../zeus';
+import { ZeusScalars } from '@/src/zeus';
 
 export const scalars = ZeusScalars({
   URI: {

@@ -1,200 +1,29 @@
+import { GraphQLTypes, InputType, ModelTypes } from '@/src/zeus';
+import { chain } from '@/src/backend/chain';
+import { scalars } from '@/src/backend/scalars';
 import {
-  IssueOrderField,
-  OrderDirection,
-  SearchType,
-  VariableDefinition,
-} from './../zeus/index';
-import { AuthConatiner } from '../containers';
-import { GraphQLTypes, InputType, ModelTypes } from '../zeus';
-import { chain } from './chain';
-import { scalars } from './scalars';
-import {
-  repositoriesSelector,
-  BranchesSelector,
-} from './selectors/repositories.selector';
+  repositoriesSelectorWithoutTree,
+  repositorySelectorWithoutTree,
+} from './selectors';
 import {
   FileSelector,
   FolderSelector,
-  repositorySelector,
 } from './selectors/repositorycontent.selector';
 import { userSelector } from './selectors/user.selector';
 
 export const useBackend = () => {
-  const { token } = AuthConatiner.useContainer();
-  const getUserInfo = async () => {
+  const getUserInfo = async (token: string) => {
     const response = await chain(
       'query',
-      token!,
+      token,
     )({
       viewer: userSelector,
     });
     if (!response.viewer) throw new Error('Bad response from getUserInfo()');
     return response.viewer;
   };
-
-  const getUserRepositoryWithoutTree = async (name: string) => {
-    const response = await chain(
-      'query',
-      token!,
-    )({
-      viewer: {
-        repository: [
-          { name: name, followRenames: true },
-          {
-            id: true,
-            name: true,
-            defaultBranchRef: BranchesSelector,
-            refs: [
-              { first: 10, refPrefix: 'refs/heads/' },
-              {
-                nodes: BranchesSelector,
-              },
-            ],
-            pullRequests: [
-              {
-                first: 50,
-                orderBy: {
-                  direction: OrderDirection.DESC,
-                  field: IssueOrderField.UPDATED_AT,
-                },
-              },
-              {
-                nodes: {
-                  baseRefName: true,
-                  headRefName: true,
-                  bodyText: true,
-                  updatedAt: true,
-                  author: {
-                    login: true,
-                    avatarUrl: [{}, true],
-                    '...on User': { name: true },
-                  },
-                },
-              },
-            ],
-          },
-        ],
-      },
-    });
-    if (!response.viewer)
-      throw new Error('Bad response from getUserRepositoryWithoutTree()');
-    return response.viewer.repository;
-  };
-
-  const getOrganizationRepositoryWithoutTree = async (
-    organizationName: string,
-    name: string,
-  ) => {
-    const response = await chain(
-      'query',
-      token!,
-    )({
-      viewer: {
-        organization: [
-          { login: organizationName },
-          {
-            repository: [
-              { name: name, followRenames: true },
-              {
-                id: true,
-                name: true,
-                url: true,
-                defaultBranchRef: BranchesSelector,
-                refs: [
-                  { first: 10, refPrefix: 'refs/heads/' },
-                  {
-                    nodes: BranchesSelector,
-                  },
-                ],
-                pullRequests: [
-                  {
-                    first: 50,
-                    orderBy: {
-                      direction: OrderDirection.DESC,
-                      field: IssueOrderField.UPDATED_AT,
-                    },
-                  },
-                  {
-                    nodes: {
-                      baseRefName: true,
-                      headRefName: true,
-                      bodyText: true,
-                      updatedAt: true,
-                      author: {
-                        login: true,
-                        avatarUrl: [{}, true],
-                        '...on User': { name: true },
-                      },
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      },
-    });
-    if (!response.viewer)
-      throw new Error('Bad response from getUserRepositoryWithoutTree()');
-    return response.viewer.organization?.repository;
-  };
-
-  const getUserRepositories = async (pagination: {
-    orderBy?: ModelTypes['RepositoryOrder'];
-    first?: number;
-    last?: number;
-  }) => {
-    const response = await chain(
-      'query',
-      token!,
-    )({
-      viewer: {
-        repositories: [
-          pagination,
-          {
-            nodes: {
-              id: true,
-              name: true,
-              defaultBranchRef: BranchesSelector,
-              refs: [
-                { first: 10, refPrefix: 'refs/heads/' },
-                {
-                  nodes: BranchesSelector,
-                },
-              ],
-              pullRequests: [
-                {
-                  first: 50,
-                  orderBy: {
-                    direction: OrderDirection.DESC,
-                    field: IssueOrderField.UPDATED_AT,
-                  },
-                },
-                {
-                  nodes: {
-                    baseRefName: true,
-                    headRefName: true,
-                    bodyText: true,
-                    updatedAt: true,
-                    author: {
-                      login: true,
-                      avatarUrl: [{}, true],
-                      '...on User': { name: true },
-                    },
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    });
-    if (!response.viewer)
-      throw new Error('Bad response from getUserRepositories()');
-    return response.viewer.repositories;
-  };
-
   const getOrganizationRepositories = async (
+    token: string,
     pagination: {
       orderBy?: ModelTypes['RepositoryOrder'];
       first?: number;
@@ -210,45 +39,7 @@ export const useBackend = () => {
         organization: [
           { login: organizationName },
           {
-            repositories: [
-              pagination,
-              {
-                nodes: {
-                  name: true,
-                  id: true,
-                  defaultBranchRef: BranchesSelector,
-
-                  refs: [
-                    { first: 10, refPrefix: 'refs/heads/' },
-                    {
-                      nodes: BranchesSelector,
-                    },
-                  ],
-                  pullRequests: [
-                    {
-                      first: 50,
-                      orderBy: {
-                        direction: OrderDirection.DESC,
-                        field: IssueOrderField.UPDATED_AT,
-                      },
-                    },
-                    {
-                      nodes: {
-                        baseRefName: true,
-                        headRefName: true,
-                        bodyText: true,
-                        updatedAt: true,
-                        author: {
-                          login: true,
-                          avatarUrl: [{}, true],
-                          '...on User': { name: true },
-                        },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
+            repositories: [pagination, repositoriesSelectorWithoutTree],
           },
         ],
       },
@@ -257,114 +48,84 @@ export const useBackend = () => {
       throw new Error('Bad response from getUserRepositories()');
     return response.viewer.organization?.repositories;
   };
-
-  const getOrganizationRepository = async (
-    repoName: string,
-    branchName: string,
-    organizationName: string,
-  ) => {
-    const response = await chain(
-      'query',
-      token!,
-    )({
-      organization: [
-        { login: organizationName },
-        {
-          repository: [
-            { name: repoName, followRenames: true },
-            {
-              object: [
-                { expression: branchName },
-                { '...on Tree': FolderSelector },
-              ],
-            },
-          ],
-        },
-      ],
-    });
-    if (!response.organization)
-      throw new Error('Bad response from getOrganizationRepository()');
-    return response.organization.repository;
-  };
-
-  const getUserRepository = async (repoName: string, branchName: string) => {
-    const response = await chain(
-      'query',
-      token!,
-    )({
-      viewer: {
-        repository: [
-          { name: repoName, followRenames: true },
-          {
-            object: [
-              { expression: branchName },
-              { '...on Tree': FolderSelector },
-            ],
-          },
-        ],
-      },
-    });
-    if (!response.viewer)
-      throw new Error('Bad response from getUserRepository()');
-    return response.viewer.repository;
-  };
-
-  const getFolderContentFromRepository = async (
-    repoName: string,
-    path: string,
-    branchName: string,
+  const getUserRepositories = async (
+    token: string,
+    pagination: {
+      orderBy?: ModelTypes['RepositoryOrder'];
+      first?: number;
+      last?: number;
+    },
   ) => {
     const response = await chain(
       'query',
       token!,
     )({
       viewer: {
-        repository: [
-          { name: repoName },
+        repositories: [pagination, repositoriesSelectorWithoutTree],
+      },
+    });
+    if (!response.viewer)
+      throw new Error('Bad response from getUserRepositories()');
+    return response.viewer.repositories;
+  };
+  const getOrganizationRepositoryWithoutTree = async (
+    token: string,
+    organizationName: string,
+    name: string,
+  ) => {
+    const response = await chain(
+      'query',
+      token!,
+    )({
+      viewer: {
+        organization: [
+          { login: organizationName },
           {
-            object: [
-              { expression: `${branchName}:${path}` },
-              { '...on Tree': FolderSelector },
+            repository: [
+              { name: name, followRenames: true },
+              repositorySelectorWithoutTree,
             ],
           },
         ],
       },
     });
     if (!response.viewer)
-      throw new Error('Bad response from getFolderContentFromRepository()');
+      throw new Error('Bad response from getUserRepositoryWithoutTree()');
+    return response.viewer.organization?.repository;
+  };
+  const getUserRepositoryWithoutTree = async (token: string, name: string) => {
+    const response = await chain(
+      'query',
+      token!,
+    )({
+      viewer: {
+        repository: [
+          { name: name, followRenames: true },
+          repositorySelectorWithoutTree,
+        ],
+      },
+    });
+    if (!response.viewer)
+      throw new Error('Bad response from getUserRepositoryWithoutTree()');
     return response.viewer.repository;
   };
-  const getFolderContentFromOrganization = async (
-    repoName: string,
-    path: string,
-    organizationName: string,
-    branchName: string,
+  const getRepositoryWithoutTree = async (
+    token: string,
+    name: string,
+    owner: string,
   ) => {
     const response = await chain(
       'query',
       token!,
     )({
-      organization: [
-        { login: organizationName },
-        {
-          repository: [
-            { name: repoName },
-            {
-              object: [
-                { expression: `${branchName}:${path}` },
-                { '...on Tree': FolderSelector },
-              ],
-            },
-          ],
-        },
-      ],
+      repository: [{ name, owner }, repositorySelectorWithoutTree],
     });
-    if (!response.organization)
-      throw new Error('Bad response from getFolderContentFromOrganization()');
-    return response.organization.repository;
+    if (!response.repository)
+      throw new Error('Bad response from getUserRepositoryWithoutTree()');
+    return response.repository;
   };
-
   const getFileContentFromOrganization = async (
+    token: string,
     repoName: string,
     path: string,
     organizationName: string,
@@ -394,14 +155,15 @@ export const useBackend = () => {
     return response.organization.repository;
   };
 
-  const getFileContentFromRepository = async (
+  const getFileContentFromUserRepository = async (
+    token: string,
     repoName: string,
     path: string,
     branchName: string,
   ) => {
     const response = await chain(
       'query',
-      token!,
+      token,
     )({
       viewer: {
         repository: [
@@ -416,16 +178,43 @@ export const useBackend = () => {
       },
     });
     if (!response.viewer)
-      throw new Error('Bad response from getFolderContentFromRepository()');
+      throw new Error('Bad response from getFolderContentFromUserRepository()');
     return response.viewer.repository;
   };
 
+  const getFileContentFromRepository = async (
+    owner: string,
+    token: string,
+    repoName: string,
+    path: string,
+    branchName: string,
+  ) => {
+    const response = await chain(
+      'query',
+      token,
+    )({
+      repository: [
+        { owner: owner, name: repoName },
+        {
+          object: [
+            { expression: `${branchName}:${path}` },
+            { '...on Blob': FileSelector },
+          ],
+        },
+      ],
+    });
+    if (!response.repository)
+      throw new Error('Bad response from getFolderContentFromRepository()');
+    return response.repository;
+  };
+
   const createCommitOnBranch = async (
+    token: string,
     input: ModelTypes['CreateCommitOnBranchInput'],
   ) => {
     const response = await chain(
       'mutation',
-      token!,
+      token,
     )({
       createCommitOnBranch: [
         { input },
@@ -442,11 +231,12 @@ export const useBackend = () => {
   };
 
   const createPullRequest = async (
+    token: string,
     input: ModelTypes['CreatePullRequestInput'],
   ) => {
     const response = await chain(
       'mutation',
-      token!,
+      token,
     )({
       createPullRequest: [{ input }, { pullRequest: { headRefName: true } }],
     });
@@ -461,10 +251,10 @@ export const useBackend = () => {
     typeof scalars
   >;
 
-  const createBranch = async (input: CreateBranchInput) => {
+  const createBranch = async (token: string, input: CreateBranchInput) => {
     const response = await chain(
       'mutation',
-      token!,
+      token,
     )({
       createRef: [
         { input },
@@ -485,20 +275,104 @@ export const useBackend = () => {
     return response.createRef;
   };
 
+  const getUserRepository = async (
+    token: string,
+    repoName: string,
+    path: string,
+    branchName: string,
+  ) => {
+    const response = await chain(
+      'query',
+      token!,
+    )({
+      viewer: {
+        repository: [
+          { name: repoName, followRenames: true },
+          {
+            object: [
+              { expression: `${branchName}:${path}` },
+              { '...on Tree': FolderSelector },
+            ],
+          },
+        ],
+      },
+    });
+    if (!response.viewer)
+      throw new Error('Bad response from getUserRepository()');
+    return response.viewer.repository;
+  };
+
+  const getOrganizationRepository = async (
+    token: string,
+    repoName: string,
+    path: string,
+    branchName: string,
+    organizationName: string,
+  ) => {
+    const response = await chain(
+      'query',
+      token!,
+    )({
+      organization: [
+        { login: organizationName },
+        {
+          repository: [
+            { name: repoName, followRenames: true },
+            {
+              object: [
+                { expression: `${branchName}:${path}` },
+                { '...on Tree': FolderSelector },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    if (!response.organization)
+      throw new Error('Bad response from getOrganizationRepository()');
+    return response.organization.repository;
+  };
+
+  const getRepository = async (
+    token: string,
+    owner: string,
+    name: string,
+    path: string,
+    branchName: string,
+  ) => {
+    const response = await chain(
+      'query',
+      token!,
+    )({
+      repository: [
+        { name: name, owner: owner },
+        {
+          object: [
+            { expression: `${branchName}:${path}` },
+            { '...on Tree': FolderSelector },
+          ],
+        },
+      ],
+    });
+    if (!response.repository)
+      throw new Error('Bad response from getUserRepository()');
+    return response.repository;
+  };
   return {
-    getOrganizationRepositories,
-    getUserRepositoryWithoutTree,
     getUserInfo,
-    getUserRepositories,
-    getUserRepository,
-    getFolderContentFromRepository,
-    getFileContentFromRepository,
     createCommitOnBranch,
     createPullRequest,
     createBranch,
-    getOrganizationRepository,
-    getFolderContentFromOrganization,
+    getFileContentFromRepository,
+    getFileContentFromUserRepository,
     getFileContentFromOrganization,
+    getOrganizationRepositories,
     getOrganizationRepositoryWithoutTree,
+    getUserRepositories,
+    getUserRepositoryWithoutTree,
+    getRepositoryWithoutTree,
+    getRepository,
+    getOrganizationRepository,
+    getUserRepository,
   };
 };

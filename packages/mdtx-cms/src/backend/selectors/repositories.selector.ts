@@ -1,5 +1,12 @@
-import { Selector, InputType, GraphQLTypes, ModelTypes, IssueOrderField, OrderDirection } from '../../zeus';
-import { scalars } from '../scalars';
+import {
+  Selector,
+  InputType,
+  GraphQLTypes,
+  IssueOrderField,
+  OrderDirection,
+  PullRequestState,
+} from '@/src/zeus';
+import { scalars } from '@/src/backend/scalars';
 
 export const BranchesSelector = Selector('Ref')({
   name: true,
@@ -17,30 +24,65 @@ export const BranchesSelector = Selector('Ref')({
   },
 });
 
-export const repositorySelector = Selector('Repository')({
+export const repositorySelectorWithoutTree = Selector('Repository')({
   id: true,
   name: true,
+  owner: {
+    '...on User': {
+      name: true,
+    },
+    '...on Organization': {
+      name: true,
+    },
+    login: true,
+  },
   defaultBranchRef: BranchesSelector,
-  refs: [{}, { nodes: BranchesSelector }],
+  refs: [
+    { first: 10, refPrefix: 'refs/heads/' },
+    {
+      nodes: BranchesSelector,
+    },
+  ],
   pullRequests: [
-    { first: 50, orderBy: { direction: OrderDirection.DESC, field: IssueOrderField.UPDATED_AT } },
-    { nodes: { baseRefName: true, headRefName: true, bodyText: true, updatedAt: true, author: { login: true, avatarUrl: [{}, true], "...on User": { name: true } } } },
-
+    {
+      first: 50,
+      states: PullRequestState.OPEN,
+      orderBy: {
+        direction: OrderDirection.DESC,
+        field: IssueOrderField.UPDATED_AT,
+      },
+    },
+    {
+      nodes: {
+        baseRefName: true,
+        headRefName: true,
+        closed: true,
+        bodyText: true,
+        updatedAt: true,
+        author: {
+          login: true,
+          avatarUrl: [{}, true],
+          '...on User': { name: true },
+        },
+      },
+    },
   ],
 });
 
-export const repositoriesSelector = Selector('RepositoryConnection')({
-  nodes: repositorySelector,
-});
+export const repositoriesSelectorWithoutTree = Selector('RepositoryConnection')(
+  {
+    nodes: repositorySelectorWithoutTree,
+  },
+);
 
 export type RepositoryType = InputType<
   GraphQLTypes['Repository'],
-  typeof repositorySelector,
+  typeof repositorySelectorWithoutTree,
   typeof scalars
 >;
 
 export type RepositoriesType = InputType<
   GraphQLTypes['RepositoryConnection'],
-  typeof repositoriesSelector,
+  typeof repositoriesSelectorWithoutTree,
   typeof scalars
 >;

@@ -1,7 +1,7 @@
 const watchMDtx = import('mdtx-core/lib/watch.js');
 class WebpackCustomWithMDtxPlugin {
   opts: { out: string; in: string; markdownToHtml: boolean; };
-  constructor(opts: any) {
+  constructor(opts: { out: string; in: string; markdownToHtml: boolean; }) {
     this.opts = opts;
   }
   apply(compiler: {

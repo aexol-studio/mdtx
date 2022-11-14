@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import dynamic from 'next/dynamic';
-import { AuthConatiner } from '../containers/AuthContainer';
 import Image from 'next/image';
 import { Layout } from '../layouts';
 import {
@@ -10,14 +9,8 @@ import {
   RepositoryType,
 } from '../backend/selectors/repositories.selector';
 import { useBackend } from '../backend/useBackend';
-import { BackIcon } from '../assets';
+import { ArrowLeft, BackIcon } from '../assets';
 import { ClipLoader } from 'react-spinners';
-import {
-  ModelTypes,
-  OrderDirection,
-  RepositoryOrderField,
-  ValueTypes,
-} from '../zeus';
 import { useRouter } from 'next/router';
 import { UserType } from '../backend/selectors/user.selector';
 import {
@@ -26,7 +19,16 @@ import {
 } from '../backend/selectors/repositorycontent.selector';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { dateFormatter } from '../utils/dateFormatter';
-import { allowedRepositiories } from '../utils/allowedRepositiories';
+import {
+  allowedRepositiories,
+  allowedRepositioriesType,
+} from '../utils/allowedRepositiories';
+import { Menu } from '../components';
+import { setterForRespositoriesList } from '../utils/setterForRepositoriesList';
+import { OrderDirection, RepositoryOrderField } from '../zeus';
+import { setterForRespositoryContent } from '../utils/setterForRepositoryContent';
+import { setterForContentFile } from '../utils/setterForContentFile';
+import { useAuthState } from '../containers';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 enum CommitingModes {
   COMMIT,
@@ -73,26 +75,11 @@ const editor = () => {
     isLoggedIn,
     setLoggedData,
     loggedData,
-    logOut,
     setTokenWithLocal,
     setIsLoggedIn,
-  } = AuthConatiner.useContainer();
-  const {
-    getUserInfo,
-    getUserRepositories,
-    getUserRepository,
-    getFolderContentFromRepository,
-    getFileContentFromRepository,
-    createCommitOnBranch,
-    createPullRequest,
-    createBranch,
-    getOrganizationRepositories,
-    getOrganizationRepository,
-    getFileContentFromOrganization,
-    getUserRepositoryWithoutTree,
-    getOrganizationRepositoryWithoutTree,
-    getFolderContentFromOrganization,
-  } = useBackend();
+  } = useAuthState();
+  const { getUserInfo, createCommitOnBranch, createPullRequest, createBranch } =
+    useBackend();
   ///////////////////////
   /// Markdown States ///
   ///////////////////////
@@ -107,6 +94,8 @@ const editor = () => {
   ///////////////////////
   ///      States     ///
   ///////////////////////
+
+  const [openMenu, setOpenMenu] = useState(false);
 
   const [watchingModeOnRepository, setWatchingModeOnRepository] =
     useState<WatchingModeOnRepository>(WatchingModeOnRepository.REPOSITORY);
@@ -138,15 +127,12 @@ const editor = () => {
   const [selectedFile, setSelectedFile] = useState<SingleFileType>();
   const [contentPath, setContentPath] = useState<string | undefined>();
 
+  const [loadingMenu, setLoadingMenu] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
   const [loadingSubTree, setLoadingSubTree] = useState(false);
 
   const [listOfAllowedRepositories, setListOfAllowedRepositories] = useState<
-    {
-      name: string;
-      target: string;
-      organizationName: string;
-    }[]
+    allowedRepositioriesType[]
   >([]);
 
   ///////////////////////
@@ -165,33 +151,6 @@ const editor = () => {
     }
   }, [autoCompleteValue, repositoriesList]);
 
-  ///////////////////////
-
-  /// utilFunctions ///
-
-  const cleanRepositoryContentAndSort = (
-    repositoryContent: RepositoryContentType,
-  ) => {
-    return {
-      object: {
-        entries: repositoryContent?.object?.entries
-          ?.filter(
-            (file) =>
-              file.extension === '.md' ||
-              (file.extension === '' && file.type === 'tree'),
-          )
-          .sort((file) => {
-            if (file.extension === '.md') {
-              return -1;
-            }
-            return 0;
-          }),
-      },
-    };
-  };
-
-  /// utilFunctions ///
-
   /// gettingToken ///
 
   useEffect(() => {
@@ -199,7 +158,7 @@ const editor = () => {
     const hasCode = url.includes('?code=');
     const hasError = url.includes('?error=');
     if (hasError) {
-      router.push('/api/githublogin');
+      router.push('/');
     }
     if (!token && hasCode) {
       const newUrl = url.split('?code=');
@@ -217,30 +176,9 @@ const editor = () => {
           if (data === 'No_installation') {
             router.push(process.env.NEXT_PUBLIC_INSTALLATION_LINK!);
           } else {
+            const response = await allowedRepositiories(data.accessToken);
+            setListOfAllowedRepositories(response);
             setTokenWithLocal(data.accessToken);
-            const x = await allowedRepositiories(data.accessToken);
-
-            x.map(
-              (installed: {
-                names: string[];
-                fullName: string;
-                targetType: string;
-              }) => {
-                installed.names.map((repoName) => {
-                  setListOfAllowedRepositories((prev) => {
-                    return [
-                      ...prev,
-                      {
-                        name: repoName,
-                        organizationName: installed.fullName,
-                        target: installed.targetType,
-                      },
-                    ];
-                  });
-                });
-              },
-            );
-
             setIsLoggedIn(true);
           }
         });
@@ -252,91 +190,30 @@ const editor = () => {
   /// First Load ///
 
   useEffect(() => {
-    if (isLoggedIn && !loggedData) {
-      setLoadingFullTree(true);
-      getUserInfo().then(async (res) => {
+    if (isLoggedIn && token && !loggedData) {
+      getUserInfo(token).then(async (res) => {
+        setLoadingMenu(true);
         setLoggedData(res);
-        console.log(res);
         setOrganizationList(res);
         setIsLoggedIn(true);
         router.replace('/editor');
-        setRepositoriesList(undefined);
-        const x = await allowedRepositiories(token!);
-        setListOfAllowedRepositories([]);
-
-        x.map(
-          (installed: {
-            names: string[];
-            fullName: string;
-            targetType: string;
-          }) => {
-            installed.names.map((repoName, idx) => {
-              setListOfAllowedRepositories((prev) => {
-                return [
-                  ...prev,
-                  {
-                    name: repoName,
-                    organizationName: installed.fullName,
-                    target: installed.targetType,
-                  },
-                ];
-              });
-              if (
-                repoName !== '' &&
-                installed.targetType === 'Organization' &&
-                selectedOrganization !== '---'
-              ) {
-                getOrganizationRepositoryWithoutTree(
-                  installed.fullName,
-                  repoName,
-                ).then((res) => {
-                  if (res) {
-                    setRepositoriesList((prev) => {
-                      if (prev?.nodes) {
-                        return { nodes: [...prev.nodes, res] };
-                      }
-                      return { nodes: [res] };
-                    });
-                  } else {
-                    setLoadingFullTree(false);
-                  }
-                });
-              }
-              if (repoName !== '' && installed.targetType === 'User') {
-                getUserRepositoryWithoutTree(repoName).then((res) => {
-                  if (res) {
-                    setRepositoriesList((prev) => {
-                      if (prev?.nodes) {
-                        return { nodes: [...prev.nodes, res] };
-                      }
-                      return { nodes: [res] };
-                    });
-                  } else {
-                    setLoadingFullTree(false);
-                  }
-                });
-              }
-            });
-            setLoadingFullTree(false);
+        const allowedRepositories = await allowedRepositiories(token!);
+        setListOfAllowedRepositories(allowedRepositories);
+        setterForRespositoriesList(
+          token,
+          {
+            first: 100,
+            orderBy: {
+              direction: OrderDirection.DESC,
+              field: RepositoryOrderField.PUSHED_AT,
+            },
           },
+          selectedOrganization,
+          allowedRepositories,
+          setRepositoriesList,
+          setLoadingMenu,
         );
       });
-
-      //   getUserRepositories({
-      //     first: 50,
-      //     orderBy: {
-      //       direction: OrderDirection.DESC,
-      //       field: RepositoryOrderField.PUSHED_AT,
-      //     },
-      //   })
-      //     .then((res) => {
-      //       setRepositoriesList(res);
-      //       setLoadingFullTree(false);
-      //     })
-      //     .catch(() => {
-      //       setLoadingFullTree(false);
-      //     });
-      // }
     }
   }, [isLoggedIn]);
 
@@ -345,128 +222,39 @@ const editor = () => {
   /// Repositories refetch ///
 
   useEffect(() => {
-    if (isLoggedIn) {
-      setRepositoriesList(undefined);
-      if (listOfAllowedRepositories?.length) {
-        listOfAllowedRepositories.forEach((x) => {
-          if (
-            x.name !== '' &&
-            x.target === 'Organization' &&
-            selectedOrganization !== '---'
-          ) {
-            getOrganizationRepositoryWithoutTree(
-              selectedOrganization,
-              x.name,
-            ).then((res) => {
-              console.log(res);
-              if (res) {
-                setRepositoriesList((prev) => {
-                  if (prev?.nodes) {
-                    return { nodes: [...prev.nodes, res] };
-                  }
-                  return { nodes: [res] };
-                });
-              } else {
-                setLoadingFullTree(false);
-              }
-              setLoadingFullTree(false);
-            });
-          }
-          if (
-            x.name !== '' &&
-            x.target === 'User' &&
-            selectedOrganization === '---'
-          ) {
-            getUserRepositoryWithoutTree(x.name).then((res) => {
-              if (res) {
-                setRepositoriesList((prev) => {
-                  if (prev?.nodes) {
-                    return { nodes: [...prev.nodes, res] };
-                  }
-                  return { nodes: [res] };
-                });
-              } else {
-                setLoadingFullTree(false);
-              }
-              setLoadingFullTree(false);
-            });
-          }
-        });
-      }
-      // else {
-      //   if (selectedOrganization !== '---') {
-      //     getOrganizationRepositories(
-      //       {
-      //         first: 50,
-      //         orderBy: {
-      //           direction: OrderDirection.DESC,
-      //           field: RepositoryOrderField.PUSHED_AT,
-      //         },
-      //       },
-      //       selectedOrganization,
-      //     ).then((res) => {
-      //       console.log(res);
-
-      //       setRepositoriesList(res);
-      //       setLoadingFullTree(false);
-      //     });
-      //   } else {
-      //     getUserRepositories({
-      //       first: 50,
-      //       orderBy: {
-      //         direction: OrderDirection.DESC,
-      //         field: RepositoryOrderField.PUSHED_AT,
-      //       },
-      //     }).then((res) => {
-      //       console.log(res);
-
-      //       setRepositoriesList(res);
-      //       setLoadingFullTree(false);
-      //     });
-      //   }
-      // }
+    if (isLoggedIn && token) {
+      setterForRespositoriesList(
+        token,
+        {
+          first: 100,
+          orderBy: {
+            direction: OrderDirection.DESC,
+            field: RepositoryOrderField.PUSHED_AT,
+          },
+        },
+        selectedOrganization,
+        listOfAllowedRepositories,
+        setRepositoriesList,
+        setLoadingFullTree,
+      );
     }
   }, [selectedOrganization]);
-
   useEffect(() => {
-    if (isLoggedIn && selectedRepository) {
+    if (isLoggedIn && token && selectedRepository) {
       setCommitingMode(CommitingModes.PULL_REQUEST);
       resetCommitForm();
       resetPullRequestForm();
-      if (selectedOrganization !== '---') {
-        getFolderContentFromOrganization(
-          selectedRepository.name,
+      if (selectedBranch && selectedRepository)
+        setterForRespositoryContent(
+          token,
           contentPath ? contentPath : '',
           selectedOrganization,
-          selectedBranch!,
-        ).then((repositoryContent) => {
-          if (repositoryContent) {
-            setSelectedRepositoryContent(
-              cleanRepositoryContentAndSort(repositoryContent),
-            );
-            setLoadingSubTree(false);
-          } else {
-            setSelectedRepositoryContent(undefined); // Empty Repository State !
-            setLoadingSubTree(false);
-          }
-        });
-      } else {
-        getFolderContentFromRepository(
-          selectedRepository.name,
-          contentPath ? contentPath : '',
-          selectedBranch!,
-        ).then((repositoryContent) => {
-          if (repositoryContent) {
-            setSelectedRepositoryContent(
-              cleanRepositoryContentAndSort(repositoryContent),
-            );
-            setLoadingSubTree(false);
-          } else {
-            setSelectedRepositoryContent(undefined); // Empty Repository State !
-            setLoadingSubTree(false);
-          }
-        });
-      }
+          selectedBranch,
+          selectedRepository,
+          loggedData?.login === selectedRepository.owner.login,
+          setSelectedRepositoryContent,
+          setLoadingSubTree,
+        );
     }
   }, [contentPath, selectedBranch]);
 
@@ -477,20 +265,22 @@ const editor = () => {
   const onCommitSubmit: SubmitHandler<CommitInput> = (data) => {
     console.log(data);
     setSendingToGIT(true);
-    if (loggedData && markdownEdit) {
+    if (loggedData && token && markdownEdit) {
       const doBuffer = Buffer.from(markdownEdit, 'utf-8').toString('base64');
       const oidArray = selectedRepository?.refs?.nodes?.find(
         (x) => x.name === selectedBranch,
       )?.target?.history.nodes;
-
+      const isOwner = loggedData.login === selectedRepository?.owner.login;
       if (oidArray && contentPath) {
-        createCommitOnBranch({
+        createCommitOnBranch(token, {
           branch: {
             branchName: selectedBranch,
             repositoryNameWithOwner: `${
-              selectedOrganization !== '---'
+              isOwner
+                ? loggedData.login
+                : selectedOrganization !== '---'
                 ? selectedOrganization
-                : loggedData.login
+                : selectedRepository.owner.login
             }/${selectedRepository?.name}`,
           },
           expectedHeadOid: oidArray[0].oid,
@@ -536,14 +326,20 @@ const editor = () => {
   const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {
     console.log(data);
     setSendingToGIT(true);
-    if (loggedData && markdownEdit && selectedRepository && contentPath) {
+    if (
+      token &&
+      loggedData &&
+      markdownEdit &&
+      selectedRepository &&
+      contentPath
+    ) {
       const doBuffer = Buffer.from(markdownEdit, 'utf-8').toString('base64');
       const oidArray = selectedRepository?.refs?.nodes?.find(
         (x) => x.name === selectedBranch,
       )?.target?.history.nodes;
-
+      const isOwner = loggedData.login === selectedRepository?.owner.login;
       if (oidArray)
-        createBranch({
+        createBranch(token, {
           name: `refs/heads/${data.newBranchName!}`, // uniwersalna nazwa brancha !!!
           oid: oidArray[0].oid,
           repositoryId: selectedRepository.id,
@@ -551,13 +347,15 @@ const editor = () => {
           const oidArray = createdBranch.ref?.target?.history.nodes;
 
           if (createdBranch && oidArray) {
-            createCommitOnBranch({
+            createCommitOnBranch(token, {
               branch: {
                 branchName: createdBranch.ref?.name,
                 repositoryNameWithOwner: `${
-                  selectedOrganization !== '---'
+                  isOwner
+                    ? loggedData.login
+                    : selectedOrganization !== '---'
                     ? selectedOrganization
-                    : loggedData.login
+                    : selectedRepository.owner.login
                 }/${selectedRepository?.name}`,
               },
               expectedHeadOid: oidArray[0].oid,
@@ -576,7 +374,7 @@ const editor = () => {
               },
             }).then((x) => {
               if (createdBranch && createdBranch.ref)
-                createPullRequest({
+                createPullRequest(token, {
                   baseRefName: data.selectedTargetBranch,
                   headRefName: createdBranch.ref.name,
                   repositoryId: selectedRepository.id,
@@ -614,26 +412,16 @@ const editor = () => {
         setContentPath(
           contentPath ? contentPath + '/' + input.name : input.name,
         );
-        if (selectedOrganization !== '---') {
-          getFileContentFromOrganization(
-            selectedRepository!.name,
-            contentPath ? contentPath + '/' + input.name : input.name,
-            selectedOrganization,
-            selectedBranch!,
-          ).then((res) => {
-            setMarkdownEdit(res?.object?.text);
-            setMarkdownBase(res?.object?.text);
-          });
-        } else {
-          getFileContentFromRepository(
-            selectedRepository!.name,
-            contentPath ? contentPath + '/' + input.name : input.name,
-            selectedBranch!,
-          ).then((res) => {
-            setMarkdownEdit(res?.object?.text);
-            setMarkdownBase(res?.object?.text);
-          });
-        }
+        setterForContentFile(
+          token!,
+          selectedRepository,
+          contentPath ? contentPath + '/' + input.name : input.name,
+          selectedBranch!,
+          selectedOrganization!,
+          loggedData?.login === selectedRepository?.owner.login,
+          setMarkdownEdit,
+          setMarkdownBase,
+        );
         break;
       }
       case '': {
@@ -653,7 +441,34 @@ const editor = () => {
   };
 
   return (
-    <Layout pageTitle="MDtx Editor">
+    <Layout isEditor pageTitle="MDtx Editor">
+      <div className="max-w-[25vw] relative">
+        <Menu
+          selectedOrganization={selectedOrganization}
+          setSelectedOrganization={setSelectedOrganization}
+          autoCompleteValue={autoCompleteValue}
+          setAutoCompleteValue={setAutoCompleteValue}
+          organizationList={organizationList}
+          loadingMenu={loadingMenu}
+          loggedData={loggedData}
+          isOpen={openMenu}
+        />
+        <div
+          className="cursor-pointer select-none z-[99] flex justify-center items-center absolute bottom-[1.6rem] right-[-1.6rem] w-[3.2rem] h-[3.2rem] rounded-full bg-mdtxOrange0"
+          onClick={() => {
+            setOpenMenu((prev) => !prev);
+          }}
+        >
+          <div
+            className={`${
+              openMenu ? 'rotate-0' : 'ml-[0.8rem] rotate-[-180deg]'
+            } flex justify-center items-center max-w-[1.6rem] max-h-[1.6rem] transition-all duration-500 ease-in-out`}
+          >
+            <ArrowLeft />
+          </div>
+        </div>
+      </div>
+
       <div className="select-none w-full max-w-[20vw] h-screen bg-[#13131C] border-r-[2px] border-r-solid border-r-white flex flex-col items-center">
         <div className="w-full border-b-[1px] border-white relative min-h-[30%] pt-[2.4rem]">
           {selectedRepository && (
@@ -703,14 +518,7 @@ const editor = () => {
               Current branch
             </p>
           )}
-          <div
-            className="bg-[#0A58CA] px-[2.4rem] py-[0.4rem] rounded-[2.4rem] flex justify-center items-center w-fit mx-auto"
-            onClick={() => {
-              logOut();
-            }}
-          >
-            <p className="hover:underline cursor-pointer">Logout</p>
-          </div>
+
           <div>
             <div className="mt-[0.8rem] flex flex-col">
               <h1 className="text-[1.8rem] text-center text-white">
@@ -738,7 +546,7 @@ const editor = () => {
                     defaultValue={selectedOrganization}
                     onChange={(e) => {
                       setSelectedOrganization(e.target.value);
-                      // setLoadingFullTree(true);
+                      setLoadingFullTree(true);
                     }}
                   >
                     <option>---</option>
@@ -823,40 +631,22 @@ const editor = () => {
                               setSelectedBranch(
                                 repository.defaultBranchRef?.name,
                               );
-                              if (selectedOrganization !== '---') {
-                                getOrganizationRepository(
-                                  repository.name,
-                                  `${selectedBranch!}:`,
+                              if (
+                                repository &&
+                                repository.defaultBranchRef &&
+                                token &&
+                                contentPath !== ''
+                              )
+                                setterForRespositoryContent(
+                                  token,
+                                  contentPath ? contentPath : '',
                                   selectedOrganization,
-                                ).then((repositoryContent) => {
-                                  if (repositoryContent) {
-                                    setSelectedRepositoryContent(
-                                      cleanRepositoryContentAndSort(
-                                        repositoryContent,
-                                      ),
-                                    );
-                                  } else {
-                                    setSelectedRepositoryContent(undefined); // Empty Repository State !
-                                  }
-                                  setLoadingSubTree(false);
-                                });
-                              } else {
-                                getUserRepository(
-                                  repository.name,
-                                  `${selectedBranch!}:`,
-                                ).then((repositoryContent) => {
-                                  if (repositoryContent) {
-                                    setSelectedRepositoryContent(
-                                      cleanRepositoryContentAndSort(
-                                        repositoryContent,
-                                      ),
-                                    );
-                                  } else {
-                                    setSelectedRepositoryContent(undefined); // Empty Repository State !
-                                  }
-                                  setLoadingSubTree(false);
-                                });
-                              }
+                                  repository.defaultBranchRef?.name,
+                                  repository,
+                                  loggedData?.login === repository.owner.login,
+                                  setSelectedRepositoryContent,
+                                  setLoadingSubTree,
+                                );
                             }}
                             key={repository.name}
                           >
@@ -888,11 +678,11 @@ const editor = () => {
                           </p>
                         </div>
                         <div>
-                          {selectedRepository.pullRequests?.nodes &&
-                          selectedRepository.pullRequests?.nodes?.length > 0 ? (
+                          {selectedRepository.pullRequests?.nodes ? (
                             <>
-                              {selectedRepository.pullRequests.nodes?.map(
-                                (pullRequest, idx) => (
+                              {selectedRepository.pullRequests.nodes
+                                ?.filter((x) => !x.closed)
+                                .map((pullRequest, idx) => (
                                   <div
                                     key={pullRequest.headRefName}
                                     onClick={() => {
@@ -944,8 +734,7 @@ const editor = () => {
                                       )}
                                     </p>
                                   </div>
-                                ),
-                              )}
+                                ))}
                             </>
                           ) : (
                             <>

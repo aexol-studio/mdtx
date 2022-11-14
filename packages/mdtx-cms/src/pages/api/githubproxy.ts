@@ -1,8 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { useGithubCalls } from '../../backend';
 export default (req: NextApiRequest, res: NextApiResponse) => {
   return new Promise(async () => {
     switch (req.method) {
       case 'POST':
+        const { getInstallationsForUser } = useGithubCalls();
         res.setHeader('Access-Control-Allow-Origin', '*');
         const trueReq = JSON.parse(req.body);
         const responseToken = await fetch(
@@ -23,36 +25,15 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
         const responseText = await responseToken.text();
         const params = new URLSearchParams(responseText);
         const accessToken = params.get('access_token');
-
-        const user = await fetch('https://api.github.com/user', {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        const loginData = await user.json();
-        const { login } = loginData;
-        const responseInstallations = await fetch(
-          'https://api.github.com/user/installations',
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-          },
-        );
-        const installationParse = await responseInstallations.json();
-        const isInstalled = installationParse.installations?.find(
-          (x: { account: { login: string }; target_type: string }) =>
-            x.account.login === login || x.target_type === 'Organization',
-        );
-        console.log(isInstalled);
-        if (!!isInstalled) {
-          res.status(201).json({ accessToken });
+        if (accessToken) {
+          const installationParse = await getInstallationsForUser(accessToken);
+          if (installationParse.installations.length) {
+            res.status(201).json({ accessToken });
+          } else {
+            res.status(201).json('No_installation');
+          }
         } else {
-          res.status(201).json('No_installation');
+          res.status(201).json('Error');
         }
     }
   });
