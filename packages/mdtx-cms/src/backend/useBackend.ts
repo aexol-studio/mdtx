@@ -183,8 +183,8 @@ export const useBackend = () => {
   };
 
   const getFileContentFromRepository = async (
-    owner: string,
     token: string,
+    owner: string,
     repoName: string,
     path: string,
     branchName: string,

@@ -35,7 +35,7 @@ export const Button: React.FC<ButtonInterface> = ({
           : ''
       } ${
         customClassName ? customClassName : ''
-      } flex justify-center items-center text-[1.4rem] rounded-[2.4rem] overflow-hidden w-fit`}
+      } h-fit flex justify-center items-center text-[1.4rem] rounded-[2.4rem] overflow-hidden w-fit`}
     >
       {type ? (
         type === 'form' ? (

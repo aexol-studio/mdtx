@@ -1,62 +1,69 @@
-# Mdtx
+# MDtx [![NPM Version](https://img.shields.io/npm/v/mdtx.svg?style=flat)](https://www.npmjs.com/package/mdtx) [![NPM Version](https://img.shields.io/github/checks-status/aexol-studio/mdtx/main)](https://www.npmjs.com/package/mdtx) [![NPM Version](https://img.shields.io/github/last-commit/aexol-studio/mdtx)](https://github.com/aexol-studio/mdtx)
 
-[![NPM Version](https://img.shields.io/npm/v/mdtx.svg?style=flat)]()
+Inspired by generative programming. I was learning Elm language at home as usual in the evening and I was missing all that generative stuff from Elm libs in TS.
 
-Inspired by generative programming and weed :). So I was learning Elm language at home usually in the evening and now I am missing all this generative stuff from Elm libs in TS.
+![Alt Text](sandbox/mdtx-nextjs-example/public/PresentationOfMDtx.gif)
 
-## What is generated now?
+# What is MDtx?
 
-- when you add **Markdown** files with gray matter it will generate typings for those
+- Just add **Markdown** files with gray matter and it will generate typings for them,
+- Generated typings from **Markdowns** can get automatically converted into html structure,
+- There is a **Next JS Plugin** to work faster with MDtx on NextJS,
 
-## Installation
+# What we serve?
 
-```sh
-$ npm i mdtx
+## [![GitHub package.json version (subfolder of monorepo)](https://img.shields.io/github/package-json/v/aexol-studio/mdtx?color=yellow&filename=%2Fpackages%2Fmdtx-cli%2Fpackage.json&label=CLI&style=for-the-badge)](https://github.com/aexol-studio/mdtx) | [![GitHub package.json version (subfolder of monorepo)](https://img.shields.io/github/package-json/v/aexol-studio/mdtx?color=green&filename=%2Fpackages%2Fmdtx-core%2Fpackage.json&label=CORE&style=for-the-badge)](https://github.com/aexol-studio/mdtx/tree/main/packages/mdtx-core) | [![GitHub package.json version (subfolder of monorepo)](https://img.shields.io/github/package-json/v/aexol-studio/mdtx?color=white&filename=%2Fpackages%2Fmdtx-plugin-nextjs%2Fpackage.json&label=NextJS-plugin&style=for-the-badge)](https://github.com/aexol-studio/mdtx/tree/main/packages/mdtx-plugin-nextjs)
+
+## Readme CLI
+
+#### Installing MDtx
+
+```
+npm i mdtx
 ```
 
-## How to use
+#### Initializing MDtx
 
-Init mdtx to provide input and output
-
-```sh
-$ mdtx --init
+```
+mdtx init
 ```
 
-Then use `mdtx` to watch files and generate new file on every markdown/static file change
+#### After initializing a config file mdtx.json will appear with:
 
-```sh
+```
+{
+  "in": "./content",
+  "out": "./src",
+}
+```
+
+- in: string - is the designated folder with content, **(default: "./content")**
+- out: string - is the designated folder to generate mdtx.ts file, **(default: "./src")**
+
+#### Optionally:
+
+- markdownToHtml: boolean - allow mdtx to convert md content to html content. **(default: false)**
+
+#### Watch mode (on "in" path)
+
+```
 mdtx
 ```
 
-## Examples
+#### Build mode (trigger once)
 
-Check example folder, generated content looks like this. It is a one big tree of safely typed md files.
-
-```ts
-export const htmlContent = {
-  'basics/HowToStart.md': {
-    content: '\n# Hello world\n',
-    data: {
-      title: 'How to start',
-    },
-    excerpt: '',
-  },
-  'Changelog.md': {
-    content: '\n## 0.0.1\n\nFirst mdtx version\n',
-    data: {
-      link: 'changelog',
-      title: 'Changelog',
-      order: 99,
-    },
-    excerpt: '',
-  },
-} as const;
 ```
+mdtx -b
+```
+
+#### [Readme CORE](https://github.com/aexol-studio/mdtx/tree/main/sandbox/mdtx-example/Readme.md)
+
+#### [Readme NextJS Plugin](https://github.com/aexol-studio/mdtx/tree/main/sandbox/mdtx-nextjs-example/Readme.md)
 
 ## Roadmap
 
-- [ ] next js plugin
-- [ ] gatsby plugin
-- [ ] tree building
-- [ ] summary building
-- [ ] other language generation
+- [x] NextJS plugin
+- [ ] Gatsby plugin
+- [ ] Tree building
+- [ ] Summary building
+- [ ] Other language generation

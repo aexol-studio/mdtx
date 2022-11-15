@@ -19,38 +19,23 @@ import {
 } from '../backend/selectors/repositorycontent.selector';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { dateFormatter } from '../utils/dateFormatter';
-import {
-  allowedRepositiories,
-  allowedRepositioriesType,
-} from '../utils/allowedRepositiories';
-import { Menu } from '../components';
-import { setterForRespositoriesList } from '../utils/setterForRepositoriesList';
+
+import { Menu, PullRequestInput } from '../components';
 import { OrderDirection, RepositoryOrderField } from '../zeus';
 import { setterForRespositoryContent } from '../utils/setterForRepositoryContent';
 import { setterForContentFile } from '../utils/setterForContentFile';
 import { useAuthState } from '../containers';
+import { CommitInput } from '../components/CMS/molecules/CommitForm';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
-enum CommitingModes {
-  COMMIT,
-  PULL_REQUEST,
+export enum CommitingModes {
+  COMMIT = 'COMMIT',
+  PULL_REQUEST = 'PULL_REQUEST',
 }
 
-enum WatchingModeOnRepository {
+export enum WatchingModeOnRepository {
   REPOSITORY,
   PULL_REQUESTS,
 }
-
-type CommitInput = {
-  commitMessage: string;
-};
-
-type PullRequestInput = {
-  selectedTargetBranch: string;
-  pullRequestMessage: string;
-  pullRequestTitle: string;
-  commitMessage: string;
-  newBranchName?: string; /// i think it is good idea to generate it
-};
 
 const editor = () => {
   const {
@@ -78,8 +63,14 @@ const editor = () => {
     setTokenWithLocal,
     setIsLoggedIn,
   } = useAuthState();
-  const { getUserInfo, createCommitOnBranch, createPullRequest, createBranch } =
-    useBackend();
+  const {
+    getUserInfo,
+    createCommitOnBranch,
+    createPullRequest,
+    createBranch,
+    getOrganizationRepositories,
+    getUserRepositories,
+  } = useBackend();
   ///////////////////////
   /// Markdown States ///
   ///////////////////////
@@ -91,11 +82,16 @@ const editor = () => {
     'Pick Markdown',
   );
 
+  const resetMarkdown = () => {
+    setMarkdownBase('Pick Markdown');
+    setMarkdownEdit('Pick Markdown');
+  };
+
   ///////////////////////
   ///      States     ///
   ///////////////////////
 
-  const [openMenu, setOpenMenu] = useState(false);
+  const [openMenu, setOpenMenu] = useState(true);
 
   const [watchingModeOnRepository, setWatchingModeOnRepository] =
     useState<WatchingModeOnRepository>(WatchingModeOnRepository.REPOSITORY);
@@ -127,13 +123,7 @@ const editor = () => {
   const [selectedFile, setSelectedFile] = useState<SingleFileType>();
   const [contentPath, setContentPath] = useState<string | undefined>();
 
-  const [loadingMenu, setLoadingMenu] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
-  const [loadingSubTree, setLoadingSubTree] = useState(false);
-
-  const [listOfAllowedRepositories, setListOfAllowedRepositories] = useState<
-    allowedRepositioriesType[]
-  >([]);
 
   ///////////////////////
 
@@ -173,33 +163,43 @@ const editor = () => {
       })
         .then((response) => response.json())
         .then(async (data) => {
-          if (data === 'No_installation') {
-            router.push(process.env.NEXT_PUBLIC_INSTALLATION_LINK!);
-          } else {
-            const response = await allowedRepositiories(data.accessToken);
-            setListOfAllowedRepositories(response);
-            setTokenWithLocal(data.accessToken);
-            setIsLoggedIn(true);
-          }
+          setTokenWithLocal(data.accessToken);
+          setIsLoggedIn(true);
         });
     }
   }, []);
 
-  /// gettingToken ///
-
   /// First Load ///
 
   useEffect(() => {
-    if (isLoggedIn && token && !loggedData) {
-      getUserInfo(token).then(async (res) => {
-        setLoadingMenu(true);
+    if (isLoggedIn && token) {
+      getUserInfo(token).then((res) => {
         setLoggedData(res);
         setOrganizationList(res);
         setIsLoggedIn(true);
         router.replace('/editor');
-        const allowedRepositories = await allowedRepositiories(token!);
-        setListOfAllowedRepositories(allowedRepositories);
-        setterForRespositoriesList(
+        setLoadingFullTree(true);
+        getUserRepositories(token, {
+          first: 100,
+          orderBy: {
+            direction: OrderDirection.DESC,
+            field: RepositoryOrderField.PUSHED_AT,
+          },
+        }).then((response) => {
+          setRepositoriesList(response);
+          setLoadingFullTree(false);
+        });
+      });
+    }
+  }, [isLoggedIn]);
+
+  /// Repositories refetch ///
+
+  useEffect(() => {
+    if (isLoggedIn && token) {
+      setRepositoriesList(undefined);
+      if (selectedOrganization !== '---') {
+        getOrganizationRepositories(
           token,
           {
             first: 100,
@@ -209,38 +209,28 @@ const editor = () => {
             },
           },
           selectedOrganization,
-          allowedRepositories,
-          setRepositoriesList,
-          setLoadingMenu,
-        );
-      });
-    }
-  }, [isLoggedIn]);
-
-  /// First Load ///
-
-  /// Repositories refetch ///
-
-  useEffect(() => {
-    if (isLoggedIn && token) {
-      setterForRespositoriesList(
-        token,
-        {
+        ).then((response) => {
+          setRepositoriesList(response);
+          setLoadingFullTree(false);
+        });
+      } else {
+        getUserRepositories(token, {
           first: 100,
           orderBy: {
             direction: OrderDirection.DESC,
             field: RepositoryOrderField.PUSHED_AT,
           },
-        },
-        selectedOrganization,
-        listOfAllowedRepositories,
-        setRepositoriesList,
-        setLoadingFullTree,
-      );
+        }).then((response) => {
+          setRepositoriesList(response);
+          setLoadingFullTree(false);
+        });
+      }
     }
   }, [selectedOrganization]);
+
   useEffect(() => {
     if (isLoggedIn && token && selectedRepository) {
+      setLoadingFullTree(true);
       setCommitingMode(CommitingModes.PULL_REQUEST);
       resetCommitForm();
       resetPullRequestForm();
@@ -253,15 +243,12 @@ const editor = () => {
           selectedRepository,
           loggedData?.login === selectedRepository.owner.login,
           setSelectedRepositoryContent,
-          setLoadingSubTree,
+          setLoadingFullTree,
         );
     }
   }, [contentPath, selectedBranch]);
 
-  /// Repositories refetch ///
-
   //COMMITS
-
   const onCommitSubmit: SubmitHandler<CommitInput> = (data) => {
     console.log(data);
     setSendingToGIT(true);
@@ -386,7 +373,7 @@ const editor = () => {
                   setSelectedFile(undefined);
                   setMarkdownBase('Pick markdown');
                   setMarkdownEdit('Pick markdown');
-                  setLoadingSubTree(true);
+                  setLoadingFullTree(true);
                   setContentPath((prev) => {
                     if (prev) {
                       if (prev.lastIndexOf('/') === -1) {
@@ -409,6 +396,7 @@ const editor = () => {
     switch (input.extension) {
       case '.md': {
         setSelectedFile(input);
+        setLoadingFullTree(true);
         setContentPath(
           contentPath ? contentPath + '/' + input.name : input.name,
         );
@@ -421,7 +409,9 @@ const editor = () => {
           loggedData?.login === selectedRepository?.owner.login,
           setMarkdownEdit,
           setMarkdownBase,
+          setLoadingFullTree,
         );
+
         break;
       }
       case '': {
@@ -432,7 +422,6 @@ const editor = () => {
             return prev + `/${input.name}`;
           }
         });
-        setLoadingSubTree(true);
         break;
       }
       case undefined:
@@ -440,18 +429,81 @@ const editor = () => {
     }
   };
 
+  const handleRepositoryPick = (repository: RepositoryType) => {
+    setLoadingFullTree(true);
+    setSelectedRepository(repository);
+    setSelectedBranch(repository.defaultBranchRef?.name);
+    if (
+      repository &&
+      repository.defaultBranchRef &&
+      token &&
+      contentPath !== ''
+    )
+      setterForRespositoryContent(
+        token,
+        contentPath ? contentPath : '',
+        selectedOrganization,
+        repository.defaultBranchRef?.name,
+        repository,
+        loggedData?.login === repository.owner.login,
+        setSelectedRepositoryContent,
+        setLoadingFullTree,
+      );
+  };
+
+  const resetContentPath = () => {
+    setContentPath((prev) => {
+      if (prev) {
+        if (prev.lastIndexOf('/') === -1) {
+          setLoadingFullTree(false);
+          setSelectedFile(undefined);
+          return undefined;
+        } else {
+          return prev.slice(0, prev.lastIndexOf('/'));
+        }
+      } else {
+        setLoadingFullTree(false);
+        setSelectedRepository(undefined);
+        return undefined;
+      }
+    });
+    resetMarkdown();
+  };
   return (
     <Layout isEditor pageTitle="MDtx Editor">
       <div className="max-w-[25vw] relative">
         <Menu
+          commitingMode={commitingMode}
+          setCommitingMode={setCommitingMode}
+          contentPath={contentPath}
+          selectedFile={selectedFile}
+          filteredRepositories={filteredRepositories}
           selectedOrganization={selectedOrganization}
           setSelectedOrganization={setSelectedOrganization}
+          selectedBranch={selectedBranch}
+          setSelectedBranch={setSelectedBranch}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
           organizationList={organizationList}
-          loadingMenu={loadingMenu}
+          loadingFullTree={loadingFullTree}
+          setLoadingFullTree={setLoadingFullTree}
           loggedData={loggedData}
           isOpen={openMenu}
+          selectedRepository={selectedRepository}
+          selectedRepositoryContent={selectedRepositoryContent}
+          handleRepositoryPick={handleRepositoryPick}
+          handlePress={handlePress}
+          resetContentPath={resetContentPath}
+          errorsCommit={errorsCommit}
+          handleSubmitCommit={handleSubmitCommit}
+          markdownBase={markdownBase}
+          markdownEdit={markdownEdit}
+          onCommitSubmit={onCommitSubmit}
+          registerCommit={registerCommit}
+          errorsPullRequest={errorsPullRequest}
+          handleSubmitPullRequest={handleSubmitPullRequest}
+          onPullRequestSubmit={onPullRequestSubmit}
+          registerPullRequest={registerPullRequest}
         />
         <div
           className="cursor-pointer select-none z-[99] flex justify-center items-center absolute bottom-[1.6rem] right-[-1.6rem] w-[3.2rem] h-[3.2rem] rounded-full bg-mdtxOrange0"
@@ -466,566 +518,6 @@ const editor = () => {
           >
             <ArrowLeft />
           </div>
-        </div>
-      </div>
-
-      <div className="select-none w-full max-w-[20vw] h-screen bg-[#13131C] border-r-[2px] border-r-solid border-r-white flex flex-col items-center">
-        <div className="w-full border-b-[1px] border-white relative min-h-[30%] pt-[2.4rem]">
-          {selectedRepository && (
-            <>
-              {!selectedFile && (
-                <div className="bottom-[0.8rem] left-[0.8rem] absolute flex gap-[.8rem]">
-                  <div
-                    className="flex justify-center items-center relative w-[4.8rem] h-[2.4rem] rounded-[3.2rem] border-[2px] border-[#FFF]"
-                    onClick={() => {
-                      watchingModeOnRepository ===
-                        WatchingModeOnRepository.REPOSITORY &&
-                        setWatchingModeOnRepository(
-                          WatchingModeOnRepository.PULL_REQUESTS,
-                        );
-                      watchingModeOnRepository ===
-                        WatchingModeOnRepository.PULL_REQUESTS &&
-                        setWatchingModeOnRepository(
-                          WatchingModeOnRepository.REPOSITORY,
-                        );
-                    }}
-                  >
-                    <div
-                      className={`${
-                        watchingModeOnRepository ===
-                        WatchingModeOnRepository.REPOSITORY
-                          ? 'translate-x-[-70%]'
-                          : 'translate-x-[70%]'
-                      } transition-all ease-in-out duration-300 absolute bg-[#FFF] w-[1.6rem] h-[1.6rem] rounded-full`}
-                    />
-                  </div>
-                  <p className="text-[#FFF]">
-                    {watchingModeOnRepository ===
-                    WatchingModeOnRepository.REPOSITORY
-                      ? 'Repository'
-                      : 'Pull requests'}
-                  </p>
-                </div>
-              )}
-
-              <p className="text-white absolute bottom-[.8rem] right-[.8rem]">
-                Current branch
-              </p>
-            </>
-          )}
-          {selectedRepository && (
-            <p className="text-white absolute bottom-[.8rem] right-[.8rem]">
-              Current branch
-            </p>
-          )}
-
-          <div>
-            <div className="mt-[0.8rem] flex flex-col">
-              <h1 className="text-[1.8rem] text-center text-white">
-                Welcome to <span className="text-[#0A58CA]">MDtx</span> editor!
-              </h1>
-              {loggedData?.avatarUrl && (
-                <div className="my-[0.8rem] relative w-[6.4rem] h-[6.4rem] rounded-full self-center">
-                  <Image
-                    priority
-                    width={128}
-                    height={128}
-                    className="rounded-full"
-                    alt="User Logo"
-                    src={loggedData.avatarUrl}
-                  />
-                </div>
-              )}
-              <p className="text-center font-[700] text-white">Welcome!</p>
-              <p className="text-center font-[400] text-white">
-                {loggedData?.name}
-              </p>
-              <div className="max-w-[12.8rem] flex items-center justify-center flex-col mx-auto gap-[0.4rem]">
-                {!selectedRepository && organizationList?.organizations?.nodes && (
-                  <select
-                    defaultValue={selectedOrganization}
-                    onChange={(e) => {
-                      setSelectedOrganization(e.target.value);
-                      setLoadingFullTree(true);
-                    }}
-                  >
-                    <option>---</option>
-                    {organizationList.organizations.nodes.map((x) => {
-                      return (
-                        <option key={x.login} value={x.login}>
-                          {x.login}
-                        </option>
-                      );
-                    })}
-                  </select>
-                )}
-                {!selectedRepository && (
-                  <input
-                    placeholder="Type to search"
-                    value={autoCompleteValue}
-                    onChange={(e) => {
-                      setAutoCompleteValue(e.target.value);
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="relative pt-[1.6rem] pl-[1.6rem] min-h-[70%] scrollbar stroke-current overflow-x-hidden overflow-y-scroll w-full gap-[0.8rem]">
-          {leaveWithChanges && selectedFile && (
-            <div className="z-[10] left-0 top-0 absolute w-full h-full bg-[#31313CF2] px-[.8rem] py-[.4rem]">
-              <p className="mt-[9.6rem] text-white text-center font-bold">
-                Are you sure? You got uncommited changes
-              </p>
-              <div className="mt-[3.2rem] w-[80%] mx-auto gap-[1.6rem] flex justify-between">
-                <div
-                  onClick={() => {
-                    setLeaveWithChanges(false);
-                    setSelectedFile(undefined);
-                    setMarkdownBase('Pick markdown');
-                    setMarkdownEdit('Pick markdown');
-                    setLoadingSubTree(true);
-                    setContentPath((prev) => {
-                      if (prev) {
-                        if (prev.lastIndexOf('/') === -1) {
-                          return undefined;
-                        } else {
-                          return prev.slice(0, prev.lastIndexOf('/'));
-                        }
-                      } else {
-                        return undefined;
-                      }
-                    });
-                  }}
-                  className="w-1/2 bg-[#0A58CA] rounded-[3.6rem] flex justify-center items-center"
-                >
-                  <p className="text-white">Yes</p>
-                </div>
-                <div
-                  onClick={() => setLeaveWithChanges(false)}
-                  className="w-1/2 flex justify-center items-center bg-[#13131C] rounded-[3.6rem]"
-                >
-                  <p className="text-white">No</p>
-                </div>
-              </div>
-            </div>
-          )}
-          <>
-            {loadingFullTree ? (
-              <div className="flex w-full items-center justify-center">
-                <ClipLoader color="#FFF" size={64} />
-              </div>
-            ) : (
-              <div className="mt-[.8rem] flex flex-col items-start">
-                {!selectedRepository ? (
-                  <>
-                    {filteredRepositories?.nodes &&
-                    filteredRepositories.nodes.length > 0 ? (
-                      filteredRepositories?.nodes?.map((repository) => {
-                        return (
-                          <div
-                            onClick={() => {
-                              setLoadingSubTree(true);
-                              setSelectedRepository(repository);
-                              setSelectedBranch(
-                                repository.defaultBranchRef?.name,
-                              );
-                              if (
-                                repository &&
-                                repository.defaultBranchRef &&
-                                token &&
-                                contentPath !== ''
-                              )
-                                setterForRespositoryContent(
-                                  token,
-                                  contentPath ? contentPath : '',
-                                  selectedOrganization,
-                                  repository.defaultBranchRef?.name,
-                                  repository,
-                                  loggedData?.login === repository.owner.login,
-                                  setSelectedRepositoryContent,
-                                  setLoadingSubTree,
-                                );
-                            }}
-                            key={repository.name}
-                          >
-                            <p className="text-[#FFF]">{repository.name}</p>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-[#FFF]">Nothing there</p>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {watchingModeOnRepository ===
-                    WatchingModeOnRepository.PULL_REQUESTS ? (
-                      <div className="w-full flex flex-col">
-                        <div
-                          className="w-full flex"
-                          onClick={() => {
-                            setSelectedRepository(undefined);
-                            setWatchingModeOnRepository(
-                              WatchingModeOnRepository.REPOSITORY,
-                            );
-                          }}
-                        >
-                          <BackIcon />
-                          <p className="ml-[1.6rem] text-white">
-                            {selectedRepository.name}
-                          </p>
-                        </div>
-                        <div>
-                          {selectedRepository.pullRequests?.nodes &&
-                          selectedRepository.pullRequests.nodes?.filter(
-                            (x) => !x.closed,
-                          ).length > 0 ? (
-                            <>
-                              {selectedRepository.pullRequests.nodes
-                                ?.filter((x) => !x.closed)
-                                .map((pullRequest, idx) => (
-                                  <div
-                                    key={pullRequest.headRefName}
-                                    onClick={() => {
-                                      setSelectedFile(undefined);
-                                      setMarkdownEdit('Pick markdown');
-                                      setMarkdownBase('Pick markdown');
-                                      setSelectedBranch(
-                                        pullRequest.headRefName,
-                                      );
-                                      setWatchingModeOnRepository(
-                                        WatchingModeOnRepository.REPOSITORY,
-                                      );
-                                    }}
-                                    className={`${
-                                      idx === 0 && 'border-t-[1px]'
-                                    } border-b-[1px]`}
-                                  >
-                                    <div className="flex items-center gap-[.8rem]">
-                                      {pullRequest?.author?.avatarUrl && (
-                                        <div className="my-[0.8rem] relative w-[3.2rem] h-[3.2rem] rounded-full self-center">
-                                          <Image
-                                            priority
-                                            width={64}
-                                            height={64}
-                                            className="rounded-full"
-                                            alt="User Logo"
-                                            src={pullRequest.author.avatarUrl}
-                                          />
-                                        </div>
-                                      )}
-                                      <p className="text-white">
-                                        {pullRequest.author?.login}
-                                      </p>
-                                    </div>
-                                    <p className="text-white">
-                                      Branch: {pullRequest.headRefName}
-                                    </p>
-                                    <p className="text-white">
-                                      Target to: {pullRequest.baseRefName}
-                                    </p>
-                                    <p className="text-white">
-                                      {pullRequest.bodyText}
-                                    </p>
-
-                                    <p className="text-white">
-                                      {dateFormatter(
-                                        pullRequest.updatedAt,
-                                        'dd.MM.yyyy hh:mm',
-                                      )}
-                                    </p>
-                                  </div>
-                                ))}
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-white">
-                                No pull requests on this repository
-                              </p>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col w-full">
-                        <div className="flex w-full">
-                          {contentPath?.length ? (
-                            <div
-                              onClick={() => {
-                                if (markdownBase === markdownEdit) {
-                                  setSelectedFile(undefined);
-                                  setMarkdownBase('Pick markdown');
-                                  setMarkdownEdit('Pick markdown');
-                                  setLoadingSubTree(true);
-                                  setContentPath((prev) => {
-                                    if (prev) {
-                                      if (prev.lastIndexOf('/') === -1) {
-                                        return undefined;
-                                      } else {
-                                        return prev.slice(
-                                          0,
-                                          prev.lastIndexOf('/'),
-                                        );
-                                      }
-                                    } else {
-                                      return undefined;
-                                    }
-                                  });
-                                } else {
-                                  setLeaveWithChanges(true);
-                                }
-                              }}
-                              className="relative w-full flex"
-                            >
-                              <BackIcon />
-                              <p className="ml-[1.6rem] text-white">
-                                {contentPath}
-                              </p>
-                            </div>
-                          ) : (
-                            <div
-                              className="w-full flex"
-                              onClick={() => {
-                                setSelectedRepository(undefined);
-                              }}
-                            >
-                              <BackIcon />
-                              <p className="ml-[1.6rem] text-white">
-                                {selectedRepository.name}
-                              </p>
-                            </div>
-                          )}
-
-                          {!contentPath ? (
-                            <div className="w-[9.6rem]">
-                              <select
-                                className="w-full"
-                                defaultValue={
-                                  selectedBranch
-                                    ? selectedBranch
-                                    : selectedRepository.defaultBranchRef?.name
-                                }
-                                onChange={(e) => {
-                                  setLoadingSubTree(true);
-                                  setSelectedBranch(e.target.value);
-                                }}
-                              >
-                                {selectedRepository.refs?.nodes?.map(
-                                  (branch) => (
-                                    <option
-                                      key={branch.name}
-                                      value={branch.name}
-                                    >
-                                      {branch.name}
-                                    </option>
-                                  ),
-                                )}
-                              </select>
-                            </div>
-                          ) : (
-                            <p className="text-white">{selectedBranch}</p>
-                          )}
-                        </div>
-                        {loadingSubTree ? (
-                          <div className="flex w-full items-center justify-center">
-                            <ClipLoader color="#FFF" size={64} />
-                          </div>
-                        ) : (
-                          <div className="mt-[1.6rem]">
-                            {!selectedFile ? (
-                              <>
-                                {selectedRepositoryContent &&
-                                selectedRepositoryContent.object &&
-                                selectedRepositoryContent.object.entries &&
-                                selectedRepositoryContent.object.entries
-                                  .length > 0 ? (
-                                  selectedRepositoryContent?.object?.entries?.map(
-                                    (content) => {
-                                      return (
-                                        <div
-                                          onClick={() => {
-                                            handlePress(content);
-                                          }}
-                                          key={content.name}
-                                        >
-                                          <p className="text-white">
-                                            {content.name}
-                                          </p>
-                                        </div>
-                                      );
-                                    },
-                                  )
-                                ) : (
-                                  <div>
-                                    <p className="text-white">
-                                      Nothing there :P
-                                    </p>
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <>
-                                <div
-                                  className="flex justify-center items-center relative w-[4.8rem] h-[2.4rem] rounded-[3.2rem] border-[2px] border-[#FFF]"
-                                  onClick={() => {
-                                    commitingMode === CommitingModes.COMMIT &&
-                                      setCommitingMode(
-                                        CommitingModes.PULL_REQUEST,
-                                      );
-                                    commitingMode ===
-                                      CommitingModes.PULL_REQUEST &&
-                                      setCommitingMode(CommitingModes.COMMIT);
-                                  }}
-                                >
-                                  <div
-                                    className={`${
-                                      commitingMode ===
-                                      CommitingModes.PULL_REQUEST
-                                        ? 'translate-x-[-70%]'
-                                        : 'translate-x-[70%]'
-                                    } transition-all ease-in-out duration-300 absolute bg-[#FFF] w-[1.6rem] h-[1.6rem] rounded-full`}
-                                  />
-                                </div>
-                                {sendingToGIT ? (
-                                  <div>
-                                    <ClipLoader color="#FFF" size={48} />
-                                  </div>
-                                ) : (
-                                  <div>
-                                    {commitingMode === CommitingModes.COMMIT ? (
-                                      <div>
-                                        <form
-                                          className="flex flex-col"
-                                          onSubmit={handleSubmitCommit(
-                                            onCommitSubmit,
-                                          )}
-                                        >
-                                          <p className="text-white italic font-bold">
-                                            Commit
-                                          </p>
-                                          <input
-                                            {...registerCommit(
-                                              'commitMessage',
-                                              {
-                                                required: true,
-                                              },
-                                            )}
-                                            placeholder="Commit message"
-                                          />
-                                          {markdownBase !== markdownEdit ? (
-                                            <input
-                                              className="text-white"
-                                              type="submit"
-                                            />
-                                          ) : (
-                                            <div>
-                                              <p className="text-white">
-                                                There are no changes to commit
-                                              </p>
-                                            </div>
-                                          )}
-                                        </form>
-                                      </div>
-                                    ) : (
-                                      <div>
-                                        {selectedRepository!.refs!.nodes!
-                                          .length > 0 ? (
-                                          <>
-                                            <p className="text-white italic font-bold">
-                                              Pull request
-                                            </p>
-                                            <form
-                                              className="flex flex-col"
-                                              onSubmit={handleSubmitPullRequest(
-                                                onPullRequestSubmit,
-                                              )}
-                                            >
-                                              <select
-                                                {...registerPullRequest(
-                                                  'selectedTargetBranch',
-                                                  { required: true },
-                                                )}
-                                              >
-                                                {selectedRepository.refs?.nodes?.map(
-                                                  (branch) => {
-                                                    return (
-                                                      <option
-                                                        key={branch.name}
-                                                        value={branch.name}
-                                                      >
-                                                        {branch.name}
-                                                      </option>
-                                                    );
-                                                  },
-                                                )}
-                                              </select>
-                                              <input
-                                                {...registerPullRequest(
-                                                  'newBranchName',
-                                                  { required: true },
-                                                )}
-                                                placeholder="New branch name"
-                                              />
-                                              <input
-                                                {...registerPullRequest(
-                                                  'pullRequestTitle',
-                                                  { required: true },
-                                                )}
-                                                placeholder="Pull request title"
-                                              />
-                                              <input
-                                                {...registerPullRequest(
-                                                  'pullRequestMessage',
-                                                  { required: true },
-                                                )}
-                                                placeholder="Pull request message"
-                                              />
-                                              <input
-                                                {...registerPullRequest(
-                                                  'commitMessage',
-                                                  { required: true },
-                                                )}
-                                                placeholder="Commit message"
-                                              />
-                                              {markdownBase !== markdownEdit ? (
-                                                <input
-                                                  className="text-white"
-                                                  type="submit"
-                                                />
-                                              ) : (
-                                                <div>
-                                                  <p className="text-white">
-                                                    There are no changes
-                                                  </p>
-                                                </div>
-                                              )}
-                                            </form>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <p className="text-white">
-                                              There are no branch to make pull
-                                              request to
-                                            </p>
-                                          </>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </>
         </div>
       </div>
       <div className="w-full">
