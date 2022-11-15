@@ -96,7 +96,7 @@ export const Menu: React.FC<MenuInteface> = ({
   return (
     <div
       className={`${
-        isOpen ? 'w-[20vw]' : 'invisible w-0'
+        isOpen ? 'w-[300px]' : 'invisible w-0'
       } relative transition-all duration-500 ease-in-out select-none h-screen bg-mdtxBlack border-r-[2px] border-r-solid border-r-mdtxOrange0 flex flex-col items-center`}
     >
       <div
@@ -104,7 +104,7 @@ export const Menu: React.FC<MenuInteface> = ({
           isOpen
             ? 'translate-x-[0%] duration-[900ms]'
             : 'translate-x-[-25vw] duration-[300ms]'
-        } w-full h-full transition-transform ease-in-out relative`}
+        } w-full h-full transition-transform ease-in-out relative flex flex-col`}
       >
         {leaveWithChanges && (
           <LeaveConfirmation
@@ -112,13 +112,8 @@ export const Menu: React.FC<MenuInteface> = ({
             resetContentPath={resetContentPath}
           />
         )}
-        <div className="mt-[1.6rem] mb-[2.4rem] flex w-full justify-center items-center">
+        <div className="w-full p-8 flex items-center justify-between">
           <MDtxLogo />
-        </div>
-        <div className="w-full flex justify-around relative my-[1.6rem]">
-          <Button onClick={() => logOut()} text={'Logout'} color={'orange'} />
-        </div>
-        <div className="border-t-[1px] py-[1.6rem] border-b-[1px] border-mdtxOrange0">
           <UserInfo loggedData={loggedData} />
         </div>
         <div className="relative w-full border-b-[1px] border-mdtxOrange0 pb-[5.6rem]">
@@ -141,13 +136,13 @@ export const Menu: React.FC<MenuInteface> = ({
             setLeaveWithChanges={setLeaveWithChanges}
           />
         </div>
-        <div className="w-full h-full flex">
+        <div className="w-full flex-1 overflow-y-auto">
           {loadingFullTree ? (
             <div className="mt-[4.2rem] flex justify-center w-full">
               <PulseLoader size={'16px'} color="#FF7200" />
             </div>
           ) : (
-            <div className="pl-[1.6rem] pt-[1.6rem] overflow-y-scroll max-h-[57.5vh] scrollbar flex flex-col gap-[0.4rem] justify-start w-full">
+            <div className="pl-[1.6rem] pt-[1.6rem] overflow-y-scroll scrollbar flex flex-col gap-[0.4rem] justify-start w-full">
               {!selectedFile ? (
                 <>
                   {selectedRepository ? (

@@ -3,8 +3,8 @@ import React from 'react';
 export const MDtxLogo = () => {
   return (
     <svg
-      width="122"
-      height="48"
+      width="61"
+      height="24"
       viewBox="0 0 122 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
