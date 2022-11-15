@@ -1,14 +1,14 @@
 # MDtx [![NPM Version](https://img.shields.io/npm/v/mdtx.svg?style=flat)](https://www.npmjs.com/package/mdtx) [![NPM Version](https://img.shields.io/github/checks-status/aexol-studio/mdtx/main)](https://www.npmjs.com/package/mdtx) [![NPM Version](https://img.shields.io/github/last-commit/aexol-studio/mdtx)](https://github.com/aexol-studio/mdtx)
 
-Inspired by generative programming and weed :). So I was learning Elm language at home usually in the evening and now I am missing all this generative stuff from Elm libs in TS.
+Inspired by generative programming. I was learning Elm language at home as usual in the evening and I was missing all that generative stuff from Elm libs in TS.
 
 ![Alt Text](sandbox/mdtx-nextjs-example/public/PresentationOfMDtx.gif)
 
 # What is MDtx?
 
-- When you add **Markdown** files with gray matter it will generate typings for those,
-- Genereted typings from **Markdowns** can get automatically convert into html structure,
-- There is **Next JS Plugin** to work faster with MDtx on NextJS,
+- Just add **Markdown** files with gray matter and it will generate typings for them,
+- Generated typings from **Markdowns** can get automatically converted into html structure,
+- There is a **Next JS Plugin** to work faster with MDtx on NextJS,
 
 # What we serve?
 
@@ -16,7 +16,7 @@ Inspired by generative programming and weed :). So I was learning Elm language a
 
 ## Readme CLI
 
-#### Instaling MDtx
+#### Installing MDtx
 
 ```
 npm i mdtx
@@ -28,7 +28,7 @@ npm i mdtx
 mdtx init
 ```
 
-#### After initalize config file mdtx.json apear as that:
+#### After initializing a config file mdtx.json will appear with:
 
 ```
 {
@@ -37,12 +37,12 @@ mdtx init
 }
 ```
 
-- in: string - means folder with content, **(default: "./content")**
-- out: string - means folder to generate mdtx.ts file, **(default: "./src")**
+- in: string - is the designated folder with content, **(default: "./content")**
+- out: string - is the designated folder to generate mdtx.ts file, **(default: "./src")**
 
 #### Optionally:
 
-- markdownToHtml: boolean - allow mdtx covert md content to html content. **(default: false)**
+- markdownToHtml: boolean - allow mdtx to convert md content to html content. **(default: false)**
 
 #### Watch mode (on "in" path)
 
