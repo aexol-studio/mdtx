@@ -1,2 +1,2 @@
-export * from './allowedRepositiories'
-export * from './dateFormatter'
+export * from './dateFormatter';
+export * from './cleanRepositoryContent';

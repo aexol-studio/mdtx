@@ -9,6 +9,7 @@ export const setterForContentFile = (
   isOwner: boolean,
   setMarkdownEdit: React.Dispatch<React.SetStateAction<string | undefined>>,
   setMarkdownBase: React.Dispatch<React.SetStateAction<string | undefined>>,
+  setLoadingFullTree: React.Dispatch<React.SetStateAction<boolean>>,
 ) => {
   const {
     getFileContentFromUserRepository,
@@ -24,6 +25,7 @@ export const setterForContentFile = (
     ).then((res) => {
       setMarkdownEdit(res?.object?.text);
       setMarkdownBase(res?.object?.text);
+      setLoadingFullTree(false);
     });
   } else {
     if (selectedOrganization === '---') {
@@ -37,6 +39,7 @@ export const setterForContentFile = (
       ).then((res) => {
         setMarkdownEdit(res?.object?.text);
         setMarkdownBase(res?.object?.text);
+        setLoadingFullTree(false);
       });
     } else {
       getFileContentFromOrganization(
@@ -48,6 +51,7 @@ export const setterForContentFile = (
       ).then((res) => {
         setMarkdownEdit(res?.object?.text);
         setMarkdownBase(res?.object?.text);
+        setLoadingFullTree(false);
       });
     }
   }

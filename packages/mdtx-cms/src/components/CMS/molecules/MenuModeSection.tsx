@@ -1,5 +1,5 @@
 import { ArrowLeft, Loupe } from '@/src/assets';
-import { RepositoryType, UserType } from '@/src/backend';
+import { RepositoryType, SingleFileType, UserType } from '@/src/backend';
 import React, { useEffect } from 'react';
 export enum Mode {
   ORGANIZATIONS = 'ORGANIZATIONS',
@@ -7,6 +7,8 @@ export enum Mode {
 }
 
 export interface MenuModeSectionInterface {
+  selectedFile?: SingleFileType;
+  contentPath?: string;
   autoCompleteValue?: string;
   setAutoCompleteValue: React.Dispatch<
     React.SetStateAction<string | undefined>
@@ -21,6 +23,8 @@ export interface MenuModeSectionInterface {
   setLoadingFullTree: React.Dispatch<React.SetStateAction<boolean>>;
   selectedRepository?: RepositoryType;
   resetContentPath: () => void;
+  setLeaveWithChanges: React.Dispatch<React.SetStateAction<boolean>>;
+  sameMarkdown: boolean;
 }
 
 export const MenuModeSection: React.FC<MenuModeSectionInterface> = ({
@@ -36,6 +40,9 @@ export const MenuModeSection: React.FC<MenuModeSectionInterface> = ({
   setLoadingFullTree,
   selectedRepository,
   resetContentPath,
+  selectedFile,
+  setLeaveWithChanges,
+  sameMarkdown,
 }) => {
   useEffect(() => {
     setAutoCompleteValue('');
@@ -45,39 +52,49 @@ export const MenuModeSection: React.FC<MenuModeSectionInterface> = ({
       <div
         className={`${
           selectedRepository !== undefined ? '' : 'translate-x-[-200%]'
-        } flex transition-all duration-500 ease-in-out left-[1.6rem] top-[1.6rem] absolute`}
+        } flex items-center justify-between transition-all duration-500 ease-in-out w-full px-[1.6rem] top-[1.6rem] absolute`}
       >
-        <div
-          className="cursor-pointer min-w-[2.4rem] min-h-[2.4rem]"
-          onClick={() => {
-            resetContentPath();
-          }}
-        >
-          <ArrowLeft />
-        </div>
-        <p className="ml-[0.8rem] text-[1.4rem] text-white">
-          {selectedRepository?.name}
-        </p>
-        <div className="w-[9.6rem]">
-          <select
-            className="w-full"
-            defaultValue={
-              selectedBranch
-                ? selectedBranch
-                : selectedRepository?.defaultBranchRef?.name
-            }
-            onChange={(e) => {
-              setLoadingFullTree(true);
-              setSelectedBranch(e.target.value);
+        <div className="flex items-center">
+          <div
+            className="cursor-pointer min-w-[2.4rem] min-h-[2.4rem]"
+            onClick={() => {
+              if (selectedFile && !sameMarkdown) {
+                setLeaveWithChanges(true);
+              } else {
+                resetContentPath();
+              }
             }}
           >
-            {selectedRepository?.refs?.nodes?.map((branch) => (
-              <option key={branch.name} value={branch.name}>
-                {branch.name}
-              </option>
-            ))}
-          </select>
+            <ArrowLeft />
+          </div>
+          <p className="ml-[0.8rem] text-[1.4rem] text-white">
+            {selectedRepository?.name}
+          </p>
         </div>
+        {selectedFile ? (
+          <></>
+        ) : (
+          <div className="w-[9.6rem]">
+            <select
+              className="w-full"
+              defaultValue={
+                selectedBranch
+                  ? selectedBranch
+                  : selectedRepository?.defaultBranchRef?.name
+              }
+              onChange={(e) => {
+                setLoadingFullTree(true);
+                setSelectedBranch(e.target.value);
+              }}
+            >
+              {selectedRepository?.refs?.nodes?.map((branch) => (
+                <option key={branch.name} value={branch.name}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
       <div
         className={`${
@@ -159,7 +176,7 @@ export const MenuModeSection: React.FC<MenuModeSectionInterface> = ({
                     : 'bg-mdtxWhite'
                 } cursor-pointer flex justify-center items-center h-[4.2rem] w-[3.2rem] border-t-[1px] border-mdtxOrange0 rounded-b-[1.2rem]`}
               >
-                <p className="mb-[0.2rem] rotate-[-90deg] text-[1rem] font-[700]">
+                <p className="mb-[0.1rem] ml-[0.4rem] rotate-[-90deg] text-[1rem] font-[700]">
                   ORGS
                 </p>
               </div>

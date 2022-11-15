@@ -4,7 +4,8 @@
   "private": false,
   "license": "MIT",
   "description": "Mdtx generate Typescript Files from Markdown. - CLI",
-  "homepage": "https://github.com/aexol-studio/mdtx#readme",
+  "homepage": "https://github.com/aexol-studio/mdtx",
+  "readme": "https://github.com/aexol-studio/mdtx#readme",
   "main": "lib/CLI.js",
   "bin": {
     "mdtx": "lib/CLI.js"

@@ -3,27 +3,7 @@ import {
   RepositoryType,
   useBackend,
 } from '@/src/backend';
-
-const cleanRepositoryContentAndSort = (
-  repositoryContent: RepositoryContentType,
-) => {
-  return {
-    object: {
-      entries: repositoryContent?.object?.entries
-        ?.filter(
-          (file) =>
-            file.extension === '.md' ||
-            (file.extension === '' && file.type === 'tree'),
-        )
-        .sort((file) => {
-          if (file.extension === '.md') {
-            return -1;
-          }
-          return 0;
-        }),
-    },
-  };
-};
+import { cleanRepositoryContentAndSort } from './cleanRepositoryContent';
 
 const setterFunction = (
   setSelectedRepositoryContent: React.Dispatch<
