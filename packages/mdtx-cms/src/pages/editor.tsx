@@ -95,7 +95,7 @@ const editor = () => {
   ///      States     ///
   ///////////////////////
 
-  const [openMenu, setOpenMenu] = useState(false);
+  const [openMenu, setOpenMenu] = useState(true);
 
   const [watchingModeOnRepository, setWatchingModeOnRepository] =
     useState<WatchingModeOnRepository>(WatchingModeOnRepository.REPOSITORY);
@@ -127,9 +127,7 @@ const editor = () => {
   const [selectedFile, setSelectedFile] = useState<SingleFileType>();
   const [contentPath, setContentPath] = useState<string | undefined>();
 
-  const [loadingMenu, setLoadingMenu] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
-  const [loadingSubTree, setLoadingSubTree] = useState(false);
 
   const [listOfAllowedRepositories, setListOfAllowedRepositories] = useState<
     allowedRepositioriesType[]
@@ -185,44 +183,62 @@ const editor = () => {
     }
   }, []);
 
-  /// gettingToken ///
-
   /// First Load ///
 
   useEffect(() => {
-    if (isLoggedIn && token && !loggedData) {
-      getUserInfo(token).then(async (res) => {
-        setLoadingMenu(true);
+    if (isLoggedIn && token) {
+      getUserInfo(token).then((res) => {
         setLoggedData(res);
         setOrganizationList(res);
         setIsLoggedIn(true);
         router.replace('/editor');
-        const allowedRepositories = await allowedRepositiories(token!);
-        setListOfAllowedRepositories(allowedRepositories);
-        setterForRespositoriesList(
-          token,
-          {
-            first: 100,
-            orderBy: {
-              direction: OrderDirection.DESC,
-              field: RepositoryOrderField.PUSHED_AT,
+        setLoadingFullTree(true);
+        allowedRepositiories(token!).then(async (allowedRepositories) => {
+          setListOfAllowedRepositories(allowedRepositories);
+          const responseFromSetter = await setterForRespositoriesList(
+            token,
+            {
+              first: 100,
+              orderBy: {
+                direction: OrderDirection.DESC,
+                field: RepositoryOrderField.PUSHED_AT,
+              },
             },
-          },
-          selectedOrganization,
-          allowedRepositories,
-          setRepositoriesList,
-          setLoadingMenu,
-        );
+            selectedOrganization,
+            allowedRepositories,
+          );
+          responseFromSetter?.map((allowed) => {
+            if (allowed) {
+              if ('nodes' in allowed) {
+                setRepositoriesList((prev) => {
+                  return { ...prev, nodes: allowed.nodes };
+                });
+              } else if ('name' in allowed) {
+                setRepositoriesList((prev) => {
+                  if (prev) {
+                    if (prev.nodes) {
+                      return { ...prev, nodes: [...prev.nodes, allowed] };
+                    } else {
+                      return { ...prev, nodes: [allowed] };
+                    }
+                  } else {
+                    return { nodes: [allowed] };
+                  }
+                });
+              }
+            }
+          });
+          setLoadingFullTree(false);
+        });
       });
     }
   }, [isLoggedIn]);
-
-  /// First Load ///
 
   /// Repositories refetch ///
 
   useEffect(() => {
     if (isLoggedIn && token) {
+      setRepositoriesList(undefined);
       setterForRespositoriesList(
         token,
         {
@@ -234,16 +250,43 @@ const editor = () => {
         },
         selectedOrganization,
         listOfAllowedRepositories,
-        setRepositoriesList,
-        setLoadingFullTree,
-      );
+      )
+        .then((responseFromSetter) => {
+          responseFromSetter?.map((allowed) => {
+            if (allowed) {
+              if ('nodes' in allowed) {
+                setRepositoriesList((prev) => {
+                  return { ...prev, nodes: allowed.nodes };
+                });
+              } else if ('name' in allowed) {
+                setRepositoriesList((prev) => {
+                  if (prev) {
+                    if (prev.nodes) {
+                      return { ...prev, nodes: [...prev.nodes, allowed] };
+                    } else {
+                      return { ...prev, nodes: [allowed] };
+                    }
+                  } else {
+                    return { nodes: [allowed] };
+                  }
+                });
+              }
+            }
+          });
+        })
+        .then(() => {
+          setLoadingFullTree(false);
+        });
     }
   }, [selectedOrganization]);
+
   useEffect(() => {
     if (isLoggedIn && token && selectedRepository) {
+      setLoadingFullTree(true);
       setCommitingMode(CommitingModes.PULL_REQUEST);
       resetCommitForm();
       resetPullRequestForm();
+      console.log(contentPath);
       if (selectedBranch && selectedRepository)
         setterForRespositoryContent(
           token,
@@ -253,15 +296,12 @@ const editor = () => {
           selectedRepository,
           loggedData?.login === selectedRepository.owner.login,
           setSelectedRepositoryContent,
-          setLoadingSubTree,
+          setLoadingFullTree,
         );
     }
   }, [contentPath, selectedBranch]);
 
-  /// Repositories refetch ///
-
   //COMMITS
-
   const onCommitSubmit: SubmitHandler<CommitInput> = (data) => {
     console.log(data);
     setSendingToGIT(true);
@@ -386,7 +426,7 @@ const editor = () => {
                   setSelectedFile(undefined);
                   setMarkdownBase('Pick markdown');
                   setMarkdownEdit('Pick markdown');
-                  setLoadingSubTree(true);
+                  setLoadingFullTree(true);
                   setContentPath((prev) => {
                     if (prev) {
                       if (prev.lastIndexOf('/') === -1) {
@@ -432,26 +472,73 @@ const editor = () => {
             return prev + `/${input.name}`;
           }
         });
-        setLoadingSubTree(true);
         break;
       }
       case undefined:
         break;
     }
   };
+  console.log(contentPath);
 
+  const handleRepositoryPick = (repository: RepositoryType) => {
+    setLoadingFullTree(true);
+    setSelectedRepository(repository);
+    setSelectedBranch(repository.defaultBranchRef?.name);
+    if (
+      repository &&
+      repository.defaultBranchRef &&
+      token &&
+      contentPath !== ''
+    )
+      setterForRespositoryContent(
+        token,
+        contentPath ? contentPath : '',
+        selectedOrganization,
+        repository.defaultBranchRef?.name,
+        repository,
+        loggedData?.login === repository.owner.login,
+        setSelectedRepositoryContent,
+        setLoadingFullTree,
+      );
+  };
+
+  const resetContentPath = () => {
+    setContentPath((prev) => {
+      if (prev) {
+        if (prev.lastIndexOf('/') === -1) {
+          setLoadingFullTree(false);
+          return undefined;
+        } else {
+          return prev.slice(0, prev.lastIndexOf('/'));
+        }
+      } else {
+        setLoadingFullTree(false);
+        setSelectedRepository(undefined);
+        return undefined;
+      }
+    });
+  };
   return (
     <Layout isEditor pageTitle="MDtx Editor">
       <div className="max-w-[25vw] relative">
         <Menu
+          filteredRepositories={filteredRepositories}
           selectedOrganization={selectedOrganization}
           setSelectedOrganization={setSelectedOrganization}
+          selectedBranch={selectedBranch}
+          setSelectedBranch={setSelectedBranch}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
           organizationList={organizationList}
-          loadingMenu={loadingMenu}
+          loadingFullTree={loadingFullTree}
+          setLoadingFullTree={setLoadingFullTree}
           loggedData={loggedData}
           isOpen={openMenu}
+          selectedRepository={selectedRepository}
+          selectedRepositoryContent={selectedRepositoryContent}
+          handleRepositoryPick={handleRepositoryPick}
+          handlePress={handlePress}
+          resetContentPath={resetContentPath}
         />
         <div
           className="cursor-pointer select-none z-[99] flex justify-center items-center absolute bottom-[1.6rem] right-[-1.6rem] w-[3.2rem] h-[3.2rem] rounded-full bg-mdtxOrange0"
@@ -518,28 +605,8 @@ const editor = () => {
               Current branch
             </p>
           )}
-
           <div>
             <div className="mt-[0.8rem] flex flex-col">
-              <h1 className="text-[1.8rem] text-center text-white">
-                Welcome to <span className="text-[#0A58CA]">MDtx</span> editor!
-              </h1>
-              {loggedData?.avatarUrl && (
-                <div className="my-[0.8rem] relative w-[6.4rem] h-[6.4rem] rounded-full self-center">
-                  <Image
-                    priority
-                    width={128}
-                    height={128}
-                    className="rounded-full"
-                    alt="User Logo"
-                    src={loggedData.avatarUrl}
-                  />
-                </div>
-              )}
-              <p className="text-center font-[700] text-white">Welcome!</p>
-              <p className="text-center font-[400] text-white">
-                {loggedData?.name}
-              </p>
               <div className="max-w-[12.8rem] flex items-center justify-center flex-col mx-auto gap-[0.4rem]">
                 {!selectedRepository && organizationList?.organizations?.nodes && (
                   <select
@@ -585,7 +652,7 @@ const editor = () => {
                     setSelectedFile(undefined);
                     setMarkdownBase('Pick markdown');
                     setMarkdownEdit('Pick markdown');
-                    setLoadingSubTree(true);
+                    setLoadingFullTree(true);
                     setContentPath((prev) => {
                       if (prev) {
                         if (prev.lastIndexOf('/') === -1) {
@@ -626,27 +693,7 @@ const editor = () => {
                         return (
                           <div
                             onClick={() => {
-                              setLoadingSubTree(true);
-                              setSelectedRepository(repository);
-                              setSelectedBranch(
-                                repository.defaultBranchRef?.name,
-                              );
-                              if (
-                                repository &&
-                                repository.defaultBranchRef &&
-                                token &&
-                                contentPath !== ''
-                              )
-                                setterForRespositoryContent(
-                                  token,
-                                  contentPath ? contentPath : '',
-                                  selectedOrganization,
-                                  repository.defaultBranchRef?.name,
-                                  repository,
-                                  loggedData?.login === repository.owner.login,
-                                  setSelectedRepositoryContent,
-                                  setLoadingSubTree,
-                                );
+                              handleRepositoryPick(repository);
                             }}
                             key={repository.name}
                           >
@@ -758,7 +805,7 @@ const editor = () => {
                                   setSelectedFile(undefined);
                                   setMarkdownBase('Pick markdown');
                                   setMarkdownEdit('Pick markdown');
-                                  setLoadingSubTree(true);
+                                  setLoadingFullTree(true);
                                   setContentPath((prev) => {
                                     if (prev) {
                                       if (prev.lastIndexOf('/') === -1) {
@@ -808,7 +855,7 @@ const editor = () => {
                                     : selectedRepository.defaultBranchRef?.name
                                 }
                                 onChange={(e) => {
-                                  setLoadingSubTree(true);
+                                  setLoadingFullTree(true);
                                   setSelectedBranch(e.target.value);
                                 }}
                               >
@@ -828,7 +875,7 @@ const editor = () => {
                             <p className="text-white">{selectedBranch}</p>
                           )}
                         </div>
-                        {loadingSubTree ? (
+                        {loadingFullTree ? (
                           <div className="flex w-full items-center justify-center">
                             <ClipLoader color="#FFF" size={64} />
                           </div>
