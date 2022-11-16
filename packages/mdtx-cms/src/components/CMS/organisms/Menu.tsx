@@ -1,13 +1,10 @@
 import { MDtxLogo } from '@/src/assets';
+import { useAuthState, UserType } from '@/src/containers';
 import {
-  RepositoriesType,
-  RepositoryContentType,
-  RepositoryType,
-  SingleFileType,
-  UserType,
-} from '@/src/backend';
-import { useAuthState } from '@/src/containers';
-import { CommitingModes } from '@/src/pages/editor';
+  CommitingModes,
+  FileArray,
+  RepositoryFromSearch,
+} from '@/src/pages/editor';
 import React, { useState } from 'react';
 import {
   UseFormRegister,
@@ -16,15 +13,12 @@ import {
   SubmitHandler,
 } from 'react-hook-form';
 import { PulseLoader } from 'react-spinners';
-import { Button, Switcher, UserInfo } from '../atoms';
+import { Button, UserInfo } from '../atoms';
 import {
-  CommitForm,
   CommitInput,
-  LeaveConfirmation,
   MenuModeSection,
   MenuModeSectionInterface,
   Mode,
-  PullRequestForm,
   PullRequestInput,
 } from '../molecules';
 
@@ -33,14 +27,19 @@ type Omitted = Omit<
   'sameMarkdown'
 >;
 
+type availableBranchType = {
+  commit: {
+    sha: string;
+    url: string;
+  };
+  name: string;
+  protected: false;
+};
+
 export interface MenuInteface extends Omitted {
-  filteredRepositories?: RepositoriesType;
   isOpen: boolean;
   loadingFullTree: boolean;
-  loggedData?: Omit<UserType, 'organizations'>;
-  selectedRepositoryContent?: RepositoryContentType;
-  handleRepositoryPick: (repository: RepositoryType) => void;
-  handlePress: (input: SingleFileType) => void;
+  loggedData?: UserType;
   setCommitingMode: React.Dispatch<React.SetStateAction<CommitingModes>>;
   markdownEdit?: string;
   markdownBase?: string;
@@ -53,28 +52,20 @@ export interface MenuInteface extends Omitted {
   handleSubmitPullRequest: UseFormHandleSubmit<PullRequestInput>;
   errorsPullRequest: Partial<FieldErrorsImpl<PullRequestInput>>;
   onPullRequestSubmit: SubmitHandler<PullRequestInput>;
+  repositoriesFromSearch?: RepositoryFromSearch[];
+  setRepositoriesFromSearch: React.Dispatch<
+    React.SetStateAction<RepositoryFromSearch[] | undefined>
+  >;
+  setMarkdownBase: React.Dispatch<React.SetStateAction<string | undefined>>;
+  setMarkdownEdit: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 export const Menu: React.FC<MenuInteface> = ({
-  contentPath,
-  selectedFile,
-  filteredRepositories,
   autoCompleteValue,
   setAutoCompleteValue,
-  selectedBranch,
-  setSelectedBranch,
-  selectedOrganization,
-  setSelectedOrganization,
   isOpen,
   loadingFullTree,
-  setLoadingFullTree,
   loggedData,
-  organizationList,
-  selectedRepository,
-  selectedRepositoryContent,
-  handleRepositoryPick,
-  handlePress,
-  resetContentPath,
   setCommitingMode,
   registerCommit,
   handleSubmitCommit,
@@ -87,12 +78,23 @@ export const Menu: React.FC<MenuInteface> = ({
   handleSubmitPullRequest,
   errorsPullRequest,
   onPullRequestSubmit,
+  repositoriesFromSearch,
+  setRepositoriesFromSearch,
+  setMarkdownBase,
+  setMarkdownEdit,
 }) => {
-  const { logOut } = useAuthState();
+  const { token } = useAuthState();
 
-  const [mode, setMode] = useState<Mode | undefined>();
+  const [mode, setMode] = useState<Mode | undefined>(Mode.SEARCHING);
   const [leaveWithChanges, setLeaveWithChanges] = useState(false);
+  const [repositoryTree, setRepositoryTree] = useState<FileArray[]>();
+  const [availableBranches, setAvailableBranches] =
+    useState<availableBranchType[]>();
+  const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
+  const [selectedRepository, setSelectedRepository] =
+    useState<RepositoryFromSearch>();
 
+  console.log(selectedBranch);
   return (
     <div
       className={`${
@@ -106,34 +108,58 @@ export const Menu: React.FC<MenuInteface> = ({
             : 'translate-x-[-25vw] duration-[300ms]'
         } w-full h-full transition-transform ease-in-out relative flex flex-col`}
       >
-        {leaveWithChanges && (
-          <LeaveConfirmation
-            setLeaveWithChanges={setLeaveWithChanges}
-            resetContentPath={resetContentPath}
-          />
+        {availableBranches && (
+          <div className="w-full h-full fixed z-[2] bg-[#ffffff90]">
+            <select
+              defaultValue={JSON.stringify(availableBranches[0])}
+              onChange={(e) => setSelectedBranch(JSON.parse(e.target.value))}
+            >
+              {availableBranches.map((branch) => (
+                <option key={branch.name} value={JSON.stringify(branch)}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+            <div>
+              <Button
+                color="orange"
+                text="Accept"
+                onClick={async () => {
+                  const response = await fetch('/api/getRepositoryAsZip', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      token: token,
+                      fullName: selectedRepository?.full_name,
+                      branchName: selectedBranch?.name,
+                    }),
+                  });
+                  const JsonResponse: { fileArray: FileArray[] } =
+                    await response.json();
+                  if (JsonResponse) {
+                    setRepositoryTree(JsonResponse.fileArray);
+                    // setLoadingFullTree(false);
+                    setAutoCompleteValue('');
+                    setAvailableBranches(undefined);
+                    setRepositoriesFromSearch(undefined);
+                  }
+                }}
+              />
+            </div>
+          </div>
         )}
         <div className="w-full p-8 flex items-center justify-between">
-          <MDtxLogo />
+          <MDtxLogo small />
           <UserInfo loggedData={loggedData} />
         </div>
         <div className="relative w-full border-b-[1px] border-mdtxOrange0 pb-[5.6rem]">
           <MenuModeSection
-            sameMarkdown={markdownBase === markdownEdit}
-            contentPath={contentPath}
-            selectedFile={selectedFile}
             mode={mode}
             setMode={setMode}
-            selectedRepository={selectedRepository}
-            organizationList={organizationList}
-            selectedOrganization={selectedOrganization}
-            setSelectedOrganization={setSelectedOrganization}
-            selectedBranch={selectedBranch}
-            setSelectedBranch={setSelectedBranch}
             autoCompleteValue={autoCompleteValue}
             setAutoCompleteValue={setAutoCompleteValue}
-            setLoadingFullTree={setLoadingFullTree}
-            resetContentPath={resetContentPath}
-            setLeaveWithChanges={setLeaveWithChanges}
           />
         </div>
         <div className="w-full flex-1 overflow-y-auto">
@@ -143,56 +169,66 @@ export const Menu: React.FC<MenuInteface> = ({
             </div>
           ) : (
             <div className="pl-[1.6rem] pt-[1.6rem] overflow-y-scroll scrollbar flex flex-col gap-[0.4rem] justify-start w-full">
-              {!selectedFile ? (
-                <>
-                  {selectedRepository ? (
-                    <>
-                      {selectedRepositoryContent?.object?.entries &&
-                      selectedRepositoryContent?.object?.entries.length > 0 ? (
-                        selectedRepositoryContent?.object?.entries?.map(
-                          (content) => (
-                            <div
-                              className="w-fit"
-                              key={content.name}
-                              onClick={() => {
-                                handlePress(content);
-                              }}
-                            >
-                              <p className="text-white hover:underline cursor-pointer">
-                                {content.name}
-                              </p>
-                            </div>
-                          ),
-                        )
-                      ) : (
-                        <></>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {filteredRepositories?.nodes &&
-                      filteredRepositories?.nodes.length > 0 ? (
-                        filteredRepositories?.nodes.map((repository) => (
-                          <div
-                            className="w-fit"
-                            key={repository.name}
-                            onClick={() => {
-                              handleRepositoryPick(repository);
-                            }}
-                          >
-                            <p className="text-white hover:underline cursor-pointer">
-                              {repository.name}
-                            </p>
-                          </div>
-                        ))
-                      ) : (
-                        <div></div>
-                      )}
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
+              <>
+                {repositoriesFromSearch && repositoriesFromSearch.length > 0
+                  ? repositoriesFromSearch.map((item) => (
+                      <div
+                        onClick={async () => {
+                          // setLoadingFullTree(true);
+                          setSelectedRepository(item);
+                          const response = await fetch(
+                            `https://api.github.com/repos/${item.full_name}/branches`,
+                            {
+                              method: 'GET',
+                              headers: {
+                                Accept: 'application/vnd.github+json',
+                                Authorization: `Bearer ${token}`,
+                              },
+                            },
+                          );
+                          const availableBranchesResponse =
+                            await response.json();
+
+                          if (availableBranchesResponse) {
+                            setAvailableBranches(availableBranchesResponse);
+                          }
+                        }}
+                        key={item.full_name}
+                      >
+                        <p className="text-white">{item.full_name}</p>
+                      </div>
+                    ))
+                  : repositoryTree &&
+                    repositoryTree.length > 0 &&
+                    repositoryTree
+                      .filter((x) => {
+                        const mdRegex = /(.*)\.md$/;
+                        return mdRegex.test(x.name);
+                      })
+                      .map((item) => (
+                        <div
+                          onClick={() => {
+                            setMarkdownEdit(item.content);
+                            setMarkdownBase(item.content);
+                          }}
+                          key={item.name}
+                        >
+                          <p className="text-white">
+                            {item.name.slice(item.name.indexOf('/') + 1)}
+                          </p>
+                        </div>
+                      ))}
+              </>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+{
+  /* <>
                   <div>
                     <div className="flex">
                       <Switcher
@@ -224,16 +260,8 @@ export const Menu: React.FC<MenuInteface> = ({
                         handleSubmitPullRequest={handleSubmitPullRequest}
                         onPullRequestSubmit={onPullRequestSubmit}
                         registerPullRequest={registerPullRequest}
-                        selectedRepository={selectedRepository}
                       />
                     )}
                   </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+                </> */
+}

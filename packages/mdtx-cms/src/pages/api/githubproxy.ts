@@ -1,3 +1,4 @@
+import { getGithubUser } from '@/src/utils/getGithubUser';
 import type { NextApiRequest, NextApiResponse } from 'next';
 export default (req: NextApiRequest, res: NextApiResponse) => {
   return new Promise(async () => {
@@ -25,7 +26,10 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
         const params = new URLSearchParams(responseText);
         const accessToken = params.get('access_token');
         if (accessToken) {
-          res.status(201).json({ accessToken });
+          const JSONdata = await getGithubUser(accessToken);
+          if (JSONdata) {
+            res.status(201).json({ accessToken, loginData: JSONdata });
+          }
         } else {
           res.status(201).json('Error');
         }

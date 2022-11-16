@@ -13,6 +13,7 @@
     "@uiw/react-md-editor": "^3.19.3",
     "graphql": "^16.6.0",
     "graphql-zeus": "^5.2.0",
+    "jszip": "^3.10.1",
     "mdtx-core": "*",
     "mdtx-plugin-nextjs": "*",
     "next": "latest",

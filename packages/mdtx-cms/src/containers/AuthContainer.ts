@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
-import { UserType } from '@/src/backend/selectors/user.selector';
+
+export type UserType = {
+  login: string;
+  avatar_url: string;
+  name?: string;
+};
 
 const AuthConatiner = createContainer(() => {
   const [token, _setToken] = useState<string | undefined>();
-  const [loggedData, setLoggedData] =
-    useState<Omit<UserType, 'organizations'>>();
+  const [loggedData, setLoggedData] = useState<UserType>();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {

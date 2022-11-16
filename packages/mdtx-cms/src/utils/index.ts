@@ -1,2 +1,2 @@
 export * from './dateFormatter';
-export * from './cleanRepositoryContent';
+export * from './useGithubCalls';

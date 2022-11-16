@@ -1,17 +1,18 @@
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 import { GithubIcon, GithubStar, MDtxLogo } from '@/src/assets';
-import { useGithubCalls } from '@/src/backend/useGithubCalls';
+
 import { NavigationData } from '@/src/datas/NavigationData';
 import { GithubStars, MobileNavbar } from '@/src/components/Site/atoms/';
+import { useGithubCalls } from '@/src/utils/useGithubCalls';
 
 export const NavigationBar = () => {
   const [stars, setStars] = useState<number>();
   const [hover, setHover] = useState(false);
   const [hideNavbar, setHideNavbar] = useState(false);
-  const { getRepository } = useGithubCalls();
+  const { getRepositoryMDtx } = useGithubCalls();
   useEffect(() => {
-    getRepository().then((response) => {
+    getRepositoryMDtx().then((response) => {
       const { stargazers_count } = response;
       setStars(stargazers_count);
     });
