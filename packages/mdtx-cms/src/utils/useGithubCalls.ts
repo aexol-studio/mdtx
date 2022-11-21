@@ -1,4 +1,4 @@
-import { UserType } from '../containers';
+import { FileType, UserType } from '../containers';
 
 export const useGithubCalls = () => {
   const getGithubUser = async (token: string) => {
@@ -36,5 +36,44 @@ export const useGithubCalls = () => {
     const responseParse = await response.json();
     return responseParse;
   };
-  return { getGithubUser, getUserOrganizations, getRepositoryMDtx };
+  const getRepository = async (token: string, full_name: string) => {
+    const response = await fetch(
+      `https://api.github.com/repos/${full_name}/branches`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const availableBranchesResponse = await response.json();
+    return availableBranchesResponse;
+  };
+  const getRepositoryAsZIP = async (
+    token: string,
+    full_name: string,
+    branch: string,
+  ) => {
+    const response = await fetch('/api/getRepositoryAsZip', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: token,
+        fullName: full_name,
+        branchName: branch,
+      }),
+    });
+    const JSONResponse: { fileArray: FileType[] } = await response.json();
+    return JSONResponse;
+  };
+  return {
+    getGithubUser,
+    getUserOrganizations,
+    getRepositoryMDtx,
+    getRepository,
+    getRepositoryAsZIP,
+  };
 };

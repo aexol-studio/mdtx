@@ -1,6 +1,6 @@
+import { FileType } from '@/src/containers';
 import JSZip from 'jszip';
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { FileArray } from '../editor';
 export default (req: NextApiRequest, res: NextApiResponse) => {
   return new Promise(async () => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,7 +16,7 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
     );
     const file = await response.arrayBuffer();
     const content = await JSZip.loadAsync(file);
-    const fileArray: FileArray[] = [];
+    const fileArray: FileType[] = [];
     const data = await Promise.all(
       Object.entries(content.files).map(async ([k, v]) => {
         const splitted = v.name.split('.');
@@ -33,7 +33,14 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
       }),
     );
     if (data) {
-      res.status(200).json({ fileArray });
+      res.status(201).json({ fileArray });
+    } else {
+      res.status(201).json('No_access');
     }
   });
+};
+export const config = {
+  api: {
+    responseLimit: false,
+  },
 };

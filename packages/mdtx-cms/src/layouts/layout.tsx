@@ -10,7 +10,7 @@ export const Layout: React.FC<{
 }> = ({ children, pageTitle, isEditor }) => {
   return (
     <div
-      className={`overflow-hidden max-w-screen min-h-screen flex ${
+      className={`relative overflow-hidden max-w-screen min-h-screen flex ${
         !isEditor ? 'flex-col' : 'flex-row'
       }`}
     >

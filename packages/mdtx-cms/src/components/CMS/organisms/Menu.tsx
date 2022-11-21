@@ -1,25 +1,17 @@
 import { MDtxLogo } from '@/src/assets';
-import { useAuthState, UserType } from '@/src/containers';
-import {
-  CommitingModes,
-  FileArray,
-  RepositoryFromSearch,
-} from '@/src/pages/editor';
+import { useFileState, useAuthState } from '@/src/containers';
+import { RepositoryFromSearch } from '@/src/pages/editor';
+import { useGithubCalls } from '@/src/utils';
+import { treeBuilder, TreeMenu } from '@/src/utils/treeBuilder';
 import React, { useState } from 'react';
-import {
-  UseFormRegister,
-  UseFormHandleSubmit,
-  FieldErrorsImpl,
-  SubmitHandler,
-} from 'react-hook-form';
 import { PulseLoader } from 'react-spinners';
 import { Button, UserInfo } from '../atoms';
 import {
-  CommitInput,
   MenuModeSection,
   MenuModeSectionInterface,
   Mode,
-  PullRequestInput,
+  RepositoriesList,
+  RepositoryTree,
 } from '../molecules';
 
 type Omitted = Omit<
@@ -39,25 +31,14 @@ type availableBranchType = {
 export interface MenuInteface extends Omitted {
   isOpen: boolean;
   loadingFullTree: boolean;
-  loggedData?: UserType;
-  setCommitingMode: React.Dispatch<React.SetStateAction<CommitingModes>>;
-  markdownEdit?: string;
-  markdownBase?: string;
-  registerCommit: UseFormRegister<CommitInput>;
-  handleSubmitCommit: UseFormHandleSubmit<CommitInput>;
-  errorsCommit: Partial<FieldErrorsImpl<CommitInput>>;
-  onCommitSubmit: SubmitHandler<CommitInput>;
-  commitingMode: CommitingModes;
-  registerPullRequest: UseFormRegister<PullRequestInput>;
-  handleSubmitPullRequest: UseFormHandleSubmit<PullRequestInput>;
-  errorsPullRequest: Partial<FieldErrorsImpl<PullRequestInput>>;
-  onPullRequestSubmit: SubmitHandler<PullRequestInput>;
+  selectedRepository?: RepositoryFromSearch;
   repositoriesFromSearch?: RepositoryFromSearch[];
+  setSelectedRepository: React.Dispatch<
+    React.SetStateAction<RepositoryFromSearch | undefined>
+  >;
   setRepositoriesFromSearch: React.Dispatch<
     React.SetStateAction<RepositoryFromSearch[] | undefined>
   >;
-  setMarkdownBase: React.Dispatch<React.SetStateAction<string | undefined>>;
-  setMarkdownEdit: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 export const Menu: React.FC<MenuInteface> = ({
@@ -65,36 +46,53 @@ export const Menu: React.FC<MenuInteface> = ({
   setAutoCompleteValue,
   isOpen,
   loadingFullTree,
-  loggedData,
-  setCommitingMode,
-  registerCommit,
-  handleSubmitCommit,
-  onCommitSubmit,
-  markdownBase,
-  markdownEdit,
-  errorsCommit,
-  commitingMode,
-  registerPullRequest,
-  handleSubmitPullRequest,
-  errorsPullRequest,
-  onPullRequestSubmit,
+  selectedRepository,
+  setSelectedRepository,
   repositoriesFromSearch,
   setRepositoriesFromSearch,
-  setMarkdownBase,
-  setMarkdownEdit,
 }) => {
-  const { token } = useAuthState();
-
+  const { token, loggedData, logOut } = useAuthState();
+  const { setFiles, setOrginalFiles } = useFileState();
+  const { getRepository, getRepositoryAsZIP } = useGithubCalls();
+  const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
   const [mode, setMode] = useState<Mode | undefined>(Mode.SEARCHING);
-  const [leaveWithChanges, setLeaveWithChanges] = useState(false);
-  const [repositoryTree, setRepositoryTree] = useState<FileArray[]>();
   const [availableBranches, setAvailableBranches] =
     useState<availableBranchType[]>();
   const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
-  const [selectedRepository, setSelectedRepository] =
-    useState<RepositoryFromSearch>();
 
-  console.log(selectedBranch);
+  const handleRepositoryPick = async (item: RepositoryFromSearch) => {
+    setSelectedRepository(item);
+    if (token) {
+      const response = await getRepository(token, item.full_name);
+      if (response) {
+        setAvailableBranches(response);
+        setSelectedBranch(response[0]);
+      }
+    }
+  };
+
+  const confirmBranchClick = async () => {
+    if (token && selectedRepository && selectedBranch) {
+      const JSONResponse = await getRepositoryAsZIP(
+        token,
+        selectedRepository?.full_name,
+        selectedBranch?.name,
+      );
+      if (JSONResponse) {
+        const paths = JSONResponse.fileArray.filter((z) =>
+          z.name.includes('.md'),
+        );
+        const tree = treeBuilder(paths);
+        setFiles(paths);
+        setOrginalFiles(paths);
+        setRepositoryTree(tree);
+        setAutoCompleteValue('');
+        setAvailableBranches(undefined);
+        setRepositoriesFromSearch(undefined);
+      }
+    }
+  };
+
   return (
     <div
       className={`${
@@ -105,13 +103,13 @@ export const Menu: React.FC<MenuInteface> = ({
         className={`${
           isOpen
             ? 'translate-x-[0%] duration-[900ms]'
-            : 'translate-x-[-25vw] duration-[300ms]'
+            : 'translate-x-[-600px] duration-[300ms]'
         } w-full h-full transition-transform ease-in-out relative flex flex-col`}
       >
         {availableBranches && (
           <div className="w-full h-full fixed z-[2] bg-[#ffffff90]">
             <select
-              defaultValue={JSON.stringify(availableBranches[0])}
+              defaultValue={availableBranches[0].name}
               onChange={(e) => setSelectedBranch(JSON.parse(e.target.value))}
             >
               {availableBranches.map((branch) => (
@@ -124,35 +122,14 @@ export const Menu: React.FC<MenuInteface> = ({
               <Button
                 color="orange"
                 text="Accept"
-                onClick={async () => {
-                  const response = await fetch('/api/getRepositoryAsZip', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      token: token,
-                      fullName: selectedRepository?.full_name,
-                      branchName: selectedBranch?.name,
-                    }),
-                  });
-                  const JsonResponse: { fileArray: FileArray[] } =
-                    await response.json();
-                  if (JsonResponse) {
-                    setRepositoryTree(JsonResponse.fileArray);
-                    // setLoadingFullTree(false);
-                    setAutoCompleteValue('');
-                    setAvailableBranches(undefined);
-                    setRepositoriesFromSearch(undefined);
-                  }
-                }}
+                onClick={confirmBranchClick}
               />
             </div>
           </div>
         )}
         <div className="w-full p-8 flex items-center justify-between">
           <MDtxLogo small />
-          <UserInfo loggedData={loggedData} />
+          <UserInfo logOut={logOut} loggedData={loggedData} />
         </div>
         <div className="relative w-full border-b-[1px] border-mdtxOrange0 pb-[5.6rem]">
           <MenuModeSection
@@ -169,99 +146,21 @@ export const Menu: React.FC<MenuInteface> = ({
             </div>
           ) : (
             <div className="pl-[1.6rem] pt-[1.6rem] overflow-y-scroll scrollbar flex flex-col gap-[0.4rem] justify-start w-full">
-              <>
-                {repositoriesFromSearch && repositoriesFromSearch.length > 0
-                  ? repositoriesFromSearch.map((item) => (
-                      <div
-                        onClick={async () => {
-                          // setLoadingFullTree(true);
-                          setSelectedRepository(item);
-                          const response = await fetch(
-                            `https://api.github.com/repos/${item.full_name}/branches`,
-                            {
-                              method: 'GET',
-                              headers: {
-                                Accept: 'application/vnd.github+json',
-                                Authorization: `Bearer ${token}`,
-                              },
-                            },
-                          );
-                          const availableBranchesResponse =
-                            await response.json();
-
-                          if (availableBranchesResponse) {
-                            setAvailableBranches(availableBranchesResponse);
-                          }
-                        }}
-                        key={item.full_name}
-                      >
-                        <p className="text-white">{item.full_name}</p>
-                      </div>
-                    ))
-                  : repositoryTree &&
-                    repositoryTree.length > 0 &&
-                    repositoryTree
-                      .filter((x) => {
-                        const mdRegex = /(.*)\.md$/;
-                        return mdRegex.test(x.name);
-                      })
-                      .map((item) => (
-                        <div
-                          onClick={() => {
-                            setMarkdownEdit(item.content);
-                            setMarkdownBase(item.content);
-                          }}
-                          key={item.name}
-                        >
-                          <p className="text-white">
-                            {item.name.slice(item.name.indexOf('/') + 1)}
-                          </p>
-                        </div>
-                      ))}
-              </>
+              {repositoriesFromSearch && repositoriesFromSearch.length > 0 && (
+                <RepositoriesList
+                  repositories={repositoriesFromSearch}
+                  handleRepositoryPick={handleRepositoryPick}
+                />
+              )}
             </div>
           )}
+          {repositoryTree &&
+            repositoryTree.length > 0 &&
+            repositoryTree.map((x) => (
+              <RepositoryTree key={x.name} root tree={x} />
+            ))}
         </div>
       </div>
     </div>
   );
 };
-
-{
-  /* <>
-                  <div>
-                    <div className="flex">
-                      <Switcher
-                        handlingFunction={() => {
-                          setCommitingMode((prev) => {
-                            if (prev === CommitingModes.COMMIT) {
-                              return CommitingModes.PULL_REQUEST;
-                            } else {
-                              return CommitingModes.COMMIT;
-                            }
-                          });
-                        }}
-                      />
-                    </div>
-                    {commitingMode === 'COMMIT' ? (
-                      <CommitForm
-                        markdownBase={markdownBase}
-                        markdownEdit={markdownEdit}
-                        errorsCommit={errorsCommit}
-                        handleSubmitCommit={handleSubmitCommit}
-                        onCommitSubmit={onCommitSubmit}
-                        registerCommit={registerCommit}
-                      />
-                    ) : (
-                      <PullRequestForm
-                        markdownBase={markdownBase}
-                        markdownEdit={markdownEdit}
-                        errorsPullRequest={errorsPullRequest}
-                        handleSubmitPullRequest={handleSubmitPullRequest}
-                        onPullRequestSubmit={onPullRequestSubmit}
-                        registerPullRequest={registerPullRequest}
-                      />
-                    )}
-                  </div>
-                </> */
-}

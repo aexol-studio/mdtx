@@ -94,8 +94,10 @@ export const transformMarkdownFiles =
       const generatedMdLib: generatedMdLibType = {};
       await Promise.all(
         mdFiles.map(async (mdFile) => {
-          const m = matter(await fs.promises.readFile(pathIn(config)(mdFile)));
-
+          const m = matter(
+            await fs.promises.readFile(pathIn(config)(mdFile).normalize()),
+          );
+          // generatedMdLib[mdFile.replaceAll(`\\`, '/')] -- windows fix // src/blog/path.md  ---> src\\blog\\path.md
           generatedMdLib[mdFile] = {
             content: config.markdownToHtml ? await convertToHtml(m) : m.content,
             data: m.data,

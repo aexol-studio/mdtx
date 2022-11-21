@@ -1,6 +1,7 @@
-import { getGithubUser } from '@/src/utils/getGithubUser';
+import { useGithubCalls } from '@/src/utils';
 import type { NextApiRequest, NextApiResponse } from 'next';
 export default (req: NextApiRequest, res: NextApiResponse) => {
+  const { getGithubUser } = useGithubCalls();
   return new Promise(async () => {
     switch (req.method) {
       case 'POST':
@@ -22,13 +23,14 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
           },
         );
         const responseText = await responseToken.text();
-        console.log(responseText);
         const params = new URLSearchParams(responseText);
         const accessToken = params.get('access_token');
         if (accessToken) {
           const JSONdata = await getGithubUser(accessToken);
           if (JSONdata) {
             res.status(201).json({ accessToken, loginData: JSONdata });
+          } else {
+            res.status(201).json('Error');
           }
         } else {
           res.status(201).json('Error');

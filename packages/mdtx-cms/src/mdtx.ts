@@ -13,7 +13,7 @@ export const htmlContent = {
         "data": {},
         "excerpt": ""
     },
-    "basics\\HowToStart.md": {
+    "basics/HowToStart.md": {
         "content": "\r\n# Hello world\r\n",
         "data": {
             "title": "How to start"

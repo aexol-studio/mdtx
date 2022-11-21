@@ -1,15 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import dynamic from 'next/dynamic';
-import { Layout } from '../layouts';
-import { ArrowLeft } from '../assets';
 import { useRouter } from 'next/router';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { Menu, PullRequestInput } from '../components';
-import { useAuthState } from '../containers';
-import { CommitInput } from '../components/CMS/molecules/CommitForm';
+import {
+  CommitInput,
+  PullRequestInput,
+  Menu,
+  BackButton,
+  Button,
+} from '../components';
+import { useFileState, useAuthState } from '../containers';
+import { Layout } from '../layouts';
 import { useGithubCalls } from '../utils';
+import { useOutsideClick } from '../hooks/useOutsideClick';
+import { useGithubActions } from '../utils/useGithubActions';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export type Organization = {
@@ -28,6 +34,7 @@ export type RepositoryFromSearch = {
   name: string;
   full_name: string;
   default_branch: string;
+  id: string;
   permission: {
     admin: boolean;
     maintain: boolean;
@@ -35,16 +42,6 @@ export type RepositoryFromSearch = {
     triage: boolean;
     pull: boolean;
   };
-};
-
-export type FileArray = {
-  content: string;
-  dir: boolean;
-  name: string;
-};
-
-type SearchForm = {
-  repositoryName: string;
 };
 
 export enum CommitingModes {
@@ -65,13 +62,7 @@ const editor = () => {
     reset: resetCommitForm,
     formState: { errors: errorsCommit },
   } = useForm<CommitInput>();
-  const {
-    register: registerSearch,
-    handleSubmit: handleSubmitSearch,
-    watch: watchSearch,
-    reset: resetSearchForm,
-    formState: { errors: errorsSearch },
-  } = useForm<SearchForm>();
+
   const {
     register: registerPullRequest,
     handleSubmit: handleSubmitPullRequest,
@@ -80,6 +71,13 @@ const editor = () => {
     formState: { errors: errorsPullRequest },
   } = useForm<PullRequestInput>();
   const { getGithubUser, getUserOrganizations } = useGithubCalls();
+  const { createCommitOnBranch, getOid } = useGithubActions();
+  const {
+    getSelectedFileByPath,
+    setSelectedFileContentByPath,
+    isFilesDirty,
+    modifiedFiles,
+  } = useFileState();
   const router = useRouter();
   const {
     token,
@@ -89,32 +87,17 @@ const editor = () => {
     setTokenWithLocal,
     setIsLoggedIn,
   } = useAuthState();
-  ///////////////////////
-  /// Markdown States ///
-  ///////////////////////
-
-  const [markdownEdit, setMarkdownEdit] = useState<string | undefined>(
-    'Pick Markdown',
-  );
-  const [markdownBase, setMarkdownBase] = useState<string | undefined>(
-    'Pick Markdown',
-  );
-
-  const resetMarkdown = () => {
-    setMarkdownBase('Pick Markdown');
-    setMarkdownEdit('Pick Markdown');
-  };
 
   ///////////////////////
   ///      States     ///
   ///////////////////////
 
   const [openMenu, setOpenMenu] = useState(true);
-
   const [commitingMode, setCommitingMode] = useState<CommitingModes>(
     CommitingModes.PULL_REQUEST,
   );
-
+  const [selectedRepository, setSelectedRepository] =
+    useState<RepositoryFromSearch>();
   const [repositoriesFromSearch, setRepositoriesFromSearch] =
     useState<RepositoryFromSearch[]>();
 
@@ -128,6 +111,9 @@ const editor = () => {
 
   const [loadingFullTree, setLoadingFullTree] = useState(false);
   const [organizations, setOrganizations] = useState<Organization[]>();
+
+  const [commitMenu, setCommitMenu] = useState(false);
+
   /// gettingToken ///
 
   useEffect(() => {
@@ -150,12 +136,12 @@ const editor = () => {
       })
         .then((response) => response.json())
         .then(async (data) => {
-          console.log(data);
           setTokenWithLocal(data.accessToken);
           setLoggedData(data.loginData);
           getUserOrganizations(data.accessToken).then((res) => {
             setOrganizations(res);
           });
+
           router.replace('/editor');
           setIsLoggedIn(true);
         });
@@ -163,7 +149,19 @@ const editor = () => {
   }, []);
 
   /// First Load ///
+  useEffect(() => {
+    const unloadCallback = (event: {
+      preventDefault: () => void;
+      returnValue: string;
+    }) => {
+      event.preventDefault();
+      event.returnValue = '';
+      return '';
+    };
 
+    window.addEventListener('beforeunload', unloadCallback);
+    return () => window.removeEventListener('beforeunload', unloadCallback);
+  }, []);
   useEffect(() => {
     if (isLoggedIn && token) {
       getGithubUser(token).then((res) => {
@@ -177,7 +175,47 @@ const editor = () => {
       });
     }
   }, [isLoggedIn]);
-  const onCommitSubmit: SubmitHandler<CommitInput> = (data) => {};
+  const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {
+    console.log(
+      data,
+      modifiedFiles,
+      modifiedFiles[0].name.split('-')[1].split('/')[0],
+    );
+    const filesToSend: { path: string; contents: string }[] = [];
+    const repoOwner = selectedRepository?.full_name.split('/')[0];
+    const repoName = selectedRepository?.full_name.split('/')[1];
+    if (token && filesToSend && repoOwner && repoName) {
+      modifiedFiles.map((x) => {
+        const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+        console.log(doBuffer);
+        filesToSend.push({
+          path: x.name.slice(x.name.indexOf('/') + 1),
+          contents: doBuffer,
+        });
+      });
+      getOid(token, {
+        branchName: modifiedFiles[0].name.split('-')[1].split('/')[0],
+        repositoryName: repoName,
+        repositoryOwner: repoOwner,
+      }).then((x) => {
+        createCommitOnBranch(token, {
+          branch: {
+            branchName: modifiedFiles[0].name.split('-')[1].split('/')[0],
+            repositoryNameWithOwner: selectedRepository?.full_name,
+          },
+          expectedHeadOid: x[0].oid,
+          message: {
+            headline: data.commitMessage,
+          },
+          fileChanges: {
+            additions: filesToSend,
+          },
+        });
+      });
+    }
+  };
+  console.log(selectedRepository);
+
   const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {};
 
   // //COMMITS
@@ -323,11 +361,13 @@ const editor = () => {
   //       });
   //   }
   // };
-
+  // if (repositoryTree && pickedFileID)
+  //   console.log(getTreeObjectByID(repositoryTree, pickedFileID));
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (autoCompleteValue !== '') {
         setLoadingFullTree(true);
+        setRepositoriesFromSearch(undefined);
         const organizationsString = organizations
           ?.map((x) => `%20org:${x.login}`)
           .toString()
@@ -358,58 +398,92 @@ const editor = () => {
       }
     }, 500);
     return () => {
+      setRepositoriesFromSearch(undefined);
       setLoadingFullTree(false);
       clearTimeout(timer);
     };
   }, [autoCompleteValue]);
 
+  const ref = useRef<HTMLDivElement>(null);
+
+  useOutsideClick(ref, () => setCommitMenu(false));
+
   return (
     <Layout isEditor pageTitle="MDtx Editor">
-      <div className="max-w-[25vw] relative">
+      {isFilesDirty && commitMenu ? (
+        <div
+          ref={ref}
+          className="flex flex-col px-[1.2rem] py-[0.8rem] h-[80vh] z-[100] absolute right-[2.4rem] bottom-[2.4rem] bg-mdtxBlack border-mdtxOrange1 border-[1px] rounder-[3.2rem]"
+        >
+          <div
+            className="self-end cursor-pointer w-fit"
+            onClick={() => {
+              setCommitMenu(false);
+            }}
+          >
+            <p className="text-white select-none w-fit">X</p>
+          </div>
+          {modifiedFiles.map((file) => (
+            <div className="flex flex-col">
+              <p className="text-white">{file.name}</p>
+            </div>
+          ))}
+          <form
+            className="flex gap-[0.8rem]"
+            onSubmit={handleSubmitCommit(onCommitSubmit)}
+          >
+            <input
+              {...registerCommit('commitMessage', {
+                required: true,
+              })}
+              placeholder="Commit message"
+            />
+            <Button
+              customClassName="px-[0.4rem] py-[0.2rem]"
+              type="form"
+              text="Wyślij"
+              color="orange"
+            />
+          </form>
+        </div>
+      ) : (
+        <></>
+      )}
+      {isFilesDirty ? (
+        <div
+          onClick={() => {
+            setCommitMenu(true);
+          }}
+          className="z-[99] rounded-full absolute w-[3.2rem] h-[3.2rem] bottom-[2.4rem] right-[2.4rem] bg-mdtxOrange0"
+        />
+      ) : (
+        <></>
+      )}
+      <div className="relative">
         <Menu
-          markdownBase={markdownBase}
-          setMarkdownBase={setMarkdownBase}
-          markdownEdit={markdownEdit}
-          setMarkdownEdit={setMarkdownEdit}
+          selectedRepository={selectedRepository}
+          setSelectedRepository={setSelectedRepository}
           repositoriesFromSearch={repositoriesFromSearch}
           setRepositoriesFromSearch={setRepositoriesFromSearch}
-          commitingMode={commitingMode}
-          setCommitingMode={setCommitingMode}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
           loadingFullTree={loadingFullTree}
-          loggedData={loggedData}
           isOpen={openMenu}
-          errorsCommit={errorsCommit}
-          handleSubmitCommit={handleSubmitCommit}
-          onCommitSubmit={onCommitSubmit}
-          registerCommit={registerCommit}
-          errorsPullRequest={errorsPullRequest}
-          handleSubmitPullRequest={handleSubmitPullRequest}
-          onPullRequestSubmit={onPullRequestSubmit}
-          registerPullRequest={registerPullRequest}
         />
-        <div
-          className="cursor-pointer select-none z-[99] flex justify-center items-center absolute bottom-[1.6rem] right-[-1.6rem] w-[3.2rem] h-[3.2rem] rounded-full bg-mdtxOrange0"
+        <BackButton
+          state={openMenu}
           onClick={() => {
             setOpenMenu((prev) => !prev);
           }}
-        >
-          <div
-            className={`${
-              openMenu ? 'rotate-0' : 'ml-[0.8rem] rotate-[-180deg]'
-            } flex justify-center items-center max-w-[1.6rem] max-h-[1.6rem] transition-all duration-500 ease-in-out`}
-          >
-            <ArrowLeft />
-          </div>
-        </div>
+        />
       </div>
-
       <div className="w-full">
         <MDEditor
           height={'100vh'}
-          value={markdownEdit}
-          onChange={setMarkdownEdit}
+          value={getSelectedFileByPath()?.content}
+          onChange={(e) => {
+            setSelectedFileContentByPath(e ? e : '');
+          }}
         />
       </div>
     </Layout>
