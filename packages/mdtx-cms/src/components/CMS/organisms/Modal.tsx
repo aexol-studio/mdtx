@@ -21,7 +21,7 @@ export const Modal: React.FC<{
       >
         <div
           onClick={closeFnc}
-          className="max-w-[2.4rem] max-h-[2.4rem] cursor-pointer absolute top-[1.2rem] right-[1.2rem] flex justify-center items-center"
+          className="z-[101] max-w-[2.4rem] max-h-[2.4rem] cursor-pointer absolute top-[1.2rem] right-[1.2rem] flex justify-center items-center"
         >
           <CloseIconSvg small navVisible />
         </div>

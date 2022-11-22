@@ -5,14 +5,17 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import {
-  CommitInput,
-  PullRequestInput,
   Menu,
   BackButton,
-  Button,
   Modal,
   BranchSelector,
   ChangesModal,
+  ButtonMenu,
+  MenuModalType,
+  CommitInput,
+  CommitModal,
+  PullRequestInput,
+  PullRequestModal,
 } from '../components';
 import { useFileState, useAuthState } from '../containers';
 import { Layout } from '../layouts';
@@ -66,6 +69,7 @@ export enum WatchingModeOnRepository {
 }
 
 const editor = () => {
+  const router = useRouter();
   const {
     register: registerCommit,
     handleSubmit: handleSubmitCommit,
@@ -75,24 +79,27 @@ const editor = () => {
   } = useForm<CommitInput>();
 
   const {
+    control: controlPullRequest,
     register: registerPullRequest,
     handleSubmit: handleSubmitPullRequest,
     watch: watchPullRequest,
     reset: resetPullRequestForm,
     formState: { errors: errorsPullRequest },
   } = useForm<PullRequestInput>();
+
   const { getGithubUser, getUserOrganizations, getRepositoryAsZIP } =
     useGithubCalls();
   const { createCommitOnBranch, getOid } = useGithubActions();
+
   const {
-    orginalFiles,
     getSelectedFileByPath,
     setSelectedFileContentByPath,
+    setFiles,
+    setOrginalFiles,
     isFilesDirty,
     modifiedFiles,
   } = useFileState();
-  const router = useRouter();
-  const { setFiles, setOrginalFiles } = useFileState();
+
   const {
     token,
     isLoggedIn,
@@ -102,40 +109,34 @@ const editor = () => {
     setIsLoggedIn,
   } = useAuthState();
 
-  ///////////////////////
-  ///      States     ///
-  ///////////////////////
-  const [availableBranches, setAvailableBranches] =
-    useState<availableBranchType[]>();
-  const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
-  const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
-  const [openMenu, setOpenMenu] = useState(true);
-  const [optionsMenu, setOptionsMenu] = useState(false);
-  const [commitingMode, setCommitingMode] = useState<CommitingModes>(
-    CommitingModes.PULL_REQUEST,
-  );
-  const [selectedRepository, setSelectedRepository] =
-    useState<RepositoryFromSearch>();
-  const [repositoriesFromSearch, setRepositoriesFromSearch] =
-    useState<RepositoryFromSearch[]>();
-
+  const [organizations, setOrganizations] = useState<Organization[]>();
   const [autoCompleteValue, setAutoCompleteValue] = useState<
     string | undefined
   >();
+  const [repositoriesFromSearch, setRepositoriesFromSearch] =
+    useState<RepositoryFromSearch[]>();
+  const [downloadModal, setDownloadModal] = useState(false);
+  const [availableBranches, setAvailableBranches] =
+    useState<availableBranchType[]>();
 
-  const [searchingMode, setSearchingMode] = useState<SearchingType>(
-    SearchingType.ALL,
-  );
-  const [downloadZIP, setDownloadZIP] = useState(false);
-  const [loadingFullTree, setLoadingFullTree] = useState(false);
-  const [organizations, setOrganizations] = useState<Organization[]>();
+  const [selectedRepository, setSelectedRepository] =
+    useState<RepositoryFromSearch>();
+  const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
+  const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
 
-  const [commitMenu, setCommitMenu] = useState(false);
+  const [openMenu, setOpenMenu] = useState(true);
+  const [menuModal, setMenuModal] = useState<MenuModalType | undefined>();
   const [previewChanges, setPreviewChanges] = useState<{
     orginalFile: string;
     changedFile: string;
   }>();
-  /// gettingToken ///
+
+  const [searchingMode, setSearchingMode] = useState<SearchingType>(
+    SearchingType.ALL,
+  );
+
+  const [downloadZIP, setDownloadZIP] = useState(false);
+  const [loadingFullTree, setLoadingFullTree] = useState(false);
 
   useEffect(() => {
     const url = window.location.href;
@@ -164,7 +165,6 @@ const editor = () => {
     }
   }, []);
 
-  /// First Load ///
   useEffect(() => {
     const unloadCallback = (event: {
       preventDefault: () => void;
@@ -174,10 +174,10 @@ const editor = () => {
       event.returnValue = '';
       return '';
     };
-
     window.addEventListener('beforeunload', unloadCallback);
     return () => window.removeEventListener('beforeunload', unloadCallback);
   }, []);
+
   useEffect(() => {
     if (isLoggedIn && token) {
       getGithubUser(token).then((res) => {
@@ -191,6 +191,30 @@ const editor = () => {
       });
     }
   }, [isLoggedIn]);
+
+  const confirmBranchClick = async () => {
+    if (token && selectedRepository && selectedBranch) {
+      setDownloadZIP(true);
+      const JSONResponse = await getRepositoryAsZIP(
+        token,
+        selectedRepository?.full_name,
+        selectedBranch?.name,
+      );
+      if (JSONResponse) {
+        const paths = JSONResponse.fileArray.filter((z) =>
+          z.name.includes('.md'),
+        );
+        const tree = treeBuilder(paths);
+        setRepositoryTree(tree);
+        setFiles(paths);
+        setOrginalFiles(paths);
+        setAutoCompleteValue('');
+        setRepositoriesFromSearch(undefined);
+        setDownloadZIP(false);
+        setDownloadModal(false);
+      }
+    }
+  };
 
   const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {
     const filesToSend: { path: string; contents: string }[] = [];
@@ -216,37 +240,14 @@ const editor = () => {
           },
           expectedHeadOid: x[0].oid,
           message: {
-            headline: data.commitMessage,
+            headline: data.commitHeadlineMessage,
+            body: data.commitBodyMessage,
           },
           fileChanges: {
             additions: filesToSend,
           },
         });
       });
-    }
-  };
-
-  const confirmBranchClick = async () => {
-    if (token && selectedRepository && selectedBranch) {
-      setDownloadZIP(true);
-      const JSONResponse = await getRepositoryAsZIP(
-        token,
-        selectedRepository?.full_name,
-        selectedBranch?.name,
-      );
-      if (JSONResponse) {
-        const paths = JSONResponse.fileArray.filter((z) =>
-          z.name.includes('.md'),
-        );
-        const tree = treeBuilder(paths);
-        setRepositoryTree(tree);
-        setFiles(paths);
-        setOrginalFiles(paths);
-        setAutoCompleteValue('');
-        setAvailableBranches(undefined);
-        setRepositoriesFromSearch(undefined);
-        setDownloadZIP(false);
-      }
     }
   };
 
@@ -439,13 +440,14 @@ const editor = () => {
       clearTimeout(timer);
     };
   }, [autoCompleteValue]);
+
   return (
     <Layout isEditor pageTitle="MDtx Editor">
-      {availableBranches?.length && (
+      {downloadModal && availableBranches?.length && (
         <Modal
           customClassName="flex flex-col w-[60rem] h-[20rem]"
           closeFnc={() => {
-            setAvailableBranches(undefined);
+            setDownloadModal(false);
           }}
         >
           <BranchSelector
@@ -458,81 +460,51 @@ const editor = () => {
           />
         </Modal>
       )}
-      {isFilesDirty && commitMenu && (
+      {menuModal === MenuModalType.CHANGES && (
         <Modal
           customClassName="flex flex-col w-[80%] h-[80%]"
           closeFnc={() => {
-            setOptionsMenu(false);
+            setMenuModal(undefined);
           }}
         >
           <ChangesModal
             previewChanges={previewChanges}
             setPreviewChanges={setPreviewChanges}
           />
-          {/* <form
-              className="flex gap-[0.8rem]"
-              onSubmit={handleSubmitCommit(onCommitSubmit)}
-            >
-              <input
-                {...registerCommit('commitMessage', {
-                  required: true,
-                })}
-                placeholder="Commit message"
-              />
-              <Button
-                customClassName="px-[0.4rem] py-[0.2rem]"
-                type="form"
-                text="Wyślij"
-                color="orange"
-              />
-            </form> */}
         </Modal>
       )}
-      {!isFilesDirty ? (
-        <div
-          onClick={() => {
-            setOptionsMenu(true);
-            // setCommitMenu(true);
-          }}
-          className="cursor-pointer flex justify-center items-center z-[99] rounded-full absolute bottom-[1.2rem] right-[2.4rem] bg-mdtxOrange0"
+      {menuModal === MenuModalType.COMMIT && (
+        <Modal
+          customClassName="flex flex-col justify-center items-center w-[40rem] h-[30rem]"
+          closeFnc={() => setMenuModal(undefined)}
         >
-          <div className="relative py-[1.2rem] px-[1.6rem] flex justify-center items-center">
-            <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
-              Menu
-            </p>
-            {optionsMenu ? (
-              <div>
-                <div>
-                  <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
-                    Changes
-                  </p>
-                </div>
-                <div>
-                  <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
-                    Commit
-                  </p>
-                </div>
-                <div>
-                  <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
-                    Pull requests
-                  </p>
-                </div>
-                <div>
-                  <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
-                    Fork
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <></>
-            )}
-          </div>
-        </div>
-      ) : (
-        <></>
+          <CommitModal
+            handleSubmitCommit={handleSubmitCommit}
+            onCommitSubmit={onCommitSubmit}
+            registerCommit={registerCommit}
+          />
+        </Modal>
       )}
+      {menuModal === MenuModalType.PULL_REQUEST && (
+        <Modal
+          customClassName="flex flex-col justify-center items-center w-[50rem] h-[60rem]"
+          closeFnc={() => setMenuModal(undefined)}
+        >
+          <PullRequestModal
+            allowedRepositories={availableBranches?.filter(
+              (x) => x.name !== selectedBranch?.name,
+            )}
+            controlPullRequest={controlPullRequest}
+            handleSubmitPullRequest={handleSubmitPullRequest}
+            onPullRequestSubmit={onPullRequestSubmit}
+            registerPullRequest={registerPullRequest}
+          />
+        </Modal>
+      )}
+      {isFilesDirty && <ButtonMenu setMenuModal={setMenuModal} />}
       <div className="relative">
         <Menu
+          setDownloadModal={setDownloadModal}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
           isOpen={openMenu}

@@ -1,8 +1,8 @@
 import { MDtxLogo } from '@/src/assets';
-import { useFileState, useAuthState } from '@/src/containers';
+import { useAuthState } from '@/src/containers';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import { useGithubCalls } from '@/src/utils';
-import { treeBuilder, TreeMenu } from '@/src/utils/treeBuilder';
+import { TreeMenu } from '@/src/utils/treeBuilder';
 import React, { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
 import { UserInfo } from '../atoms';
@@ -34,6 +34,7 @@ export interface MenuInteface extends Omitted {
   setSelectedRepository: React.Dispatch<
     React.SetStateAction<RepositoryFromSearch | undefined>
   >;
+  setDownloadModal: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const Menu: React.FC<MenuInteface> = ({
@@ -46,16 +47,19 @@ export const Menu: React.FC<MenuInteface> = ({
   setAvailableBranches,
   setSelectedBranch,
   repositoryTree,
+  setDownloadModal,
 }) => {
   const { token, loggedData, logOut } = useAuthState();
   const { getRepositoryBranches } = useGithubCalls();
 
   const [mode, setMode] = useState<Mode | undefined>(Mode.SEARCHING);
+
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
     setSelectedRepository(item);
     if (token) {
       const response = await getRepositoryBranches(token, item.full_name);
       if (response) {
+        setDownloadModal(true);
         setAvailableBranches(response);
         setSelectedBranch(response[0]);
       }
