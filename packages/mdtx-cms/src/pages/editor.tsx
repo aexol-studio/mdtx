@@ -12,6 +12,7 @@ import {
   Button,
   Modal,
   BranchSelector,
+  ChangesModal,
 } from '../components';
 import { useFileState, useAuthState } from '../containers';
 import { Layout } from '../layouts';
@@ -84,6 +85,7 @@ const editor = () => {
     useGithubCalls();
   const { createCommitOnBranch, getOid } = useGithubActions();
   const {
+    orginalFiles,
     getSelectedFileByPath,
     setSelectedFileContentByPath,
     isFilesDirty,
@@ -108,6 +110,7 @@ const editor = () => {
   const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
   const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
   const [openMenu, setOpenMenu] = useState(true);
+  const [optionsMenu, setOptionsMenu] = useState(false);
   const [commitingMode, setCommitingMode] = useState<CommitingModes>(
     CommitingModes.PULL_REQUEST,
   );
@@ -128,7 +131,10 @@ const editor = () => {
   const [organizations, setOrganizations] = useState<Organization[]>();
 
   const [commitMenu, setCommitMenu] = useState(false);
-
+  const [previewChanges, setPreviewChanges] = useState<{
+    orginalFile: string;
+    changedFile: string;
+  }>();
   /// gettingToken ///
 
   useEffect(() => {
@@ -152,10 +158,6 @@ const editor = () => {
         .then((response) => response.json())
         .then(async (data) => {
           setTokenWithLocal(data.accessToken);
-          setLoggedData(data.loginData);
-          getUserOrganizations(data.accessToken).then((res) => {
-            setOrganizations(res);
-          });
           router.replace('/editor');
           setIsLoggedIn(true);
         });
@@ -460,24 +462,14 @@ const editor = () => {
         <Modal
           customClassName="flex flex-col w-[80%] h-[80%]"
           closeFnc={() => {
-            setCommitMenu(false);
+            setOptionsMenu(false);
           }}
         >
-          <div className="w-full h-full flex flex-col justify-center items-center">
-            <div>
-              <p className="text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
-                Changed files
-              </p>
-            </div>
-            <div className="h-[12rem] overflow-y-scroll overflow-x-hidden scrollbar">
-              {modifiedFiles.map((file) => (
-                <div className="flex flex-col">
-                  <p className="text-white">{file.name}</p>
-                </div>
-              ))}
-            </div>
-
-            <form
+          <ChangesModal
+            previewChanges={previewChanges}
+            setPreviewChanges={setPreviewChanges}
+          />
+          {/* <form
               className="flex gap-[0.8rem]"
               onSubmit={handleSubmitCommit(onCommitSubmit)}
             >
@@ -493,20 +485,48 @@ const editor = () => {
                 text="Wyślij"
                 color="orange"
               />
-            </form>
-          </div>
+            </form> */}
         </Modal>
       )}
-      {isFilesDirty ? (
+      {!isFilesDirty ? (
         <div
           onClick={() => {
-            setCommitMenu(true);
+            setOptionsMenu(true);
+            // setCommitMenu(true);
           }}
-          className="py-[1.2rem] px-[0.8rem] cursor-pointer flex justify-center items-center z-[99] rounded-full absolute bottom-[1.2rem] right-[2.4rem] bg-mdtxOrange0"
+          className="cursor-pointer flex justify-center items-center z-[99] rounded-full absolute bottom-[1.2rem] right-[2.4rem] bg-mdtxOrange0"
         >
-          <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
-            Apply your changes
-          </p>
+          <div className="relative py-[1.2rem] px-[1.6rem] flex justify-center items-center">
+            <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
+              Menu
+            </p>
+            {optionsMenu ? (
+              <div>
+                <div>
+                  <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
+                    Changes
+                  </p>
+                </div>
+                <div>
+                  <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
+                    Commit
+                  </p>
+                </div>
+                <div>
+                  <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
+                    Pull requests
+                  </p>
+                </div>
+                <div>
+                  <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
+                    Fork
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <></>
+            )}
+          </div>
         </div>
       ) : (
         <></>
