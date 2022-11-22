@@ -1,9 +1,4 @@
 const removeImports = require('next-remove-imports')();
-const withMDtx = require('mdtx-plugin-nextjs')({
-  in: './content',
-  out: './src',
-  markdownToHtml: false,
-});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -13,4 +8,4 @@ const nextConfig = {
     domains: ['avatars.githubusercontent.com', 'github.githubassets.com'],
   },
 };
-module.exports = removeImports(withMDtx(nextConfig));
+module.exports = removeImports(nextConfig);

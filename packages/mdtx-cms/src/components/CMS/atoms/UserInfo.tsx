@@ -1,28 +1,31 @@
 import React from 'react';
 import Image from 'next/image';
-import { UserType } from '@/src/backend';
+import { UserType } from '@/src/containers';
 
 export const UserInfo: React.FC<{
-  loggedData?: Omit<UserType, 'organizations'>;
-}> = ({ loggedData }) => {
+  loggedData?: UserType;
+  logOut: () => void;
+}> = ({ loggedData, logOut }) => {
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex items-center gap-[1.6rem] ">
       {loggedData ? (
         <>
-          {loggedData.avatarUrl && (
-            <div className="my-[0.8rem] relative w-[6.4rem] h-[6.4rem] rounded-full self-center">
-              <Image
-                priority
-                width={128}
-                height={128}
-                className="rounded-full"
-                alt="User Logo"
-                src={loggedData.avatarUrl}
-              />
-            </div>
+          {loggedData.avatar_url && (
+            <Image
+              priority
+              width={24}
+              height={24}
+              className="rounded-full"
+              alt="User Logo"
+              src={loggedData.avatar_url}
+            />
           )}
-          <p className="text-center font-[700] text-mdtxOrange0">Welcome!</p>
-          <p className="text-center font-[400] text-white">{loggedData.name}</p>
+          <p
+            onClick={logOut}
+            className="text-[1.4rem] text-center font-[400] text-white"
+          >
+            {loggedData.name}
+          </p>
         </>
       ) : (
         <></>

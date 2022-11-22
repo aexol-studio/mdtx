@@ -44,6 +44,8 @@ html {
   font-size: 62.5%;
   text-size-adjust: none;
   -webkit-text-size-adjust: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 input,

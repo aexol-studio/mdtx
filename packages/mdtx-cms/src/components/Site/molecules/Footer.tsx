@@ -14,17 +14,7 @@ export const Footer = () => {
 
       <div className="z-[2] relative my-[5.6rem] max-w-[90%] mx-auto w-full xl:max-w-[1068px] flex flex-col md:flex-row">
         <div className="w-full md:w-1/2 relative">
-          <div className="top-[-3.6rem] md:top-[14.2rem] right-0 md:right-auto md:left-0 absolute">
-            <Link href={'https://aexol.com/'}>
-              <p className="select-none font-[500] text-[1.2rem] leading-[2.4rem] text-mediumGray">
-                powered by
-              </p>
-              <div className="mt-[0.8rem]">
-                <AexolAsSvg />
-              </div>
-            </Link>
-          </div>
-          <div className="w-fit">
+          <div className="w-fit flex gap-[0.8rem]">
             <Link
               aria-label="MDtx"
               href={'/'}
@@ -32,6 +22,19 @@ export const Footer = () => {
             >
               <FooterLogo />
             </Link>
+            <div className="">
+              <Link
+                className="items-center flex gap-[0.4rem]"
+                href={'https://aexol.com/'}
+              >
+                <p className="select-none font-[500] text-[1.2rem] leading-[2.4rem] text-mediumGray">
+                  powered by
+                </p>
+                <div className="mb-[0.2rem]">
+                  <AexolAsSvg />
+                </div>
+              </Link>
+            </div>
           </div>
           <p className="select-none mt-[2.4rem] font-[400] text-[1.4rem] leading-[2.4rem] text-gray3">
             Transform markdown files to different formats.

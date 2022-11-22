@@ -1,11 +1,17 @@
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
-import { UserType } from '@/src/backend/selectors/user.selector';
+
+export type UserType = {
+  login: string;
+  avatar_url: string;
+  name?: string;
+};
 
 const AuthConatiner = createContainer(() => {
+  const router = useRouter();
   const [token, _setToken] = useState<string | undefined>();
-  const [loggedData, setLoggedData] =
-    useState<Omit<UserType, 'organizations'>>();
+  const [loggedData, setLoggedData] = useState<UserType>();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
   useEffect(() => {
@@ -32,8 +38,7 @@ const AuthConatiner = createContainer(() => {
     _setToken(undefined);
     setLoggedData(undefined);
     window.localStorage.removeItem('token');
-    window.document.location.reload();
-    window.location.href = '/';
+    router.push('/');
   };
 
   return {

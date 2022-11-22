@@ -1,10 +1,10 @@
 import React from 'react';
 
-export const MDtxLogo = () => {
+export const MDtxLogo: React.FC<{ small?: boolean }> = ({ small }) => {
   return (
     <svg
-      width="122"
-      height="48"
+      width={small ? '61' : '122'}
+      height={small ? '24' : '48'}
       viewBox="0 0 122 48"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

@@ -1,15 +1,16 @@
 import * as React from 'react';
 
 export const CloseIconSvg: React.FC<{
+  small?: boolean;
   navVisible: boolean;
-}> = ({ navVisible }) => (
+}> = ({ navVisible, small }) => (
   <svg
     className={`${
       navVisible ? 'opacity-1 visible' : 'opacity-0 invisible'
     } transition-all ease-in-out duration-300`}
     viewBox="0 0 24 24"
-    width={36}
-    height={36}
+    width={small ? '24' : '36'}
+    height={small ? '24' : '36'}
     xmlns="http://www.w3.org/2000/svg"
   >
     <path

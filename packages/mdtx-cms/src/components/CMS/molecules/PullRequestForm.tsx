@@ -1,4 +1,3 @@
-import { RepositoryType } from '@/src/backend';
 import React from 'react';
 import {
   UseFormRegister,
@@ -22,7 +21,6 @@ export const PullRequestForm: React.FC<{
   handleSubmitPullRequest: UseFormHandleSubmit<PullRequestInput>;
   errorsPullRequest: Partial<FieldErrorsImpl<PullRequestInput>>;
   onPullRequestSubmit: SubmitHandler<PullRequestInput>;
-  selectedRepository?: RepositoryType;
 }> = ({
   markdownBase,
   markdownEdit,
@@ -30,11 +28,10 @@ export const PullRequestForm: React.FC<{
   handleSubmitPullRequest,
   errorsPullRequest,
   onPullRequestSubmit,
-  selectedRepository,
 }) => {
   return (
     <>
-      {selectedRepository?.refs?.nodes &&
+      {/* {selectedRepository?.refs?.nodes &&
       selectedRepository?.refs?.nodes?.length > 0 ? (
         <form
           className="flex flex-col"
@@ -80,7 +77,7 @@ export const PullRequestForm: React.FC<{
         <div>
           <p className="text-white">We need branch to make pull request to</p>
         </div>
-      )}
+      )} */}
     </>
   );
 };
