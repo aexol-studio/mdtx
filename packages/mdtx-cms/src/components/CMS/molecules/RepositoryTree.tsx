@@ -13,7 +13,6 @@ export const RepositoryTree: React.FC<{
   const hasChildren = !!tree?.children;
   const isFolder = hasChildren && !root;
   const [path, setPath] = useState(activePath);
-
   const clickHandler = () => {
     if (!isFolder && pickedFilePath !== tree?.path && tree) {
       setPickedFilePath(tree.path);
@@ -32,10 +31,14 @@ export const RepositoryTree: React.FC<{
     <div className="mx-[0.8rem] my-[0.2rem]">
       {tree?.name && (
         <div
-          onClick={clickHandler}
+          onClick={() => {
+            !(hasChildren && root) && clickHandler();
+          }}
           className={`${
-            hasChildren && root ? 'cursor-default' : 'cursor-pointer'
-          } items-center flex gap-[0.4rem]`}
+            hasChildren && root
+              ? 'mb-[1.2rem] cursor-default'
+              : 'items-center cursor-pointer'
+          } flex gap-[0.4rem]`}
         >
           {hasChildren && root && (
             <div>

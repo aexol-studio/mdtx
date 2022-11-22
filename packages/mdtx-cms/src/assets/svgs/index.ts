@@ -22,3 +22,4 @@ export * from './GithubIcon';
 export * from './Hamburger';
 export * from './CloseIconSvg';
 export * from './Loupe';
+export * from './Chevron';

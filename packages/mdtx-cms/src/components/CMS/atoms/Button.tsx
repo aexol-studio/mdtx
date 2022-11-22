@@ -31,7 +31,7 @@ export const Button: React.FC<ButtonInterface> = ({
         color === 'orange'
           ? 'bg-mdtxOrange0 text-mdtxWhite hover:text-mdtxBlack'
           : color === 'white'
-          ? 'bg-mdtxWhite text-mdtxBlack hover:text-mdtxOrange0'
+          ? 'bg-mdtxWhite text-mdtxOrange0 hover:text-mdtxBlack'
           : ''
       } ${
         customClassName ? customClassName : ''

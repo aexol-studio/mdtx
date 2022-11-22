@@ -1,11 +1,11 @@
 import { MDtxLogo } from '@/src/assets';
 import { useFileState, useAuthState } from '@/src/containers';
-import { RepositoryFromSearch } from '@/src/pages/editor';
+import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import { useGithubCalls } from '@/src/utils';
 import { treeBuilder, TreeMenu } from '@/src/utils/treeBuilder';
 import React, { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
-import { Button, UserInfo } from '../atoms';
+import { UserInfo } from '../atoms';
 import {
   MenuModeSection,
   MenuModeSectionInterface,
@@ -19,25 +19,20 @@ type Omitted = Omit<
   'sameMarkdown'
 >;
 
-type availableBranchType = {
-  commit: {
-    sha: string;
-    url: string;
-  };
-  name: string;
-  protected: false;
-};
-
 export interface MenuInteface extends Omitted {
   isOpen: boolean;
   loadingFullTree: boolean;
-  selectedRepository?: RepositoryFromSearch;
   repositoriesFromSearch?: RepositoryFromSearch[];
+  setAvailableBranches: React.Dispatch<
+    React.SetStateAction<availableBranchType[] | undefined>
+  >;
+  selectedBranch?: availableBranchType;
+  setSelectedBranch: React.Dispatch<
+    React.SetStateAction<availableBranchType | undefined>
+  >;
+  repositoryTree?: TreeMenu;
   setSelectedRepository: React.Dispatch<
     React.SetStateAction<RepositoryFromSearch | undefined>
-  >;
-  setRepositoriesFromSearch: React.Dispatch<
-    React.SetStateAction<RepositoryFromSearch[] | undefined>
   >;
 }
 
@@ -46,49 +41,23 @@ export const Menu: React.FC<MenuInteface> = ({
   setAutoCompleteValue,
   isOpen,
   loadingFullTree,
-  selectedRepository,
   setSelectedRepository,
   repositoriesFromSearch,
-  setRepositoriesFromSearch,
+  setAvailableBranches,
+  setSelectedBranch,
+  repositoryTree,
 }) => {
   const { token, loggedData, logOut } = useAuthState();
-  const { setFiles, setOrginalFiles } = useFileState();
-  const { getRepository, getRepositoryAsZIP } = useGithubCalls();
-  const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
-  const [mode, setMode] = useState<Mode | undefined>(Mode.SEARCHING);
-  const [availableBranches, setAvailableBranches] =
-    useState<availableBranchType[]>();
-  const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
+  const { getRepositoryBranches } = useGithubCalls();
 
+  const [mode, setMode] = useState<Mode | undefined>(Mode.SEARCHING);
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
     setSelectedRepository(item);
     if (token) {
-      const response = await getRepository(token, item.full_name);
+      const response = await getRepositoryBranches(token, item.full_name);
       if (response) {
         setAvailableBranches(response);
         setSelectedBranch(response[0]);
-      }
-    }
-  };
-
-  const confirmBranchClick = async () => {
-    if (token && selectedRepository && selectedBranch) {
-      const JSONResponse = await getRepositoryAsZIP(
-        token,
-        selectedRepository?.full_name,
-        selectedBranch?.name,
-      );
-      if (JSONResponse) {
-        const paths = JSONResponse.fileArray.filter((z) =>
-          z.name.includes('.md'),
-        );
-        const tree = treeBuilder(paths);
-        setFiles(paths);
-        setOrginalFiles(paths);
-        setRepositoryTree(tree);
-        setAutoCompleteValue('');
-        setAvailableBranches(undefined);
-        setRepositoriesFromSearch(undefined);
       }
     }
   };
@@ -106,27 +75,6 @@ export const Menu: React.FC<MenuInteface> = ({
             : 'translate-x-[-600px] duration-[300ms]'
         } w-full h-full transition-transform ease-in-out relative flex flex-col`}
       >
-        {availableBranches && (
-          <div className="w-full h-full fixed z-[2] bg-[#ffffff90]">
-            <select
-              defaultValue={availableBranches[0].name}
-              onChange={(e) => setSelectedBranch(JSON.parse(e.target.value))}
-            >
-              {availableBranches.map((branch) => (
-                <option key={branch.name} value={JSON.stringify(branch)}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-            <div>
-              <Button
-                color="orange"
-                text="Accept"
-                onClick={confirmBranchClick}
-              />
-            </div>
-          </div>
-        )}
         <div className="w-full p-8 flex items-center justify-between">
           <MDtxLogo small />
           <UserInfo logOut={logOut} loggedData={loggedData} />
@@ -139,13 +87,13 @@ export const Menu: React.FC<MenuInteface> = ({
             setAutoCompleteValue={setAutoCompleteValue}
           />
         </div>
-        <div className="w-full flex-1 overflow-y-auto">
+        <div className="w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar">
           {loadingFullTree ? (
             <div className="mt-[4.2rem] flex justify-center w-full">
               <PulseLoader size={'16px'} color="#FF7200" />
             </div>
           ) : (
-            <div className="pl-[1.6rem] pt-[1.6rem] overflow-y-scroll scrollbar flex flex-col gap-[0.4rem] justify-start w-full">
+            <div className="pl-[1.6rem] pt-[1.6rem] flex flex-col gap-[0.4rem] justify-start w-full">
               {repositoriesFromSearch && repositoriesFromSearch.length > 0 && (
                 <RepositoriesList
                   repositories={repositoriesFromSearch}

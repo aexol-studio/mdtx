@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import dynamic from 'next/dynamic';
@@ -10,12 +10,14 @@ import {
   Menu,
   BackButton,
   Button,
+  Modal,
+  BranchSelector,
 } from '../components';
 import { useFileState, useAuthState } from '../containers';
 import { Layout } from '../layouts';
 import { useGithubCalls } from '../utils';
-import { useOutsideClick } from '../hooks/useOutsideClick';
 import { useGithubActions } from '../utils/useGithubActions';
+import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export type Organization = {
@@ -42,6 +44,14 @@ export type RepositoryFromSearch = {
     triage: boolean;
     pull: boolean;
   };
+};
+export type availableBranchType = {
+  commit: {
+    sha: string;
+    url: string;
+  };
+  name: string;
+  protected: false;
 };
 
 export enum CommitingModes {
@@ -70,7 +80,8 @@ const editor = () => {
     reset: resetPullRequestForm,
     formState: { errors: errorsPullRequest },
   } = useForm<PullRequestInput>();
-  const { getGithubUser, getUserOrganizations } = useGithubCalls();
+  const { getGithubUser, getUserOrganizations, getRepositoryAsZIP } =
+    useGithubCalls();
   const { createCommitOnBranch, getOid } = useGithubActions();
   const {
     getSelectedFileByPath,
@@ -79,6 +90,7 @@ const editor = () => {
     modifiedFiles,
   } = useFileState();
   const router = useRouter();
+  const { setFiles, setOrginalFiles } = useFileState();
   const {
     token,
     isLoggedIn,
@@ -91,7 +103,10 @@ const editor = () => {
   ///////////////////////
   ///      States     ///
   ///////////////////////
-
+  const [availableBranches, setAvailableBranches] =
+    useState<availableBranchType[]>();
+  const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
+  const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
   const [openMenu, setOpenMenu] = useState(true);
   const [commitingMode, setCommitingMode] = useState<CommitingModes>(
     CommitingModes.PULL_REQUEST,
@@ -108,7 +123,7 @@ const editor = () => {
   const [searchingMode, setSearchingMode] = useState<SearchingType>(
     SearchingType.ALL,
   );
-
+  const [downloadZIP, setDownloadZIP] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
   const [organizations, setOrganizations] = useState<Organization[]>();
 
@@ -141,7 +156,6 @@ const editor = () => {
           getUserOrganizations(data.accessToken).then((res) => {
             setOrganizations(res);
           });
-
           router.replace('/editor');
           setIsLoggedIn(true);
         });
@@ -175,19 +189,14 @@ const editor = () => {
       });
     }
   }, [isLoggedIn]);
+
   const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {
-    console.log(
-      data,
-      modifiedFiles,
-      modifiedFiles[0].name.split('-')[1].split('/')[0],
-    );
     const filesToSend: { path: string; contents: string }[] = [];
     const repoOwner = selectedRepository?.full_name.split('/')[0];
     const repoName = selectedRepository?.full_name.split('/')[1];
     if (token && filesToSend && repoOwner && repoName) {
       modifiedFiles.map((x) => {
         const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
-        console.log(doBuffer);
         filesToSend.push({
           path: x.name.slice(x.name.indexOf('/') + 1),
           contents: doBuffer,
@@ -214,7 +223,30 @@ const editor = () => {
       });
     }
   };
-  console.log(selectedRepository);
+
+  const confirmBranchClick = async () => {
+    if (token && selectedRepository && selectedBranch) {
+      setDownloadZIP(true);
+      const JSONResponse = await getRepositoryAsZIP(
+        token,
+        selectedRepository?.full_name,
+        selectedBranch?.name,
+      );
+      if (JSONResponse) {
+        const paths = JSONResponse.fileArray.filter((z) =>
+          z.name.includes('.md'),
+        );
+        const tree = treeBuilder(paths);
+        setRepositoryTree(tree);
+        setFiles(paths);
+        setOrginalFiles(paths);
+        setAutoCompleteValue('');
+        setAvailableBranches(undefined);
+        setRepositoriesFromSearch(undefined);
+        setDownloadZIP(false);
+      }
+    }
+  };
 
   const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {};
 
@@ -368,6 +400,8 @@ const editor = () => {
       if (autoCompleteValue !== '') {
         setLoadingFullTree(true);
         setRepositoriesFromSearch(undefined);
+        setSelectedRepository(undefined);
+        setRepositoryTree(undefined);
         const organizationsString = organizations
           ?.map((x) => `%20org:${x.login}`)
           .toString()
@@ -403,72 +437,92 @@ const editor = () => {
       clearTimeout(timer);
     };
   }, [autoCompleteValue]);
-
-  const ref = useRef<HTMLDivElement>(null);
-
-  useOutsideClick(ref, () => setCommitMenu(false));
-
   return (
     <Layout isEditor pageTitle="MDtx Editor">
-      {isFilesDirty && commitMenu ? (
-        <div
-          ref={ref}
-          className="flex flex-col px-[1.2rem] py-[0.8rem] h-[80vh] z-[100] absolute right-[2.4rem] bottom-[2.4rem] bg-mdtxBlack border-mdtxOrange1 border-[1px] rounder-[3.2rem]"
+      {availableBranches?.length && (
+        <Modal
+          customClassName="flex flex-col w-[60rem] h-[20rem]"
+          closeFnc={() => {
+            setAvailableBranches(undefined);
+          }}
         >
-          <div
-            className="self-end cursor-pointer w-fit"
-            onClick={() => {
-              setCommitMenu(false);
-            }}
-          >
-            <p className="text-white select-none w-fit">X</p>
-          </div>
-          {modifiedFiles.map((file) => (
-            <div className="flex flex-col">
-              <p className="text-white">{file.name}</p>
+          <BranchSelector
+            downloadZIP={downloadZIP}
+            selectedRepository={selectedRepository}
+            availableBranches={availableBranches}
+            confirmBranchClick={confirmBranchClick}
+            selectedBranch={selectedBranch}
+            setSelectedBranch={setSelectedBranch}
+          />
+        </Modal>
+      )}
+      {isFilesDirty && commitMenu && (
+        <Modal
+          customClassName="flex flex-col w-[80%] h-[80%]"
+          closeFnc={() => {
+            setCommitMenu(false);
+          }}
+        >
+          <div className="w-full h-full flex flex-col justify-center items-center">
+            <div>
+              <p className="text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
+                Changed files
+              </p>
             </div>
-          ))}
-          <form
-            className="flex gap-[0.8rem]"
-            onSubmit={handleSubmitCommit(onCommitSubmit)}
-          >
-            <input
-              {...registerCommit('commitMessage', {
-                required: true,
-              })}
-              placeholder="Commit message"
-            />
-            <Button
-              customClassName="px-[0.4rem] py-[0.2rem]"
-              type="form"
-              text="Wyślij"
-              color="orange"
-            />
-          </form>
-        </div>
-      ) : (
-        <></>
+            <div className="h-[12rem] overflow-y-scroll overflow-x-hidden scrollbar">
+              {modifiedFiles.map((file) => (
+                <div className="flex flex-col">
+                  <p className="text-white">{file.name}</p>
+                </div>
+              ))}
+            </div>
+
+            <form
+              className="flex gap-[0.8rem]"
+              onSubmit={handleSubmitCommit(onCommitSubmit)}
+            >
+              <input
+                {...registerCommit('commitMessage', {
+                  required: true,
+                })}
+                placeholder="Commit message"
+              />
+              <Button
+                customClassName="px-[0.4rem] py-[0.2rem]"
+                type="form"
+                text="Wyślij"
+                color="orange"
+              />
+            </form>
+          </div>
+        </Modal>
       )}
       {isFilesDirty ? (
         <div
           onClick={() => {
             setCommitMenu(true);
           }}
-          className="z-[99] rounded-full absolute w-[3.2rem] h-[3.2rem] bottom-[2.4rem] right-[2.4rem] bg-mdtxOrange0"
-        />
+          className="py-[1.2rem] px-[0.8rem] cursor-pointer flex justify-center items-center z-[99] rounded-full absolute bottom-[1.2rem] right-[2.4rem] bg-mdtxOrange0"
+        >
+          <p className="text-center w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
+            Apply your changes
+          </p>
+        </div>
       ) : (
         <></>
       )}
       <div className="relative">
         <Menu
-          selectedRepository={selectedRepository}
-          setSelectedRepository={setSelectedRepository}
-          repositoriesFromSearch={repositoriesFromSearch}
-          setRepositoriesFromSearch={setRepositoriesFromSearch}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
-          loadingFullTree={loadingFullTree}
           isOpen={openMenu}
+          loadingFullTree={loadingFullTree}
+          repositoryTree={repositoryTree}
+          repositoriesFromSearch={repositoriesFromSearch}
+          selectedBranch={selectedBranch}
+          setSelectedBranch={setSelectedBranch}
+          setAvailableBranches={setAvailableBranches}
+          setSelectedRepository={setSelectedRepository}
         />
         <BackButton
           state={openMenu}

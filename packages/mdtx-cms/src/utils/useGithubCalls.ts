@@ -36,7 +36,7 @@ export const useGithubCalls = () => {
     const responseParse = await response.json();
     return responseParse;
   };
-  const getRepository = async (token: string, full_name: string) => {
+  const getRepositoryBranches = async (token: string, full_name: string) => {
     const response = await fetch(
       `https://api.github.com/repos/${full_name}/branches`,
       {
@@ -55,7 +55,7 @@ export const useGithubCalls = () => {
     full_name: string,
     branch: string,
   ) => {
-    const response = await fetch('/api/getRepositoryAsZip', {
+    const response = await fetch('/api/getRepositoryAsZIP', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export const useGithubCalls = () => {
     getGithubUser,
     getUserOrganizations,
     getRepositoryMDtx,
-    getRepository,
+    getRepositoryBranches,
     getRepositoryAsZIP,
   };
 };

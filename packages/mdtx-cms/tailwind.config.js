@@ -1,3 +1,5 @@
+const plugin = require('tailwindcss/plugin');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -36,5 +38,14 @@ module.exports = {
       },
     },
   },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [
+    plugin(function ({ addBase }) {
+      addBase({
+        html: {
+          fontSize: '62.5%',
+        },
+      });
+    }),
+    require('@tailwindcss/typography'),
+  ],
 };

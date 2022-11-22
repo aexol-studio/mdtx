@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
 
@@ -8,6 +9,7 @@ export type UserType = {
 };
 
 const AuthConatiner = createContainer(() => {
+  const router = useRouter();
   const [token, _setToken] = useState<string | undefined>();
   const [loggedData, setLoggedData] = useState<UserType>();
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
@@ -36,8 +38,7 @@ const AuthConatiner = createContainer(() => {
     _setToken(undefined);
     setLoggedData(undefined);
     window.localStorage.removeItem('token');
-    window.document.location.reload();
-    window.location.href = '/';
+    router.push('/');
   };
 
   return {
