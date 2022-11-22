@@ -25,8 +25,8 @@ const FileStateContainer = createContainer(() => {
     return files?.find((x) => x.name === pickedFilePath);
   };
   const setSelectedFileContentByPath = (content: string) => {
-    setFiles((prev) => {
-      return prev?.map((x) => {
+    setFiles((prev) =>
+      prev?.map((x) => {
         if (x.name === pickedFilePath) {
           setModifiedFiles((prev) => {
             const orginalContent = orginalFiles?.find(
@@ -70,8 +70,8 @@ const FileStateContainer = createContainer(() => {
         } else {
           return x;
         }
-      });
-    });
+      }),
+    );
   };
   return {
     pickedFilePath,
