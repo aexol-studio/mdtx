@@ -2,7 +2,7 @@
 
 Inspired by generative programming. I was learning Elm language at home as usual in the evening and I was missing all that generative stuff from Elm libs in TS.
 
-![Alt Text](sandbox/mdtx-nextjs-example/public/PresentationOfMDtx.gif)
+![Alt Text](packages/mdtx-cms/public/PresentationOfMDtx.gif)
 
 # What is MDtx?
 
