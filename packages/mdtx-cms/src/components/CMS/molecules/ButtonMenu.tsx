@@ -1,4 +1,5 @@
 import { Hamburger, CloseIconSvg } from '@/src/assets';
+import { useFileState } from '@/src/containers';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
 import { RepositoryFromSearch } from '@/src/pages/editor';
 import React, { useRef, useState } from 'react';
@@ -18,6 +19,7 @@ export const ButtonMenu: React.FC<{
   };
   setMenuModal: React.Dispatch<React.SetStateAction<MenuModalType | undefined>>;
 }> = ({ permissions, setMenuModal }) => {
+  const { modifiedFiles } = useFileState();
   const [optionsMenu, setOptionsMenu] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useOutsideClick(ref, () => setOptionsMenu(false));
@@ -71,7 +73,8 @@ export const ButtonMenu: React.FC<{
               className="w-fit ml-[4.8rem] mb-[1.2rem]"
             >
               <p className="text-center w-fit text-mdtxWhite uppercase text-[1.4rem] font-[700] select-none hover:underline cursor-pointer">
-                Changes
+                Changed (
+                <span className="text-[1.2rem]">{modifiedFiles.length}</span>)
               </p>
             </div>
             <div

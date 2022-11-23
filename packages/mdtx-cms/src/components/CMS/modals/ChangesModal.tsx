@@ -1,7 +1,27 @@
 import { useFileState } from '@/src/containers';
 import dynamic from 'next/dynamic';
 import React from 'react';
+import ReactDiffViewer, {
+  ReactDiffViewerStylesOverride,
+} from 'react-diff-viewer-continued';
+
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
+
+const newStyles: ReactDiffViewerStylesOverride = {
+  variables: {
+    dark: {
+      diffViewerBackground: '#111111',
+    },
+  },
+  emptyLine: {
+    background: 'transparent',
+  },
+  contentText: {
+    '&:hover': {
+      color: '#FF9800',
+    },
+  },
+};
 
 interface IChangesModal {
   previewChanges?: {
@@ -24,6 +44,7 @@ export const ChangesModal: React.FC<IChangesModal> = ({
   setPreviewChanges,
 }) => {
   const { orginalFiles, modifiedFiles } = useFileState();
+
   return (
     <div className="w-full h-full flex">
       <div className="w-[25%] mx-[1.2rem] mt-[1.6rem]">
@@ -45,7 +66,17 @@ export const ChangesModal: React.FC<IChangesModal> = ({
           </div>
         ))}
       </div>
-      <MDEditor
+      <div className="max-h-[100%] overflow-y-scroll scrollbar w-full flex flex-1">
+        <ReactDiffViewer
+          styles={newStyles}
+          useDarkTheme
+          oldValue={previewChanges?.orginalFile}
+          newValue={previewChanges?.changedFile}
+          splitView={true}
+        />
+      </div>
+
+      {/* <MDEditor
         value={previewChanges?.orginalFile}
         className="w-1/2 border-none rounded-none"
         height={'100%'}
@@ -63,7 +94,7 @@ export const ChangesModal: React.FC<IChangesModal> = ({
         contentEditable="false"
         preview={'edit'}
         hideToolbar
-      />
+      /> */}
     </div>
   );
 };
