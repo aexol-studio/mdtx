@@ -103,7 +103,6 @@ const editor = () => {
     getSelectedFileByPath,
     setSelectedFileContentByPath,
     setFiles,
-    setImagesToDisplay,
     setOrginalFiles,
     isFilesDirty,
     modifiedFiles,
@@ -226,7 +225,6 @@ const editor = () => {
         setRepositoryTree(tree);
         setFiles(paths);
         setOrginalFiles(paths);
-        setImagesToDisplay(images);
         setAutoCompleteValue('');
         setRepositoriesFromSearch(undefined);
         setDownloadZIP(false);

@@ -12,19 +12,13 @@ const FileStateContainer = createContainer(() => {
   const [files, setFiles] = useState<FileType[]>();
   const [orginalFiles, setOrginalFiles] = useState<FileType[]>();
   const [modifiedFiles, setModifiedFiles] = useState<FileType[]>([]);
-  const [imagesToDisplay, setImagesToDisplay] = useState<FileType[]>();
   const [pickedFilePath, setPickedFilePath] = useState<string>();
   const [isFilesDirty, setIsFilesDirty] = useState(false);
 
-  const temp = imagesToDisplay?.map((x) => {
-    return x.name.slice(x.name.indexOf('/') + 1);
-  });
-  console.log(temp);
   const resetState = () => {
     setOrginalFiles(undefined);
     setModifiedFiles([]);
     setFiles(undefined);
-    setImagesToDisplay(undefined);
     setPickedFilePath(undefined);
     setIsFilesDirty(false);
   };
@@ -91,8 +85,6 @@ const FileStateContainer = createContainer(() => {
     );
   };
   return {
-    imagesToDisplay,
-    setImagesToDisplay,
     pickedFilePath,
     setPickedFilePath,
     files,
@@ -104,7 +96,6 @@ const FileStateContainer = createContainer(() => {
     setSelectedFileContentByPath,
     isFilesDirty,
     resetState,
-    temp,
   };
 });
 
