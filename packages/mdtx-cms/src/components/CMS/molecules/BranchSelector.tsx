@@ -1,7 +1,8 @@
+import { Check, MDtxLogo, NotCheck } from '@/src/assets';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import React from 'react';
 import { PulseLoader } from 'react-spinners';
-import { Button, SelectBranch } from '../atoms';
+import { Button, PermissionsTable, SelectBranch } from '../atoms';
 
 interface IBranchSelector {
   downloadZIP: boolean;
@@ -33,18 +34,29 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
         </div>
       ) : (
         <>
-          <div>
-            <p className="w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
-              Selected repository:{' '}
-              <span className="text-mdtxOrange1 font-[500]">
-                {selectedRepository?.name}
-              </span>
-            </p>
-            <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
-              Select branch to work
-            </p>
+          <div className="top-[3.2rem] absolute">
+            <MDtxLogo small />
           </div>
-          <div className="mt-[0.8rem] flex justify-between gap-[4.2rem]">
+          <div className="flex justify-between">
+            <div className="flex flex-col justify-end">
+              <p className="w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
+                Selected repository:{' '}
+                <span className="text-mdtxOrange1 font-[500]">
+                  {selectedRepository?.name}
+                </span>
+              </p>
+              <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
+                Select branch to work
+              </p>
+            </div>
+            <div className="">
+              <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
+                Your access to repository
+              </p>
+              <PermissionsTable permissions={selectedRepository?.permissions} />
+            </div>
+          </div>
+          <div className="mt-[2.4rem] flex justify-between gap-[4.2rem]">
             <div className="flex-1">
               <SelectBranch
                 onChange={(e) => setSelectedBranch(e)}

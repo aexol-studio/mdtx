@@ -1,4 +1,4 @@
-export * from './MenuModeSection';
+export * from './MenuSearchSection';
 export * from './LeaveConfirmation';
 export * from './RepositoriesList';
 export * from './RepositoryTree';

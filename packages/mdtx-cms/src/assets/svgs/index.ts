@@ -23,3 +23,5 @@ export * from './Hamburger';
 export * from './CloseIconSvg';
 export * from './Loupe';
 export * from './Chevron';
+export * from './Check';
+export * from './NotCheck';

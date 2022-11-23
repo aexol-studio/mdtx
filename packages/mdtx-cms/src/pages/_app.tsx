@@ -1,4 +1,6 @@
 import '../styles/globals.css';
+import '../styles/markdown-editor-preview.css';
+import '../styles/markdown-editor.css';
 import type { AppProps } from 'next/app';
 import { Fira_Sans } from '@next/font/google';
 import { AuthProvider, FileStateProvider } from '../containers';

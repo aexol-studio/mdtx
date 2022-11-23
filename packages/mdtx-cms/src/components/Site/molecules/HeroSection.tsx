@@ -4,7 +4,7 @@ import { HeaderLeft, HeaderRight } from '@/src/assets';
 
 export const HeroSection = () => {
   return (
-    <header className="select-none overflow-hidden relative items-center w-full min-h-[65rem] flex flex-col pt-[2.4rem] mt-[2.4rem] md:pt-[6.4rem] md:mt-[6.4rem]">
+    <header className="select-none overflow-hidden relative items-center w-full min-h-[62.5rem] flex flex-col pt-[2.4rem] mt-[2.4rem] md:pt-[6.4rem] md:mt-[6.4rem]">
       <div className="w-full h-full absolute top-0 left-0 bg-gradientBlue0 opacity-[0.12] z-[2]" />
       <div className="hidden md:block absolute left-[-3.2rem] top-[9.6rem] z-[1]">
         <HeaderLeft />

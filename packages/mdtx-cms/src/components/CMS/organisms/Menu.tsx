@@ -7,34 +7,22 @@ import React, { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
 import { UserInfo } from '../atoms';
 import {
-  MenuModeSection,
-  MenuModeSectionInterface,
-  Mode,
+  MenuSearchSection,
   RepositoriesList,
   RepositoryTree,
 } from '../molecules';
 
-type Omitted = Omit<
-  Omit<Omit<MenuModeSectionInterface, 'setMode'>, 'setLeaveWithChanges'>,
-  'sameMarkdown'
->;
-
-export interface MenuInteface extends Omitted {
+export interface MenuInteface {
+  autoCompleteValue?: string;
+  setAutoCompleteValue: React.Dispatch<
+    React.SetStateAction<string | undefined>
+  >;
   isOpen: boolean;
   loadingFullTree: boolean;
   repositoriesFromSearch?: RepositoryFromSearch[];
-  setAvailableBranches: React.Dispatch<
-    React.SetStateAction<availableBranchType[] | undefined>
-  >;
   selectedBranch?: availableBranchType;
-  setSelectedBranch: React.Dispatch<
-    React.SetStateAction<availableBranchType | undefined>
-  >;
   repositoryTree?: TreeMenu;
-  setSelectedRepository: React.Dispatch<
-    React.SetStateAction<RepositoryFromSearch | undefined>
-  >;
-  setDownloadModal: React.Dispatch<React.SetStateAction<boolean>>;
+  handleRepositoryPick: (item: RepositoryFromSearch) => Promise<void>;
 }
 
 export const Menu: React.FC<MenuInteface> = ({
@@ -42,29 +30,11 @@ export const Menu: React.FC<MenuInteface> = ({
   setAutoCompleteValue,
   isOpen,
   loadingFullTree,
-  setSelectedRepository,
   repositoriesFromSearch,
-  setAvailableBranches,
-  setSelectedBranch,
   repositoryTree,
-  setDownloadModal,
+  handleRepositoryPick,
 }) => {
-  const { token, loggedData, logOut } = useAuthState();
-  const { getRepositoryBranches } = useGithubCalls();
-
-  const [mode, setMode] = useState<Mode | undefined>(Mode.SEARCHING);
-
-  const handleRepositoryPick = async (item: RepositoryFromSearch) => {
-    setSelectedRepository(item);
-    if (token) {
-      const response = await getRepositoryBranches(token, item.full_name);
-      if (response) {
-        setDownloadModal(true);
-        setAvailableBranches(response);
-        setSelectedBranch(response[0]);
-      }
-    }
-  };
+  const { loggedData, logOut } = useAuthState();
 
   return (
     <div
@@ -83,15 +53,13 @@ export const Menu: React.FC<MenuInteface> = ({
           <MDtxLogo small />
           <UserInfo logOut={logOut} loggedData={loggedData} />
         </div>
-        <div className="relative w-full border-b-[1px] border-mdtxOrange0 pb-[5.6rem]">
-          <MenuModeSection
-            mode={mode}
-            setMode={setMode}
+        <div className="mt-[1.6rem] relative w-full mb-[3.2rem]">
+          <MenuSearchSection
             autoCompleteValue={autoCompleteValue}
             setAutoCompleteValue={setAutoCompleteValue}
           />
         </div>
-        <div className="w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar">
+        <div className="pb-[1.6rem] border-t-[1px] border-mdtxOrange0  w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar">
           {loadingFullTree ? (
             <div className="mt-[4.2rem] flex justify-center w-full">
               <PulseLoader size={'16px'} color="#FF7200" />
@@ -111,6 +79,13 @@ export const Menu: React.FC<MenuInteface> = ({
             repositoryTree.map((x) => (
               <RepositoryTree key={x.name} root tree={x} />
             ))}
+          {!loadingFullTree && !repositoryTree && !repositoriesFromSearch && (
+            <div className="px-[1.6rem] mt-[2.4rem]">
+              <p className="text-mdtxWhite text-[1.4rem]">
+                Type something to start explore GitHub repositories
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>

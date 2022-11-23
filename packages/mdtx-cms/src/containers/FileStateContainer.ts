@@ -11,8 +11,19 @@ const FileStateContainer = createContainer(() => {
   const [files, setFiles] = useState<FileType[]>();
   const [orginalFiles, setOrginalFiles] = useState<FileType[]>();
   const [modifiedFiles, setModifiedFiles] = useState<FileType[]>([]);
+  const [imagesToDisplay, setImagesToDisplay] = useState<FileType[]>();
   const [pickedFilePath, setPickedFilePath] = useState<string>();
   const [isFilesDirty, setIsFilesDirty] = useState(false);
+
+  const resetState = () => {
+    setOrginalFiles(undefined);
+    setModifiedFiles([]);
+    setFiles(undefined);
+    setImagesToDisplay(undefined);
+    setPickedFilePath(undefined);
+    setIsFilesDirty(false);
+  };
+
   useEffect(() => {
     if (JSON.stringify(files) === JSON.stringify(orginalFiles)) {
       setIsFilesDirty(false);
@@ -74,6 +85,8 @@ const FileStateContainer = createContainer(() => {
     );
   };
   return {
+    imagesToDisplay,
+    setImagesToDisplay,
     pickedFilePath,
     setPickedFilePath,
     files,
@@ -84,6 +97,7 @@ const FileStateContainer = createContainer(() => {
     getSelectedFileByPath,
     setSelectedFileContentByPath,
     isFilesDirty,
+    resetState,
   };
 });
 

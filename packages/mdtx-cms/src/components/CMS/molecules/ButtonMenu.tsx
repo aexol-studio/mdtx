@@ -1,5 +1,6 @@
 import { Hamburger, CloseIconSvg } from '@/src/assets';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
+import { RepositoryFromSearch } from '@/src/pages/editor';
 import React, { useRef, useState } from 'react';
 export enum MenuModalType {
   COMMIT = 'COMMIT',
@@ -8,11 +9,24 @@ export enum MenuModalType {
   CHANGES = 'CHANGES',
 }
 export const ButtonMenu: React.FC<{
+  permissions?: {
+    admin: boolean;
+    maintain: boolean;
+    push: boolean;
+    triage: boolean;
+    pull: boolean;
+  };
   setMenuModal: React.Dispatch<React.SetStateAction<MenuModalType | undefined>>;
-}> = ({ setMenuModal }) => {
+}> = ({ permissions, setMenuModal }) => {
   const [optionsMenu, setOptionsMenu] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useOutsideClick(ref, () => setOptionsMenu(false));
+  const onlyView =
+    permissions?.triage &&
+    !permissions.admin &&
+    !permissions.maintain &&
+    !permissions.pull &&
+    !permissions.push;
   return (
     <div
       onClick={() => {
@@ -62,34 +76,50 @@ export const ButtonMenu: React.FC<{
             </div>
             <div
               onClick={() => {
-                setMenuModal(MenuModalType.COMMIT);
-                setOptionsMenu(false);
+                if (!onlyView && permissions?.push) {
+                  setMenuModal(MenuModalType.COMMIT);
+                  setOptionsMenu(false);
+                }
               }}
               className="w-fit ml-[3.2rem] mb-[1.2rem]"
             >
-              <p className="text-center w-fit text-mdtxWhite uppercase text-[1.4rem] font-[700] select-none hover:underline cursor-pointer">
+              <p
+                className={`${
+                  permissions?.push
+                    ? 'text-mdtxWhite hover:underline cursor-pointer'
+                    : 'text-mdtxBlack line-through'
+                } text-center w-fit uppercase text-[1.4rem] font-[700] select-none`}
+              >
                 Commit
               </p>
             </div>
             <div
               onClick={() => {
-                setMenuModal(MenuModalType.FORK);
-                setOptionsMenu(false);
+                // setMenuModal(MenuModalType.FORK);
+                // setOptionsMenu(false);
               }}
               className="w-fit ml-[1.6rem] mb-[1.2rem]"
             >
-              <p className="text-center w-fit text-mdtxWhite uppercase text-[1.4rem] font-[700] select-none hover:underline cursor-pointer">
+              <p className="text-center w-fit text-mdtxBlack uppercase text-[1.4rem] font-[700] select-none line-through">
                 Fork
               </p>
             </div>
             <div
               onClick={() => {
-                setMenuModal(MenuModalType.PULL_REQUEST);
-                setOptionsMenu(false);
+                if (!onlyView && permissions?.pull) {
+                  setMenuModal(MenuModalType.PULL_REQUEST);
+                  setOptionsMenu(false);
+                }
               }}
               className="w-fit"
             >
-              <p className="text-center w-fit text-mdtxWhite uppercase text-[1.4rem] font-[700] select-none hover:underline cursor-pointer">
+              <p
+                className={`${
+                  permissions?.pull
+                    ? 'text-mdtxWhite hover:underline cursor-pointer'
+                    : 'text-mdtxBlack line-through'
+                } text-center w-fit uppercase text-[1.4rem] font-[700] select-none`}
+              >
                 Pull request
               </p>
             </div>
