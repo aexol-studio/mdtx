@@ -42,7 +42,9 @@ export const RepositoryTree: React.FC<{
         >
           {hasChildren && root && (
             <div>
-              <p className="text-white text-[1.5rem]">Repository:&nbsp;</p>
+              <p className="text-white leading-[1.8rem] select-none text-center text-[1.2rem] font-[700] uppercase tracking-wider">
+                Repository:&nbsp;
+              </p>
             </div>
           )}
           {isFolder && (
@@ -59,7 +61,13 @@ export const RepositoryTree: React.FC<{
             </div>
           )}
           <div>
-            <p className="text-white text-[1.4rem]">{tree?.name}</p>
+            <p
+              className={`${
+                hasChildren && root ? 'text-[1.2rem]' : 'text-[1.4rem]'
+              } text-white`}
+            >
+              {tree?.name}
+            </p>
           </div>
         </div>
       )}

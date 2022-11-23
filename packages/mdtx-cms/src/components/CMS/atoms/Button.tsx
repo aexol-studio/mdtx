@@ -27,7 +27,7 @@ export const Button: React.FC<ButtonInterface> = ({
       }}
       className={` ${
         withAnimation ? 'transition-all duration-300 ease-in-out' : ''
-      } transition-all duration-300 ease-in-out ${
+      } ${
         color === 'orange'
           ? 'bg-mdtxOrange0 text-mdtxWhite hover:text-mdtxBlack'
           : color === 'white'
@@ -35,11 +35,15 @@ export const Button: React.FC<ButtonInterface> = ({
           : ''
       } ${
         customClassName ? customClassName : ''
-      } h-fit flex justify-center items-center text-[1.4rem] rounded-[2.4rem] overflow-hidden w-fit`}
+      } z-[102] cursor-pointer h-fit flex justify-center items-center text-[1.4rem] rounded-[2.4rem] overflow-hidden w-fit`}
     >
       {type ? (
         type === 'form' ? (
-          <input className="appearance-none" type="submit" value={text}></input>
+          <input
+            className="appearance-none cursor-pointer"
+            type="submit"
+            value={text}
+          ></input>
         ) : (
           type === 'link' &&
           href && (

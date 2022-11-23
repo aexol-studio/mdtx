@@ -59,9 +59,50 @@ export const useGithubActions = () => {
       throw new Error('Bad response from createCommitOnBranch()');
     return response.createCommitOnBranch;
   };
-
+  const createBranch = async (
+    token: string,
+    input: ModelTypes['CreateRefInput'],
+  ) => {
+    const response = await chain(
+      'mutation',
+      token,
+    )({
+      createRef: [
+        { input },
+        {
+          ref: {
+            name: true,
+            target: {
+              '...on Commit': {
+                history: [{ first: 1 }, { nodes: { oid: true } }],
+              },
+            },
+          },
+        },
+      ],
+    });
+    if (!response.createRef)
+      throw new Error('Bad response from createBranch()');
+    return response.createRef;
+  };
+  const createPullRequest = async (
+    token: string,
+    input: ModelTypes['CreatePullRequestInput'],
+  ) => {
+    const response = await chain(
+      'mutation',
+      token,
+    )({
+      createPullRequest: [{ input }, { pullRequest: { headRefName: true } }],
+    });
+    if (!response.createPullRequest)
+      throw new Error('Bad response from createPullRequest()');
+    return response.createPullRequest;
+  };
   return {
     getOid,
     createCommitOnBranch,
+    createBranch,
+    createPullRequest,
   };
 };

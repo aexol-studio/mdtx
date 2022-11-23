@@ -57,7 +57,7 @@ export const Select: React.FC<SelectProps<string>> = ({
         </div>
       )}
       {open && (
-        <div className="absolute z-[101] w-[100%] bg-mdtxWhite border-[1px] max-h-[30rem] overflow-y-auto rounded-b-[0.8rem] top-[2.8rem]">
+        <div className="absolute z-[101] w-[100%] bg-mdtxWhite border-[1px] max-h-[30rem] overflow-y-auto rounded-b-[0.8rem] top-[3rem]">
           {options.map((o, idx) => (
             <div
               className={`${idx !== 0 && 'border-t-[1px]'} ${
