@@ -19,6 +19,7 @@
     "next": "latest",
     "next-remove-imports": "^1.0.8",
     "react": "^18.2.0",
+    "react-diff-viewer-continued": "^3.2.3",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.39.1",
     "react-spinners": "^0.13.6",

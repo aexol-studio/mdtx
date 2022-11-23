@@ -214,13 +214,7 @@ const editor = () => {
         const paths = JSONResponse.fileArray.filter((z) =>
           z.name.includes('.md'),
         );
-        const images = JSONResponse.fileArray.filter(
-          (z) =>
-            z.name.includes('.png') ||
-            z.name.includes('.jpg') ||
-            z.name.includes('.jpeg') ||
-            z.name.includes('.gif'),
-        );
+
         const tree = treeBuilder(paths);
         setRepositoryTree(tree);
         setFiles(paths);
