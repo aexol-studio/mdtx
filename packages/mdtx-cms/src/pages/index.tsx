@@ -10,7 +10,7 @@ const index = () => {
     <Layout pageTitle="MDtx - editor to fast edit your markdowns!">
       <main className="bg-mdtxBlack w-full h-full flex flex-col justify-center items-center">
         <HeroSection />
-        <div className="mt-[1.6rem] mb-[3.2rem] max-w-[90%] mx-auto w-full xl:max-w-[1068px]">
+        <div className="mt-[1.6rem] mb-[12.8rem] max-w-[90%] mx-auto w-full xl:max-w-[1068px]">
           <section>
             <WhatIsMDtx
               content={WhatIsMDtxContent.content}

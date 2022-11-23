@@ -1,9 +1,8 @@
 import { MDtxLogo } from '@/src/assets';
 import { useAuthState } from '@/src/containers';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
-import { useGithubCalls } from '@/src/utils';
 import { TreeMenu } from '@/src/utils/treeBuilder';
-import React, { useState } from 'react';
+import React from 'react';
 import { PulseLoader } from 'react-spinners';
 import { UserInfo } from '../atoms';
 import {
@@ -35,7 +34,6 @@ export const Menu: React.FC<MenuInteface> = ({
   handleRepositoryPick,
 }) => {
   const { loggedData, logOut } = useAuthState();
-
   return (
     <div
       className={`${

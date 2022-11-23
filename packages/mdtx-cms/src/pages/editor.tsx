@@ -30,7 +30,7 @@ enum SearchingType {
   ALL = 'ALL',
   ALLALLOWED = 'ALLALLOWED',
   USER = 'USER',
-  ORGANIZATION = 'ORGANIZATION',
+  // ORGANIZATION = 'ORGANIZATION',
   ORGANIZATIONS = 'ORGANIZATIONS',
 }
 
@@ -203,13 +203,13 @@ const editor = () => {
     }
   }, [isLoggedIn]);
 
-  const confirmBranchClick = async () => {
+  const confirmBranchClick = async (branchName?: string) => {
     if (token && selectedRepository && selectedBranch) {
       setDownloadZIP(true);
       const JSONResponse = await getRepositoryAsZIP(
         token,
         selectedRepository?.full_name,
-        selectedBranch?.name,
+        branchName ? branchName : selectedBranch?.name,
       );
       if (JSONResponse) {
         const paths = JSONResponse.fileArray.filter((z) =>
@@ -346,7 +346,7 @@ const editor = () => {
                 }).then((pr) => {
                   if (pr.pullRequest) {
                     resetState();
-                    confirmBranchClick().then(() => {
+                    confirmBranchClick(ref.name).then(() => {
                       setPullRequest(false);
                       setMenuModal(undefined);
                     });
@@ -361,7 +361,11 @@ const editor = () => {
   };
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (autoCompleteValue !== '' && autoCompleteValue !== undefined) {
+      if (
+        autoCompleteValue !== '' &&
+        autoCompleteValue !== undefined &&
+        !loadingFullTree
+      ) {
         setLoadingFullTree(true);
         setRepositoriesFromSearch(undefined);
         setSelectedRepository(undefined);
@@ -393,14 +397,12 @@ const editor = () => {
         );
         const res = await response.json();
         setRepositoriesFromSearch(res.items);
-        console.log(res);
         setLoadingFullTree(false);
       }
     }, 750);
     return () => {
       setRepositoriesFromSearch(undefined);
       setLoadingFullTree(false);
-
       clearTimeout(timer);
     };
   }, [autoCompleteValue]);
@@ -496,6 +498,13 @@ const editor = () => {
         <MDEditor
           height={'100vh'}
           value={getSelectedFileByPath()?.content}
+          previewOptions={{
+            transformImageUri: (src) => {
+              return !src.includes('https') || !src.includes('http')
+                ? `https://github.com/${selectedRepository?.full_name}/blob/${selectedBranch?.name}/${src}?raw=true`
+                : src;
+            },
+          }}
           onChange={(e) => {
             setSelectedFileContentByPath(e ? e : '');
           }}

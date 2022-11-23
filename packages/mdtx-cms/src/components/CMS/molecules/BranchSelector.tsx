@@ -49,7 +49,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                 Select branch to work
               </p>
             </div>
-            <div className="">
+            <div className="min-w-fit">
               <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
                 Your access to repository
               </p>

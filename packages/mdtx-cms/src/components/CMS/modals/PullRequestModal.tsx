@@ -86,7 +86,7 @@ export const PullRequestModal: React.FC<IPullRequestModal> = ({
               />
             )}
           />
-          <div className="flex gap-[0.8rem]">
+          <div className="flex w-full gap-[0.8rem]">
             <div className="flex flex-col">
               <p className="mt-[1.6rem] select-none text-white text-[1.4rem]">
                 Pull request title
@@ -98,6 +98,7 @@ export const PullRequestModal: React.FC<IPullRequestModal> = ({
                 rules={{ required: true }}
                 render={({ field: { onChange, value } }) => (
                   <Input
+                    className="w-full"
                     onChange={onChange}
                     value={value}
                     placeholder="Pull request title"
@@ -116,6 +117,7 @@ export const PullRequestModal: React.FC<IPullRequestModal> = ({
                 rules={{ required: true }}
                 render={({ field: { onChange, value } }) => (
                   <Input
+                    className="w-full"
                     onChange={onChange}
                     value={value}
                     placeholder="Pull request message"
@@ -136,6 +138,7 @@ export const PullRequestModal: React.FC<IPullRequestModal> = ({
                 rules={{ required: true }}
                 render={({ field: { onChange, value } }) => (
                   <Input
+                    className="w-full"
                     onChange={onChange}
                     value={value}
                     placeholder="Commit head message"
@@ -154,6 +157,7 @@ export const PullRequestModal: React.FC<IPullRequestModal> = ({
                 rules={{ required: true }}
                 render={({ field: { onChange, value } }) => (
                   <Input
+                    className="w-full"
                     onChange={onChange}
                     value={value}
                     placeholder="Commit body message"

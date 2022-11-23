@@ -1,3 +1,4 @@
+import { file } from 'jszip';
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
 
@@ -15,6 +16,10 @@ const FileStateContainer = createContainer(() => {
   const [pickedFilePath, setPickedFilePath] = useState<string>();
   const [isFilesDirty, setIsFilesDirty] = useState(false);
 
+  const temp = imagesToDisplay?.map((x) => {
+    return x.name.slice(x.name.indexOf('/') + 1);
+  });
+  console.log(temp);
   const resetState = () => {
     setOrginalFiles(undefined);
     setModifiedFiles([]);
@@ -77,6 +82,7 @@ const FileStateContainer = createContainer(() => {
               ];
             }
           });
+
           return { ...x, content };
         } else {
           return x;
@@ -98,6 +104,7 @@ const FileStateContainer = createContainer(() => {
     setSelectedFileContentByPath,
     isFilesDirty,
     resetState,
+    temp,
   };
 });
 
