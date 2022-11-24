@@ -1,5 +1,5 @@
-import React from 'react';
 import { Input } from '../atoms';
+
 export enum Mode {
   ORGANIZATIONS = 'ORGANIZATIONS',
   SEARCHING = 'SEARCHING',
@@ -22,9 +22,7 @@ export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
         className="w-full"
         placeholder={`Type to search`}
         value={autoCompleteValue ? autoCompleteValue : ''}
-        onChange={(e) => {
-          setAutoCompleteValue(e.target.value);
-        }}
+        onChange={(e) => setAutoCompleteValue(e.target.value)}
       />
     </div>
   );

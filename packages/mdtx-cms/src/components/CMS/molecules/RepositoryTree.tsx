@@ -1,7 +1,7 @@
 import { FileIcon, FolderIcon } from '@/src/assets';
 import { useFileState } from '@/src/containers';
 import { TreeObject } from '@/src/utils/treeBuilder';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 export const RepositoryTree: React.FC<{
   tree?: TreeObject;
@@ -31,9 +31,7 @@ export const RepositoryTree: React.FC<{
     <div className="mx-[0.8rem] my-[0.2rem]">
       {tree?.name && (
         <div
-          onClick={() => {
-            !(hasChildren && root) && clickHandler();
-          }}
+          onClick={() => !(hasChildren && root) && clickHandler()}
           className={`${
             hasChildren && root
               ? 'mb-[1.2rem] cursor-default'

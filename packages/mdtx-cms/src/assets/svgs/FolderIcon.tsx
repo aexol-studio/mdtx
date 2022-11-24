@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 export const FolderIcon: React.FC<{ selected?: boolean }> = ({ selected }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

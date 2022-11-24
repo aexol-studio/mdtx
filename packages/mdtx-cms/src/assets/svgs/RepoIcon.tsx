@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 export const RepoIcon: React.FC<{ id: string; color?: string }> = ({
   id,
   color = '#FFF',

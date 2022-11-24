@@ -1,5 +1,5 @@
 import { createContainer } from 'unstated-next';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { v4 } from 'uuid';
 import { Uuid } from '@typed/uuid';
 import { ErrorIcon, Message, Success, Warning } from '../assets';

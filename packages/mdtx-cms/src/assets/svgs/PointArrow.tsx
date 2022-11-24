@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const PointArrow: React.FC<{ color?: string }> = ({
   color = '#FF9800',
 }) => {

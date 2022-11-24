@@ -1,5 +1,5 @@
 import { useFileState } from '@/src/containers';
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import ReactDiffViewer, {
   ReactDiffViewerStylesOverride,
 } from 'react-diff-viewer-continued';

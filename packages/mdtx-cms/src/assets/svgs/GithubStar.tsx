@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const GithubStar: React.FC<{ isHovered?: boolean }> = ({
   isHovered,
 }) => {

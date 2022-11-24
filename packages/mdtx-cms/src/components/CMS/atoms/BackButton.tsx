@@ -1,5 +1,4 @@
 import { ArrowLeft } from '@/src/assets';
-import React from 'react';
 
 export const BackButton: React.FC<{ state: boolean; onClick: () => void }> = ({
   state,

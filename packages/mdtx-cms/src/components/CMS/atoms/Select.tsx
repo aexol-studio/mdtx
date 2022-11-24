@@ -1,6 +1,5 @@
 import { Chevron } from '@/src/assets';
-import { availableBranchType } from '@/src/pages/editor';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 interface SelectProps<T> {
   value?: T;

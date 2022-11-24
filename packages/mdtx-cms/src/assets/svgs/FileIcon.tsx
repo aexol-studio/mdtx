@@ -1,6 +1,3 @@
-import * as React from 'react';
-import { SVGProps } from 'react';
-
 export const FileIcon: React.FC<{ edited?: boolean; selected?: boolean }> = ({
   selected,
   edited,

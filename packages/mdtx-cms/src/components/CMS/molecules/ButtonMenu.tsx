@@ -1,8 +1,8 @@
 import { Hamburger, CloseIconSvg } from '@/src/assets';
 import { useFileState } from '@/src/containers';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
-import { RepositoryFromSearch } from '@/src/pages/editor';
-import React, { useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+
 export enum MenuModalType {
   COMMIT = 'COMMIT',
   PULL_REQUEST = 'PULL_REQUEST',
@@ -29,11 +29,10 @@ export const ButtonMenu: React.FC<{
     !permissions.maintain &&
     !permissions.pull &&
     !permissions.push;
+
   return (
     <div
-      onClick={() => {
-        !optionsMenu && setOptionsMenu(true);
-      }}
+      onClick={() => !optionsMenu && setOptionsMenu(true)}
       className={`${
         optionsMenu
           ? 'right-0 bottom-0 cursor-default'

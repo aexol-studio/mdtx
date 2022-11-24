@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const Message = () => {
   return (
     <svg height="24" width="24" viewBox="0 0 24 24" fill="white">
