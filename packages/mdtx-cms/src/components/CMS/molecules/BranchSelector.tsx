@@ -45,33 +45,39 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
           <div className="absolute top-[1.6rem] left-[1.6rem]">
             <MDtxLogo small />
           </div>
-          {!pullRequestView &&
-          availablePullRequests &&
-          availablePullRequests.length > 0 ? (
-            <div
-              onClick={() => {
-                setPullRequestView(true);
-              }}
-              className="absolute bottom-[1.6rem] left-[1.6rem]"
-            >
-              <p className="hover:underline cursor-pointer w-fit text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wider">
-                <span className="text-mdtxOrange1 font-[500] text-[1rem]">{`<<`}</span>{' '}
-                See pull requests
-              </p>
-            </div>
-          ) : (
-            <div
-              onClick={() => {
-                setPullRequestView(false);
-              }}
-              className="absolute bottom-[1.6rem] right-[1.6rem]"
-            >
-              <p className="hover:underline cursor-pointer w-fit text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wider">
-                See branches{' '}
-                <span className="text-mdtxOrange1 font-[500] text-[1rem]">{`>>`}</span>
-              </p>
-            </div>
-          )}
+          {
+            <>
+              {availablePullRequests && availablePullRequests.length > 0 && (
+                <>
+                  {!pullRequestView ? (
+                    <div
+                      onClick={() => {
+                        setPullRequestView(true);
+                      }}
+                      className="z-[102] absolute bottom-[1.6rem] left-[1.6rem]"
+                    >
+                      <p className="hover:underline cursor-pointer w-fit text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wider">
+                        <span className="text-mdtxOrange1 font-[500] text-[1rem]">{`<<`}</span>{' '}
+                        See pull requests
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => {
+                        setPullRequestView(false);
+                      }}
+                      className="z-[102] absolute bottom-[1.6rem] right-[1.6rem]"
+                    >
+                      <p className="hover:underline cursor-pointer w-fit text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wider">
+                        See branches{' '}
+                        <span className="text-mdtxOrange1 font-[500] text-[1rem]">{`>>`}</span>
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          }
           <div className="mt-[3.2rem] flex items-center justify-center">
             <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.4rem] font-[700] select-none tracking-wide">
               {pullRequestView ? 'Select PR to work' : 'Select branch to work'}
@@ -94,41 +100,69 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                 : 'translate-x-0 visible'
             } h-full transition-transform duration-300 ease-in-out w-full flex-col`}
           >
-            <div className="mt-[2.4rem] max-h-[100%] overflow-y-scroll scrollbar">
-              {availablePullRequests?.map((pr) => (
-                <div className="flex flex-col">
-                  <div className="flex">
+            <div className="mt-[0.8rem] max-h-[20rem] h-full overflow-y-scroll scrollbar">
+              {availablePullRequests?.map((pr, idx) => (
+                <div
+                  key={idx}
+                  className={`${
+                    idx !== 0 ? 'border-t-[1px] pt-[1.6rem]' : ''
+                  } mt-[1.6rem] select-none flex flex-col`}
+                >
+                  <div className="flex items-center gap-[0.8rem]">
                     <PullRequestIcon />
                     <div className="flex text-mdtxWhite">
-                      <p className="text-[1.2rem]">From</p>&nbsp;
-                      <p className="text-[1.2rem]">{pr.base.ref}</p>&nbsp;
-                      <p className="text-[1.2rem]">to</p>&nbsp;
-                      <p className="text-[1.2rem]">{pr.head.ref}</p>
-                    </div>
-                    <div className="ml-[0.8rem] text-mdtxWhite">
-                      <p className="text-[1.2rem]">Pull request title</p>
-                      <p className="text-[1.2rem]">{pr.title}</p>
-                    </div>
-                    <div className="ml-[0.8rem] text-mdtxWhite">
-                      <p className="text-[1.2rem]">Pull request body</p>
-                      <p className="text-[1.2rem]">{pr.body}</p>
+                      <p className="text-[1.2rem] font-[700]">From</p>&nbsp;
+                      <p className="text-[1.2rem] font-[700]">{pr.head.ref}</p>
+                      &nbsp;
+                      <p className="text-[1.2rem] font-[700]">to</p>&nbsp;
+                      <p className="text-[1.2rem] font-[700]">{pr.base.ref}</p>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-[0.8rem]">
-                    {pr.user.avatar_url && (
-                      <Image
-                        priority
-                        width={24}
-                        height={24}
-                        className="rounded-full"
-                        alt="User Logo"
-                        src={pr.user.avatar_url}
-                      />
-                    )}
-                    <p className="select-none text-[1.2rem] text-center font-[400] text-white">
-                      Authored by: {pr.user.login}
+                  <div className="mt-[0.8rem] text-mdtxWhite">
+                    <p className="text-[1.2rem]">
+                      Last update: {pr.updated_at.split('T')[0]}&nbsp;
+                      {pr.updated_at.split('T')[1].replace('Z', '')}
                     </p>
+                  </div>
+                  <div className="mt-[0.8rem] text-mdtxWhite">
+                    <p className="text-[1.2rem]">
+                      Pull request title: {pr.title}
+                    </p>
+                  </div>
+                  <div className="mt-[0.8rem] text-mdtxWhite">
+                    <p className="text-[1.2rem]">
+                      Pull request body: {pr.body}
+                    </p>
+                  </div>
+
+                  <div className="w-full justify-between mt-[1.2rem] flex">
+                    <div className="flex items-center gap-[0.8rem] ">
+                      {pr.user.avatar_url && (
+                        <Image
+                          priority
+                          width={24}
+                          height={24}
+                          className="rounded-full"
+                          alt="User Logo"
+                          src={pr.user.avatar_url}
+                        />
+                      )}
+                      <p className="select-none text-[1.2rem] text-center font-[400] text-white">
+                        Authored by: {pr.user.login}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        const found = availableBranches.find(
+                          (x) => x.name === pr.head.ref,
+                        );
+                        setSelectedBranch(found);
+                        confirmBranchClick();
+                      }}
+                      color="orange"
+                      text="Select"
+                      customClassName="mr-[0.8rem]"
+                    />
                   </div>
                 </div>
               ))}

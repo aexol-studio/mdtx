@@ -50,7 +50,7 @@ export const Menu: React.FC<MenuInteface> = ({
           <MDtxLogo small />
           <UserInfo logOut={logOut} loggedData={loggedData} />
         </div>
-        <div className="mt-[1.6rem] relative w-full mb-[3.2rem]">
+        <div className="mt-[3.2rem] relative w-full mb-[3.2rem]">
           <MenuSearchSection
             autoCompleteValue={autoCompleteValue}
             setAutoCompleteValue={setAutoCompleteValue}

@@ -183,7 +183,7 @@ const editor = () => {
         body: JSON.stringify(requestData),
       })
         .then((response) => response.json())
-        .then(async (data) => {
+        .then((data) => {
           setTokenWithLocal(data.accessToken);
           router.replace('/editor');
           setIsLoggedIn(true);
@@ -256,11 +256,8 @@ const editor = () => {
         promiseBranches,
         promisePullRequest,
       ]);
+      setAvailablePullRequests(pullRequests);
       if (branches.length) {
-        if (pullRequests.length) {
-          console.log(pullRequests);
-          setAvailablePullRequests(pullRequests);
-        }
         setDownloadModal(true);
         setAvailableBranches(branches);
         setSelectedBranch(branches[0]);

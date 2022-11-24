@@ -12,7 +12,7 @@ export const UserInfo: React.FC<{
     <div>
       {loggedData ? (
         <div
-          className="relative w-fit cursor-pointer flex items-center gap-[0.4rem]"
+          className="relative w-fit  flex items-center gap-[0.4rem]"
           onClick={() => {
             setOpenMenu((prev) => !prev);
           }}
@@ -23,12 +23,12 @@ export const UserInfo: React.FC<{
                 priority
                 width={24}
                 height={24}
-                className="rounded-full"
+                className="cursor-pointer rounded-full"
                 alt="User Logo"
                 src={loggedData.avatar_url}
               />
             )}
-            <p className="text-[1.4rem] text-center font-[400] text-white">
+            <p className="cursor-pointer text-[1.4rem] text-center font-[400] text-white">
               {loggedData.name}
             </p>
           </div>
@@ -40,8 +40,11 @@ export const UserInfo: React.FC<{
             <Chevron small colorFill="white" />
           </div>
           {openMenu ? (
-            <div className="absolute right-0 top-[2.4rem] w-[80%]">
-              <p onClick={logOut} className="text-white w-fit hover:underline text-[1.4rem] font-[400]">
+            <div className="border-l-[1px] border-b-[1px] border-r-[1px] rounded-b-[0.8rem] border-t-none border-mdtxOrange1 absolute left-0 top-[2.6rem] w-[100%]">
+              <p
+                onClick={logOut}
+                className="cursor-pointer pl-[1.2rem] py-[0.2rem] text-white w-fit hover:underline text-[1.4rem] font-[400]"
+              >
                 Log out
               </p>
             </div>
