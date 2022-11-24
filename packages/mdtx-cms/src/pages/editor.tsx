@@ -60,7 +60,21 @@ export type availableBranchType = {
   name: string;
   protected: false;
 };
-
+export type PullRequestsType = {
+  base: {
+    ref: string;
+  };
+  head: {
+    ref: string;
+  };
+  user: {
+    avatar_url: string;
+    login: string;
+  };
+  title: string;
+  body: string;
+  updated_at: string;
+};
 export enum CommitingModes {
   COMMIT = 'COMMIT',
   PULL_REQUEST = 'PULL_REQUEST',
@@ -128,7 +142,8 @@ const editor = () => {
   const [downloadModal, setDownloadModal] = useState(false);
   const [availableBranches, setAvailableBranches] =
     useState<availableBranchType[]>();
-
+  const [availablePullRequests, setAvailablePullRequests] =
+    useState<PullRequestsType[]>();
   const [selectedRepository, setSelectedRepository] =
     useState<RepositoryFromSearch>();
   const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
@@ -241,8 +256,11 @@ const editor = () => {
         promiseBranches,
         promisePullRequest,
       ]);
-      console.log(branches, pullRequests);
       if (branches.length) {
+        if (pullRequests.length) {
+          console.log(pullRequests);
+          setAvailablePullRequests(pullRequests);
+        }
         setDownloadModal(true);
         setAvailableBranches(branches);
         setSelectedBranch(branches[0]);
@@ -363,13 +381,11 @@ const editor = () => {
       });
     }
   };
+  const controller = new AbortController();
+  const { signal } = controller;
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (
-        autoCompleteValue !== '' &&
-        autoCompleteValue !== undefined &&
-        !loadingFullTree
-      ) {
+      if (autoCompleteValue !== '' && autoCompleteValue !== undefined) {
         setLoadingFullTree(true);
         setRepositoriesFromSearch(undefined);
         setSelectedRepository(undefined);
@@ -392,6 +408,7 @@ const editor = () => {
               : ''
           }&per_page=100`,
           {
+            signal: signal,
             method: 'GET',
             headers: {
               Accept: 'application/vnd.github+json',
@@ -403,10 +420,11 @@ const editor = () => {
         setRepositoriesFromSearch(res.items);
         setLoadingFullTree(false);
       }
-    }, 750);
+    }, 500);
     return () => {
       setRepositoriesFromSearch(undefined);
       setLoadingFullTree(false);
+      controller.abort();
       clearTimeout(timer);
     };
   }, [autoCompleteValue]);
@@ -415,7 +433,7 @@ const editor = () => {
     <Layout isEditor pageTitle="MDtx Editor">
       {downloadModal && availableBranches?.length && (
         <Modal
-          customClassName="flex flex-col w-[60rem] h-[30rem]"
+          customClassName="flex flex-col w-[60rem] h-[40rem]"
           blockingState={downloadZIP}
           closeFnc={() => {
             setDownloadModal(false);
@@ -425,6 +443,7 @@ const editor = () => {
             downloadZIP={downloadZIP}
             selectedRepository={selectedRepository}
             availableBranches={availableBranches}
+            availablePullRequests={availablePullRequests}
             confirmBranchClick={confirmBranchClick}
             selectedBranch={selectedBranch}
             setSelectedBranch={setSelectedBranch}

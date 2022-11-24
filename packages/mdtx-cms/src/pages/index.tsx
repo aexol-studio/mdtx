@@ -1,9 +1,8 @@
 import React from 'react';
 import { Layout } from '@/src/layouts';
-import { BonusesOfMDtxContent } from '@/src/datas/BonusesOfMDtxData';
 import { WhatIsMDtxContent } from '@/src/datas/WhatIsMDtxData';
 import { HeroSection } from '@/src/components/Site';
-import { BonusesOfMDtx, WhatIsMDtx } from '@/src/components/Site';
+import { WhatIsMDtx } from '@/src/components/Site';
 
 const index = () => {
   return (

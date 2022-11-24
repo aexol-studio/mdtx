@@ -25,3 +25,4 @@ export * from './Loupe';
 export * from './Chevron';
 export * from './Check';
 export * from './NotCheck';
+export * from './PullRequestIcon';

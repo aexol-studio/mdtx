@@ -8,6 +8,9 @@ const newStyles: ReactDiffViewerStylesOverride = {
   variables: {
     dark: {
       diffViewerBackground: '#111111',
+      changedBackground: '#355347',
+      addedBackground: '#355347',
+      wordAddedBackground: '#355347',
     },
   },
 
