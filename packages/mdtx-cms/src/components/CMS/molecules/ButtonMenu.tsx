@@ -44,7 +44,7 @@ export const ButtonMenu: React.FC<{
         ref={ref}
         className={`${
           optionsMenu
-            ? 'w-[24rem] h-[24rem] rounded-lt-full rounded-tl-full border-l-[1px] border-t-[1px] border-mdtxBlack'
+            ? 'w-[32rem] h-[32rem] rounded-lt-full rounded-tl-full border-l-[1px] border-t-[1px] border-mdtxBlack'
             : 'w-[4.2rem] h-[4.2rem] rounded-full'
         } transition-all duration-300 ease-in-out relative flex justify-center items-center bg-mdtxOrange0 z-[100]`}
       >
@@ -64,64 +64,66 @@ export const ButtonMenu: React.FC<{
           >
             <CloseIconSvg small navVisible={optionsMenu} />
           </div>
-          <div className="absolute bottom-[4.2rem] left-[6.4rem]">
+          <div className="top-[65%] translate-y-[-50%] absolute right-[3.2rem] flex flex-col gap-[0.8rem] w-[50%]">
             <div
+              className="flex justify-end"
               onClick={() => {
                 setMenuModal(MenuModalType.CHANGES);
                 setOptionsMenu(false);
               }}
-              className="w-fit ml-[4.8rem] mb-[1.2rem]"
             >
-              <p className="text-center w-fit text-mdtxWhite uppercase text-[1.4rem] font-[700] select-none hover:underline cursor-pointer">
-                Changed (
-                <span className="text-[1.2rem]">{modifiedFiles.length}</span>)
+              <p className="w-fit text-right text-mdtxWhite uppercase text-[1.6rem] font-[700] select-none hover:underline cursor-pointer">
+                Changed&nbsp;
+                <span className="text-[1.2rem] leading-[1.2rem]">
+                  ({modifiedFiles.length})
+                </span>
               </p>
             </div>
             <div
+              className="flex justify-end"
               onClick={() => {
                 if (!onlyView && permissions?.push) {
                   setMenuModal(MenuModalType.COMMIT);
                   setOptionsMenu(false);
                 }
               }}
-              className="w-fit ml-[3.2rem] mb-[1.2rem]"
             >
               <p
                 className={`${
                   permissions?.push
                     ? 'text-mdtxWhite hover:underline cursor-pointer'
                     : 'text-mdtxBlack line-through'
-                } text-center w-fit uppercase text-[1.4rem] font-[700] select-none`}
+                } w-fit text-right uppercase text-[1.6rem] font-[700] select-none`}
               >
                 Commit
               </p>
             </div>
             <div
+              className="flex justify-end"
               onClick={() => {
                 // setMenuModal(MenuModalType.FORK);
                 // setOptionsMenu(false);
               }}
-              className="w-fit ml-[1.6rem] mb-[1.2rem]"
             >
-              <p className="text-center w-fit text-mdtxBlack uppercase text-[1.4rem] font-[700] select-none line-through">
+              <p className="w-fit text-right text-mdtxBlack uppercase text-[1.6rem] font-[700] select-none line-through">
                 Fork
               </p>
             </div>
             <div
+              className="flex justify-end"
               onClick={() => {
                 if (!onlyView && permissions?.pull) {
                   setMenuModal(MenuModalType.PULL_REQUEST);
                   setOptionsMenu(false);
                 }
               }}
-              className="w-fit"
             >
               <p
                 className={`${
                   permissions?.pull
                     ? 'text-mdtxWhite hover:underline cursor-pointer'
                     : 'text-mdtxBlack line-through'
-                } text-center w-fit uppercase text-[1.4rem] font-[700] select-none`}
+                } w-fit text-right uppercase text-[1.6rem] font-[700] select-none`}
               >
                 Pull request
               </p>

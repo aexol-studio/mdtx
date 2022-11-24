@@ -24,9 +24,9 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
   setSelectedBranch,
 }) => {
   return (
-    <div className="flex flex-col w-[80%] mx-auto h-full justify-center">
+    <div className="flex flex-col w-[80%] mx-auto h-full">
       {downloadZIP ? (
-        <div className="flex justify-center items-center flex-col gap-[4.2rem]">
+        <div className="flex h-full justify-center items-center flex-col gap-[4.2rem]">
           <p className="text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
             Loading repository...
           </p>
@@ -34,10 +34,15 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
         </div>
       ) : (
         <>
-          <div className="top-[3.2rem] absolute">
+          <div className="absolute top-[1.6rem] left-[1.6rem]">
             <MDtxLogo small />
           </div>
-          <div className="flex justify-between">
+          <div className="mt-[1.6rem] flex items-center justify-center">
+            <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.4rem] font-[700] select-none tracking-wide">
+              Select branch to work
+            </p>
+          </div>
+          <div className="mt-[4.2rem] flex justify-between">
             <div className="flex flex-col justify-end">
               <p className="w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
                 Selected repository:{' '}
@@ -45,16 +50,15 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                   {selectedRepository?.name}
                 </span>
               </p>
-              <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
-                Select branch to work
-              </p>
             </div>
+          </div>
+          <div>
             <div className="min-w-fit">
               <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
                 Your access to repository
               </p>
               <PermissionsTable permissions={selectedRepository?.permissions} />
-            </div>
+            </div>{' '}
           </div>
           <div className="mt-[2.4rem] flex justify-between gap-[4.2rem]">
             <div className="flex-1">

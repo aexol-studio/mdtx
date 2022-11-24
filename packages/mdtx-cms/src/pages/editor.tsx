@@ -95,6 +95,7 @@ const editor = () => {
     getUserOrganizations,
     getRepositoryAsZIP,
     getRepositoryBranches,
+    getRepositoryPullRequests,
   } = useGithubCalls();
   const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
     useGithubActions();
@@ -210,11 +211,10 @@ const editor = () => {
         selectedRepository?.full_name,
         branchName ? branchName : selectedBranch?.name,
       );
-      if (JSONResponse) {
-        const paths = JSONResponse.fileArray.filter((z) =>
-          z.name.includes('.md'),
+      if (JSONResponse !== undefined) {
+        const paths = JSONResponse.fileArray.filter(
+          (z: { name: string | string[] }) => z.name.includes('.md'),
         );
-
         const tree = treeBuilder(paths);
         setRepositoryTree(tree);
         setFiles(paths);
@@ -223,18 +223,30 @@ const editor = () => {
         setRepositoriesFromSearch(undefined);
         setDownloadZIP(false);
         setDownloadModal(false);
+      } else {
+        setDownloadZIP(false);
+        setDownloadModal(false);
       }
     }
   };
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
     setSelectedRepository(item);
     if (token) {
-      const response = await getRepositoryBranches(token, item.full_name);
-      if (response) {
+      const promiseBranches = getRepositoryBranches(token, item.full_name);
+      const promisePullRequest = getRepositoryPullRequests(
+        token,
+        item.full_name,
+      );
+      const [branches, pullRequests] = await Promise.all([
+        promiseBranches,
+        promisePullRequest,
+      ]);
+      console.log(branches, pullRequests);
+      if (branches.length) {
         setDownloadModal(true);
-        setAvailableBranches(response);
-        setSelectedBranch(response[0]);
-        setValuePullRequestForm('selectedTargetBranch', response[0].name);
+        setAvailableBranches(branches);
+        setSelectedBranch(branches[0]);
+        setValuePullRequestForm('selectedTargetBranch', branches[0].name);
       }
     }
   };
@@ -308,7 +320,7 @@ const editor = () => {
         repositoryOwner: selectedRepository.owner.login,
       }).then((oidArray) => {
         createBranch(token, {
-          name: `refs/heads/${data.newBranchName}`, // uniwersalna nazwa brancha !!!
+          name: `refs/heads/${data.newBranchName}`,
           oid: oidArray[0].oid,
           repositoryId: selectedRepository.node_id,
         }).then((createdBranch) => {
