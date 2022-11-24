@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '../atoms';
 
 export const LeaveConfirmation: React.FC<{
@@ -20,9 +19,7 @@ export const LeaveConfirmation: React.FC<{
               color={'orange'}
             />
             <Button
-              onClick={() => {
-                setLeaveWithChanges(false);
-              }}
+              onClick={() => setLeaveWithChanges(false)}
               text={'Stay'}
               color={'orange'}
             />

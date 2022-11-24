@@ -1,5 +1,4 @@
 import { availableBranchType } from '@/src/pages/editor';
-import React from 'react';
 import {
   Control,
   Controller,

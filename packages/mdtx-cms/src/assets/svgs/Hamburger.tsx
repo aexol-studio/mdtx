@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 export const Hamburger: React.FC<{
   navVisible: boolean;
   small?: boolean;

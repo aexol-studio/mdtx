@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const MDtxLogo: React.FC<{ small?: boolean }> = ({ small }) => {
   return (
     <svg

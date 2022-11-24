@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const Chevron: React.FC<{ small?: boolean; colorFill?: string }> = ({
   colorFill = 'black',
   small,

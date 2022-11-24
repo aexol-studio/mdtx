@@ -2,7 +2,6 @@ import { MDtxLogo } from '@/src/assets';
 import { useAuthState } from '@/src/containers';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import { TreeMenu } from '@/src/utils/treeBuilder';
-import React from 'react';
 import { PulseLoader } from 'react-spinners';
 import { UserInfo } from '../atoms';
 import {

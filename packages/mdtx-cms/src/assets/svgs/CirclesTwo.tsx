@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const CirclesTwo = () => {
   return (
     <svg

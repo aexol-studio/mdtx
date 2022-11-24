@@ -1,7 +1,4 @@
-import * as React from 'react';
-import { SVGProps } from 'react';
-
-export const ArrowLeft = (props: SVGProps<SVGSVGElement>) => (
+export const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     width={24}
     height={24}

@@ -1,6 +1,6 @@
 import { CloseIconSvg } from '@/src/assets';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
-import React, { useRef } from 'react';
+import  { useRef } from 'react';
 
 export const Modal: React.FC<{
   children: React.ReactNode;
