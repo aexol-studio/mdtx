@@ -221,26 +221,12 @@ const editor = () => {
   const confirmBranchClick = async (branchName?: string) => {
     if (token && selectedRepository && selectedBranch) {
       setDownloadZIP(true);
-      console.log(token, selectedRepository.full_name, selectedBranch.name);
-      const response = await fetch(
-        `https://github.com/${
-          selectedRepository?.full_name
-        }/archive/refs/heads/${
-          branchName ? branchName : selectedBranch?.name
-        }.zip`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+
+      const JSONResponse = await getRepositoryAsZIP(
+        token,
+        selectedRepository?.full_name,
+        branchName ? branchName : selectedBranch?.name,
       );
-      const JSONResponse = await response.json();
-      // const JSONResponse = await getRepositoryAsZIP(
-      //   token,
-      //   selectedRepository?.full_name,
-      //   branchName ? branchName : selectedBranch?.name,
-      // );
       if (JSONResponse !== undefined) {
         const paths = JSONResponse.fileArray.filter(
           (z: { name: string | string[] }) => z.name.includes('.md'),
