@@ -1,4 +1,3 @@
-import React from 'react';
 import { PointArrow } from '@/src/assets';
 
 export const ListingText: React.FC<{ title: string; text: string }> = ({

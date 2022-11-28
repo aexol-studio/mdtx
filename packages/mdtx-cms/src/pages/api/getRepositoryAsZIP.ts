@@ -35,7 +35,7 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
     if (data) {
       res.status(201).json({ fileArray });
     } else {
-      res.status(201).json('No_access');
+      res.status(201).json('Error');
     }
   });
 };

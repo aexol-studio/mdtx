@@ -14,8 +14,14 @@ import {
   CommitModal,
   PullRequestInput,
   PullRequestModal,
+  SearchingType,
 } from '../components';
-import { useFileState, useAuthState } from '../containers';
+import {
+  useFileState,
+  useAuthState,
+  useToasts,
+  ToastType,
+} from '../containers';
 import { Layout } from '../layouts';
 import { useGithubCalls } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
@@ -26,20 +32,13 @@ export type Organization = {
   login: string;
 };
 
-enum SearchingType {
-  ALL = 'ALL',
-  ALLALLOWED = 'ALLALLOWED',
-  USER = 'USER',
-  // ORGANIZATION = 'ORGANIZATION',
-  ORGANIZATIONS = 'ORGANIZATIONS',
-}
-
 export type RepositoryFromSearch = {
   name: string;
   full_name: string;
   default_branch: string;
   id: string;
   node_id: string;
+  fork: boolean;
   owner: {
     avatar_url: string;
     login: string;
@@ -60,7 +59,21 @@ export type availableBranchType = {
   name: string;
   protected: false;
 };
-
+export type PullRequestsType = {
+  base: {
+    ref: string;
+  };
+  head: {
+    ref: string;
+  };
+  user: {
+    avatar_url: string;
+    login: string;
+  };
+  title: string;
+  body: string;
+  updated_at: string;
+};
 export enum CommitingModes {
   COMMIT = 'COMMIT',
   PULL_REQUEST = 'PULL_REQUEST',
@@ -95,6 +108,8 @@ const editor = () => {
     getUserOrganizations,
     getRepositoryAsZIP,
     getRepositoryBranches,
+    getRepositoryForks,
+    getRepositoryPullRequests,
   } = useGithubCalls();
   const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
     useGithubActions();
@@ -117,7 +132,11 @@ const editor = () => {
     setTokenWithLocal,
     setIsLoggedIn,
   } = useAuthState();
-
+  const [includeForks, setIncludeForks] = useState(true);
+  const [forksOnRepo, setForksOnRepo] = useState<{ full_name: string }[]>();
+  const [searchingMode, setSearchingMode] = useState<SearchingType>(
+    SearchingType.ALL,
+  );
   const [organizations, setOrganizations] = useState<Organization[]>();
   const [autoCompleteValue, setAutoCompleteValue] = useState<
     string | undefined
@@ -127,12 +146,12 @@ const editor = () => {
   const [downloadModal, setDownloadModal] = useState(false);
   const [availableBranches, setAvailableBranches] =
     useState<availableBranchType[]>();
-
+  const [availablePullRequests, setAvailablePullRequests] =
+    useState<PullRequestsType[]>();
   const [selectedRepository, setSelectedRepository] =
     useState<RepositoryFromSearch>();
   const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
   const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
-
   const [openMenu, setOpenMenu] = useState(true);
   const [menuModal, setMenuModal] = useState<MenuModalType | undefined>();
   const [previewChanges, setPreviewChanges] = useState<{
@@ -140,14 +159,11 @@ const editor = () => {
     changedFile: string;
   }>();
 
-  const [searchingMode, setSearchingMode] = useState<SearchingType>(
-    SearchingType.ALL,
-  );
   const [submittingCommit, setSubmittingCommit] = useState(false);
   const [submittingPullRequest, setPullRequest] = useState(false);
   const [downloadZIP, setDownloadZIP] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
-
+  const { createToast } = useToasts();
   useEffect(() => {
     const url = window.location.href;
     const hasCode = url.includes('?code=');
@@ -167,7 +183,7 @@ const editor = () => {
         body: JSON.stringify(requestData),
       })
         .then((response) => response.json())
-        .then(async (data) => {
+        .then((data) => {
           setTokenWithLocal(data.accessToken);
           router.replace('/editor');
           setIsLoggedIn(true);
@@ -205,16 +221,30 @@ const editor = () => {
   const confirmBranchClick = async (branchName?: string) => {
     if (token && selectedRepository && selectedBranch) {
       setDownloadZIP(true);
-      const JSONResponse = await getRepositoryAsZIP(
-        token,
-        selectedRepository?.full_name,
-        branchName ? branchName : selectedBranch?.name,
+      console.log(token, selectedRepository.full_name, selectedBranch.name);
+      const response = await fetch(
+        `https://github.com/${
+          selectedRepository?.full_name
+        }/archive/refs/heads/${
+          branchName ? branchName : selectedBranch?.name
+        }.zip`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
-      if (JSONResponse) {
-        const paths = JSONResponse.fileArray.filter((z) =>
-          z.name.includes('.md'),
+      const JSONResponse = await response.json();
+      // const JSONResponse = await getRepositoryAsZIP(
+      //   token,
+      //   selectedRepository?.full_name,
+      //   branchName ? branchName : selectedBranch?.name,
+      // );
+      if (JSONResponse !== undefined) {
+        const paths = JSONResponse.fileArray.filter(
+          (z: { name: string | string[] }) => z.name.includes('.md'),
         );
-
         const tree = treeBuilder(paths);
         setRepositoryTree(tree);
         setFiles(paths);
@@ -223,21 +253,47 @@ const editor = () => {
         setRepositoriesFromSearch(undefined);
         setDownloadZIP(false);
         setDownloadModal(false);
+        createToast(ToastType.SUCCESS, 'Done.');
+      } else {
+        setDownloadZIP(false);
+        setDownloadModal(false);
+        createToast(ToastType.SUCCESS, 'Error while downloading repository.');
       }
     }
   };
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
     setSelectedRepository(item);
+
     if (token) {
-      const response = await getRepositoryBranches(token, item.full_name);
-      if (response) {
+      const promiseBranches = getRepositoryBranches(token, item.full_name);
+      const promisePullRequest = getRepositoryPullRequests(
+        token,
+        item.full_name,
+      );
+      const promiseForks = getRepositoryForks(token, item.full_name);
+      const [branches, pullRequests, forks] = await Promise.all([
+        promiseBranches,
+        promisePullRequest,
+        promiseForks,
+      ]);
+      if (!branches) {
+        createToast(ToastType.ERROR, 'We cannot download this repository');
+        return;
+      }
+      setAvailablePullRequests(pullRequests);
+      setForksOnRepo(forks);
+      if (branches.length) {
         setDownloadModal(true);
-        setAvailableBranches(response);
-        setSelectedBranch(response[0]);
-        setValuePullRequestForm('selectedTargetBranch', response[0].name);
+        setAvailableBranches(branches);
+        setSelectedBranch(branches[0]);
+        setValuePullRequestForm('selectedTargetBranch', branches[0].name);
+      } else {
+        createToast(ToastType.ERROR, 'We cannot download this repository');
+        setDownloadModal(false);
       }
     }
   };
+
   const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {
     setSubmittingCommit(true);
     const filesToSend: { path: string; contents: string }[] = [];
@@ -308,7 +364,7 @@ const editor = () => {
         repositoryOwner: selectedRepository.owner.login,
       }).then((oidArray) => {
         createBranch(token, {
-          name: `refs/heads/${data.newBranchName}`, // uniwersalna nazwa brancha !!!
+          name: `refs/heads/${data.newBranchName}`,
           oid: oidArray[0].oid,
           repositoryId: selectedRepository.node_id,
         }).then((createdBranch) => {
@@ -340,6 +396,7 @@ const editor = () => {
                     resetState();
                     confirmBranchClick(ref.name).then(() => {
                       setPullRequest(false);
+
                       setMenuModal(undefined);
                     });
                   }
@@ -351,13 +408,11 @@ const editor = () => {
       });
     }
   };
+  const controller = new AbortController();
+  const { signal } = controller;
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (
-        autoCompleteValue !== '' &&
-        autoCompleteValue !== undefined &&
-        !loadingFullTree
-      ) {
+      if (autoCompleteValue !== '' && autoCompleteValue !== undefined) {
         setLoadingFullTree(true);
         setRepositoriesFromSearch(undefined);
         setSelectedRepository(undefined);
@@ -367,6 +422,7 @@ const editor = () => {
           ?.map((x) => `%20org:${x.login}`)
           .toString()
           .replaceAll(',', '');
+        console.log(organizationsString);
         const response = await fetch(
           `https://api.github.com/search/repositories?q=${autoCompleteValue}${
             searchingMode === SearchingType.USER ||
@@ -378,8 +434,9 @@ const editor = () => {
             searchingMode === SearchingType.ALLALLOWED
               ? organizationsString
               : ''
-          }&per_page=100`,
+          }${includeForks ? '%20fork:true' : ''}&per_page=100`,
           {
+            signal: signal,
             method: 'GET',
             headers: {
               Accept: 'application/vnd.github+json',
@@ -391,19 +448,20 @@ const editor = () => {
         setRepositoriesFromSearch(res.items);
         setLoadingFullTree(false);
       }
-    }, 750);
+    }, 500);
     return () => {
       setRepositoriesFromSearch(undefined);
       setLoadingFullTree(false);
+      controller.abort();
       clearTimeout(timer);
     };
-  }, [autoCompleteValue]);
+  }, [autoCompleteValue, includeForks, searchingMode]);
 
   return (
     <Layout isEditor pageTitle="MDtx Editor">
       {downloadModal && availableBranches?.length && (
         <Modal
-          customClassName="flex flex-col w-[60rem] h-[30rem]"
+          customClassName="flex flex-col w-[60rem] h-[40rem]"
           blockingState={downloadZIP}
           closeFnc={() => {
             setDownloadModal(false);
@@ -413,6 +471,7 @@ const editor = () => {
             downloadZIP={downloadZIP}
             selectedRepository={selectedRepository}
             availableBranches={availableBranches}
+            availablePullRequests={availablePullRequests}
             confirmBranchClick={confirmBranchClick}
             selectedBranch={selectedBranch}
             setSelectedBranch={setSelectedBranch}
@@ -470,6 +529,12 @@ const editor = () => {
       )}
       <div className="relative">
         <Menu
+          searchingMode={searchingMode}
+          setSearchingMode={setSearchingMode}
+          forksOnRepo={forksOnRepo}
+          includeForks={includeForks}
+          setIncludeForks={setIncludeForks}
+          selectedRepository={selectedRepository}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
           isOpen={openMenu}

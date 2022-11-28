@@ -1,5 +1,3 @@
-import React from 'react';
-
 export const WhatIsMDtxHead: React.FC = () => {
   return (
     <svg

@@ -1,25 +1,21 @@
 import { useFileState } from '@/src/containers';
-import dynamic from 'next/dynamic';
-import React from 'react';
+import  { useState } from 'react';
 import ReactDiffViewer, {
   ReactDiffViewerStylesOverride,
 } from 'react-diff-viewer-continued';
-
-const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 const newStyles: ReactDiffViewerStylesOverride = {
   variables: {
     dark: {
       diffViewerBackground: '#111111',
+      changedBackground: '#355347',
+      addedBackground: '#355347',
+      wordAddedBackground: '#355347',
     },
   },
+
   emptyLine: {
     background: 'transparent',
-  },
-  contentText: {
-    '&:hover': {
-      color: '#FF9800',
-    },
   },
 };
 
@@ -44,13 +40,14 @@ export const ChangesModal: React.FC<IChangesModal> = ({
   setPreviewChanges,
 }) => {
   const { orginalFiles, modifiedFiles } = useFileState();
-
+  const [selectedFile, setSelectedFile] = useState<string>();
   return (
-    <div className="w-full h-full flex">
+    <div className="w-full h-full flex overflow-hidden rounded-[0.4rem]">
       <div className="w-[25%] mx-[1.2rem] mt-[1.6rem]">
         {modifiedFiles.map((file) => (
           <div
             onClick={() => {
+              setSelectedFile(file.name);
               const found = orginalFiles?.find((o) => o.name === file.name);
               if (found)
                 setPreviewChanges({
@@ -60,7 +57,11 @@ export const ChangesModal: React.FC<IChangesModal> = ({
             }}
             className="w-fit cursor-pointer"
           >
-            <p className="select-none text-white text-[1.4rem]">
+            <p
+              className={`${
+                selectedFile === file.name ? 'text-mdtxOrange0' : 'text-white'
+              } select-none text-[1.4rem]`}
+            >
               {file.name.slice(file.name.indexOf('/') + 1)}
             </p>
           </div>
@@ -68,33 +69,21 @@ export const ChangesModal: React.FC<IChangesModal> = ({
       </div>
       <div className="max-h-[100%] overflow-y-scroll scrollbar w-full flex flex-1">
         <ReactDiffViewer
-          styles={newStyles}
+          splitView
           useDarkTheme
-          oldValue={previewChanges?.orginalFile}
-          newValue={previewChanges?.changedFile}
-          splitView={true}
+          styles={newStyles}
+          oldValue={
+            previewChanges?.orginalFile
+              ? previewChanges.orginalFile
+              : 'Pick file to see changes'
+          }
+          newValue={
+            previewChanges?.changedFile
+              ? previewChanges.changedFile
+              : 'Pick file to see changes'
+          }
         />
       </div>
-
-      {/* <MDEditor
-        value={previewChanges?.orginalFile}
-        className="w-1/2 border-none rounded-none"
-        height={'100%'}
-        visibleDragbar={false}
-        contentEditable="false"
-        preview={'edit'}
-        hideToolbar
-      />
-      <MDEditor
-        style={{ border: 'none', borderRadius: 'none' }}
-        value={previewChanges?.changedFile}
-        className="w-1/2 h-full"
-        height={'100%'}
-        visibleDragbar={false}
-        contentEditable="false"
-        preview={'edit'}
-        hideToolbar
-      /> */}
     </div>
   );
 };

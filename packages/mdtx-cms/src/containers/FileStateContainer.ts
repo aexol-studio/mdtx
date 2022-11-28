@@ -1,4 +1,3 @@
-import { file } from 'jszip';
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
 

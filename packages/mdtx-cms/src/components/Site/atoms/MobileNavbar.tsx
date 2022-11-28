@@ -1,16 +1,9 @@
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
-import {
-  GithubStar,
-  Hamburger,
-  CloseIconSvg,
-  GithubIcon,
-  AexolAsSvg,
-} from '@/src/assets';
+import { useEffect, useState } from 'react';
+import { Hamburger, CloseIconSvg, GithubIcon, AexolAsSvg } from '@/src/assets';
 import { NavigationData } from '@/src/datas/NavigationData';
-import { GithubStars } from './GithubStars';
 
-export const MobileNavbar: React.FC<{ stars?: number }> = ({ stars }) => {
+export const MobileNavbar = () => {
   const [navVisible, setNavVisible] = useState(false);
   useEffect(() => {
     document.body.style.overflowY = navVisible ? 'hidden' : 'scroll';
@@ -21,9 +14,7 @@ export const MobileNavbar: React.FC<{ stars?: number }> = ({ stars }) => {
   return (
     <div className="flex items-center flex-row-reverse w-full h-full md:hidden relative">
       <div
-        onClick={() => {
-          setNavVisible((prev) => !prev);
-        }}
+        onClick={() => setNavVisible((prev) => !prev)}
         className="select-none z-[99] relative w-fit cursor-pointer"
       >
         <Hamburger navVisible={navVisible} />

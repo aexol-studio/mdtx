@@ -1,4 +1,4 @@
-import { FileType, UserType } from '../containers';
+import { UserType } from '../containers';
 
 export const useGithubCalls = () => {
   const getGithubUser = async (token: string) => {
@@ -50,6 +50,37 @@ export const useGithubCalls = () => {
     const availableBranchesResponse = await response.json();
     return availableBranchesResponse;
   };
+  const getRepositoryForks = async (token: string, full_name: string) => {
+    const response = await fetch(
+      `https://api.github.com/repos/${full_name}/forks`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const availableForksResponse = await response.json();
+    return availableForksResponse;
+  };
+  const getRepositoryPullRequests = async (
+    token: string,
+    full_name: string,
+  ) => {
+    const response = await fetch(
+      `https://api.github.com/repos/${full_name}/pulls`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const PullRequestsResponse = await response.json();
+    return PullRequestsResponse;
+  };
   const getRepositoryAsZIP = async (
     token: string,
     full_name: string,
@@ -66,14 +97,36 @@ export const useGithubCalls = () => {
         branchName: branch,
       }),
     });
-    const JSONResponse: { fileArray: FileType[] } = await response.json();
+    const JSONResponse = await response.json();
+    if (JSONResponse === 'Error') {
+      return undefined;
+    } else {
+      return JSONResponse;
+    }
+  };
+  const createFork = async (token: string, full_name: string) => {
+    const response = await fetch(
+      `https://api.github.com/repos/${full_name}/forks`,
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const JSONResponse = await response.json();
     return JSONResponse;
   };
+
   return {
     getGithubUser,
     getUserOrganizations,
     getRepositoryMDtx,
     getRepositoryBranches,
+    getRepositoryForks,
     getRepositoryAsZIP,
+    getRepositoryPullRequests,
+    createFork,
   };
 };

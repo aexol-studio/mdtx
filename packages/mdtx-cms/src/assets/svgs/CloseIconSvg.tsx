@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 export const CloseIconSvg: React.FC<{
   small?: boolean;
   navVisible: boolean;

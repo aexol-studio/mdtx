@@ -1,16 +1,15 @@
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
-import { GithubIcon, GithubStar, MDtxLogo } from '@/src/assets';
-
+import  { useEffect, useState } from 'react';
+import { GithubIcon,  MDtxLogo } from '@/src/assets';
 import { NavigationData } from '@/src/datas/NavigationData';
 import { GithubStars, MobileNavbar } from '@/src/components/Site/atoms/';
 import { useGithubCalls } from '@/src/utils/useGithubCalls';
 
 export const NavigationBar = () => {
   const [stars, setStars] = useState<number>();
-  const [hover, setHover] = useState(false);
   const [hideNavbar, setHideNavbar] = useState(false);
   const { getRepositoryMDtx } = useGithubCalls();
+
   useEffect(() => {
     getRepositoryMDtx().then((response) => {
       const { stargazers_count } = response;
@@ -36,6 +35,7 @@ export const NavigationBar = () => {
       document.removeEventListener('scroll', scrollHandler);
     };
   }, []);
+
   return (
     <nav
       className={`
@@ -45,28 +45,20 @@ export const NavigationBar = () => {
     >
       <div className="max-w-[90%] mx-auto w-full xl:max-w-[1068px] flex justify-between items-center relative">
         <div className="w-full h-full absolute right-[0]">
-          <MobileNavbar stars={stars} />
+          <MobileNavbar/>
         </div>
         <div className="z-[99] min-w-[12rem] min-h-[4.8rem] flex items-center justify-center">
           <Link aria-label="MDtx" href={'/'}>
             <MDtxLogo />
           </Link>
         </div>
-
         <div className="z-[99] mr-[4.8rem] md:mr-0 flex items-center justify-center">
           <Link
             className="z-[99]"
-            onMouseEnter={() => {
-              setHover(true);
-            }}
-            onMouseLeave={() => {
-              setHover(false);
-            }}
             href={'https://github.com/aexol-studio/mdtx/stargazers'}
           >
             <GithubStars stars={stars} />
           </Link>
-
           <div className="hidden md:flex items-center">
             {NavigationData.links.map((data) => (
               <Link
