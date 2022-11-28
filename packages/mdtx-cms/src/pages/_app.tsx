@@ -12,18 +12,18 @@ const FiraSans = Fira_Sans({
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <ToastsProvider>
-      <AuthProvider>
-        <FileStateProvider>
+    <AuthProvider>
+      <FileStateProvider>
+        <ToastsProvider>
           <style jsx global>{`
             html {
               font-family: ${FiraSans.style.fontFamily};
             }
           `}</style>
           <Component {...pageProps} />
-        </FileStateProvider>
-      </AuthProvider>
-    </ToastsProvider>
+        </ToastsProvider>
+      </FileStateProvider>
+    </AuthProvider>
   );
 }
 

@@ -50,6 +50,20 @@ export const useGithubCalls = () => {
     const availableBranchesResponse = await response.json();
     return availableBranchesResponse;
   };
+  const getRepositoryForks = async (token: string, full_name: string) => {
+    const response = await fetch(
+      `https://api.github.com/repos/${full_name}/forks`,
+      {
+        method: 'GET',
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const availableForksResponse = await response.json();
+    return availableForksResponse;
+  };
   const getRepositoryPullRequests = async (
     token: string,
     full_name: string,
@@ -90,12 +104,29 @@ export const useGithubCalls = () => {
       return JSONResponse;
     }
   };
+  const createFork = async (token: string, full_name: string) => {
+    const response = await fetch(
+      `https://api.github.com/repos/${full_name}/forks`,
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const JSONResponse = await response.json();
+    return JSONResponse;
+  };
+
   return {
     getGithubUser,
     getUserOrganizations,
     getRepositoryMDtx,
     getRepositoryBranches,
+    getRepositoryForks,
     getRepositoryAsZIP,
     getRepositoryPullRequests,
+    createFork,
   };
 };

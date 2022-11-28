@@ -20,11 +20,11 @@ type ToastItem = {
 const selectToast = (type: ToastType) => {
   switch (type) {
     case ToastType.SUCCESS:
-      return { color: '', icon: <Success /> };
+      return { color: 'bg-green-900', icon: <Success /> };
     case ToastType.WARNING:
       return { color: '', icon: <Warning /> };
     case ToastType.ERROR:
-      return { color: '', icon: <ErrorIcon /> };
+      return { color: 'bg-red-900', icon: <ErrorIcon /> };
     case ToastType.MESSAGE:
       return { color: '', icon: <Message /> };
   }
@@ -35,12 +35,16 @@ const Toast: React.FC<ToastItem> = ({ id, type, content }) => {
   return (
     <div
       onClick={() => removeToast(id as Uuid)}
-      className={`${selectToast(type).color} `}
+      className={`animate-showToast w-fit cursor-pointer py-[1.2rem] px-[2.4rem] rounded-[0.8rem] gap-[0.8rem] flex items-center ${
+        selectToast(type).color
+      }`}
     >
-      <div className="min-w-[2.4rem] min-h-[2.4rem] flex justify-center items-center">
+      <div className="min-w-[1.6rem] min-h-[1.6rem] flex justify-center items-center">
         {selectToast(type).icon}
       </div>
-      <p>{content}</p>
+      <p className="text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
+        {content}
+      </p>
     </div>
   );
 };
@@ -52,7 +56,7 @@ const useToastsContainer = createContainer(() => {
     setToasts((prevToasts) => prevToasts.filter((item) => item.id !== id));
   };
 
-  const createToast = async (type: ToastType, content: string) => {
+  const createToast = (type: ToastType, content: string) => {
     const id = v4();
     const toast = {
       id,
@@ -68,7 +72,7 @@ const useToastsContainer = createContainer(() => {
     if (shouldPass) setToasts([...toasts, toast]);
     setTimeout(() => {
       removeToast(id as Uuid);
-    }, 2500);
+    }, 1850);
   };
 
   return {
@@ -83,7 +87,7 @@ export const useToasts = useToastsContainer.useContainer;
 const Toasts: React.FC = () => {
   const { toasts } = useToasts();
   return (
-    <div>
+    <div className="flex flex-col gap-[1.6rem] absolute z-[999] left-[2.4rem] bottom-[2.4rem]">
       {toasts?.map(({ id, type, content }) => (
         <Toast key={id} id={id} content={content} type={type} />
       ))}

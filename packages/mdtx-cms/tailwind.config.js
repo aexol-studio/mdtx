@@ -2,11 +2,7 @@ const plugin = require('tailwindcss/plugin');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    './src/pages/**/*.{js,ts,jsx,tsx}',
-    './src/components/**/*.{js,ts,jsx,tsx}',
-    './src/assets/**/*.{js,ts,jsx,tsx}',
-  ],
+  content: ['./src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -35,6 +31,20 @@ module.exports = {
       },
       screens: {
         ssm: '480px',
+      },
+      animation: {
+        showToast: 'showToast 2000ms ease-in-out',
+      },
+      boxShadow: {
+        mdtxShadow0: '0px 4px 8px 0px rgba(255, 114, 0, 0.2)',
+      },
+      keyframes: {
+        showToast: {
+          '0%': { opacity: 0.2 },
+          '35%': { opacity: 1 },
+          '80%': { opacity: 1 },
+          '100%': { opacity: 0 },
+        },
       },
     },
   },

@@ -169,7 +169,7 @@ export const PullRequestModal: React.FC<IPullRequestModal> = ({
             <Button
               customClassName="mt-[1.6rem] px-[3.2rem] py-[0.4rem]"
               type="form"
-              text="Wyślij"
+              text="Send"
               color="orange"
             />
           </div>

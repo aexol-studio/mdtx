@@ -12,7 +12,7 @@ export const UserInfo: React.FC<{
     <div>
       {loggedData ? (
         <div
-          className="relative w-fit  flex items-center gap-[0.4rem]"
+          className="relative w-fit flex items-center gap-[0.4rem]"
           onClick={() => {
             setOpenMenu((prev) => !prev);
           }}
@@ -29,21 +29,26 @@ export const UserInfo: React.FC<{
               />
             )}
             <p className="cursor-pointer text-[1.4rem] text-center font-[400] text-white">
-              {loggedData.name}
+              {loggedData.name ? loggedData.name : loggedData.login}
             </p>
           </div>
           <div
             className={`${
               openMenu ? 'scale-y-[1]' : 'scale-y-[-1]'
-            } transition-all duration-300 min-w-[1.2rem] min-h-[1.2rem] flex justify-center items-center`}
+            } cursor-pointer transition-all duration-300 min-w-[1.2rem] min-h-[1.2rem] flex justify-center items-center`}
           >
             <Chevron small colorFill="white" />
           </div>
           {openMenu ? (
-            <div className="border-l-[1px] border-b-[1px] border-r-[1px] rounded-b-[0.8rem] border-t-none border-mdtxOrange1 absolute left-0 top-[2.6rem] w-[100%]">
+            <div
+              onMouseLeave={() => {
+                setOpenMenu(false);
+              }}
+              className="border-l-[1px] border-b-[1px] border-r-[1px] rounded-b-[0.8rem] border-t-none border-mdtxOrange1 absolute left-0 top-[2.6rem] w-[100%]"
+            >
               <p
                 onClick={logOut}
-                className="cursor-pointer pl-[1.2rem] py-[0.2rem] text-white w-fit hover:underline text-[1.4rem] font-[400]"
+                className="cursor-pointer pl-[1.2rem] py-[0.2rem] text-white w-fit text-[1.4rem] font-[400] hover:underline"
               >
                 Log out
               </p>

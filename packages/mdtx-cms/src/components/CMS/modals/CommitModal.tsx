@@ -84,7 +84,7 @@ export const CommitModal: React.FC<ICommitModal> = ({
           <Button
             customClassName="mt-[0.8rem] px-[3.2rem] py-[0.4rem]"
             type="form"
-            text="Wyślij"
+            text="Send"
             color="orange"
           />
         </div>

@@ -175,7 +175,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                 : 'translate-x-0 visible'
             } transition-transform duration-300 ease-in-out`}
           >
-            <div className="mt-[3.2rem] min-w-fit">
+            <div className="mt-[6.4rem] min-w-fit">
               <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
                 Your access to repository
               </p>

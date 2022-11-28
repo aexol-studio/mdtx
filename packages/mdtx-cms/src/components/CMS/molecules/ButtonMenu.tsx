@@ -43,7 +43,7 @@ export const ButtonMenu: React.FC<{
         ref={ref}
         className={`${
           optionsMenu
-            ? 'w-[32rem] h-[32rem] rounded-lt-full rounded-tl-full border-l-[1px] border-t-[1px] border-mdtxBlack'
+            ? 'w-[24rem] h-[24rem] rounded-lt-full rounded-tl-full border-l-[1px] border-t-[1px] border-mdtxBlack'
             : 'w-[4.2rem] h-[4.2rem] rounded-full'
         } transition-all duration-300 ease-in-out relative flex justify-center items-center bg-mdtxOrange0 z-[100]`}
       >
@@ -71,7 +71,7 @@ export const ButtonMenu: React.FC<{
                 setOptionsMenu(false);
               }}
             >
-              <p className="w-fit text-right text-mdtxWhite uppercase text-[1.6rem] font-[700] select-none hover:underline cursor-pointer">
+              <p className="w-fit text-right text-mdtxWhite uppercase text-[1.4rem] font-[700] select-none hover:underline cursor-pointer">
                 Changed&nbsp;
                 <span className="text-[1.2rem] leading-[1.2rem]">
                   ({modifiedFiles.length})
@@ -92,7 +92,7 @@ export const ButtonMenu: React.FC<{
                   permissions?.push
                     ? 'text-mdtxWhite hover:underline cursor-pointer'
                     : 'text-mdtxBlack line-through'
-                } w-fit text-right uppercase text-[1.6rem] font-[700] select-none`}
+                } w-fit text-right uppercase text-[1.4rem] font-[700] select-none`}
               >
                 Commit
               </p>
@@ -104,7 +104,7 @@ export const ButtonMenu: React.FC<{
                 // setOptionsMenu(false);
               }}
             >
-              <p className="w-fit text-right text-mdtxBlack uppercase text-[1.6rem] font-[700] select-none line-through">
+              <p className="w-fit text-right text-mdtxBlack uppercase text-[1.4rem] font-[700] select-none line-through">
                 Fork
               </p>
             </div>
@@ -122,7 +122,7 @@ export const ButtonMenu: React.FC<{
                   permissions?.pull
                     ? 'text-mdtxWhite hover:underline cursor-pointer'
                     : 'text-mdtxBlack line-through'
-                } w-fit text-right uppercase text-[1.6rem] font-[700] select-none`}
+                } w-fit text-right uppercase text-[1.4rem] font-[700] select-none`}
               >
                 Pull request
               </p>

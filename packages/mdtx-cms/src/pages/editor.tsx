@@ -14,8 +14,14 @@ import {
   CommitModal,
   PullRequestInput,
   PullRequestModal,
+  SearchingType,
 } from '../components';
-import { useFileState, useAuthState } from '../containers';
+import {
+  useFileState,
+  useAuthState,
+  useToasts,
+  ToastType,
+} from '../containers';
 import { Layout } from '../layouts';
 import { useGithubCalls } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
@@ -26,20 +32,13 @@ export type Organization = {
   login: string;
 };
 
-enum SearchingType {
-  ALL = 'ALL',
-  ALLALLOWED = 'ALLALLOWED',
-  USER = 'USER',
-  // ORGANIZATION = 'ORGANIZATION',
-  ORGANIZATIONS = 'ORGANIZATIONS',
-}
-
 export type RepositoryFromSearch = {
   name: string;
   full_name: string;
   default_branch: string;
   id: string;
   node_id: string;
+  fork: boolean;
   owner: {
     avatar_url: string;
     login: string;
@@ -109,6 +108,7 @@ const editor = () => {
     getUserOrganizations,
     getRepositoryAsZIP,
     getRepositoryBranches,
+    getRepositoryForks,
     getRepositoryPullRequests,
   } = useGithubCalls();
   const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
@@ -132,7 +132,11 @@ const editor = () => {
     setTokenWithLocal,
     setIsLoggedIn,
   } = useAuthState();
-
+  const [includeForks, setIncludeForks] = useState(true);
+  const [forksOnRepo, setForksOnRepo] = useState<{ full_name: string }[]>();
+  const [searchingMode, setSearchingMode] = useState<SearchingType>(
+    SearchingType.ALL,
+  );
   const [organizations, setOrganizations] = useState<Organization[]>();
   const [autoCompleteValue, setAutoCompleteValue] = useState<
     string | undefined
@@ -148,7 +152,6 @@ const editor = () => {
     useState<RepositoryFromSearch>();
   const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
   const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
-
   const [openMenu, setOpenMenu] = useState(true);
   const [menuModal, setMenuModal] = useState<MenuModalType | undefined>();
   const [previewChanges, setPreviewChanges] = useState<{
@@ -156,14 +159,11 @@ const editor = () => {
     changedFile: string;
   }>();
 
-  const [searchingMode, setSearchingMode] = useState<SearchingType>(
-    SearchingType.ALL,
-  );
   const [submittingCommit, setSubmittingCommit] = useState(false);
   const [submittingPullRequest, setPullRequest] = useState(false);
   const [downloadZIP, setDownloadZIP] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
-
+  const { createToast } = useToasts();
   useEffect(() => {
     const url = window.location.href;
     const hasCode = url.includes('?code=');
@@ -221,11 +221,26 @@ const editor = () => {
   const confirmBranchClick = async (branchName?: string) => {
     if (token && selectedRepository && selectedBranch) {
       setDownloadZIP(true);
-      const JSONResponse = await getRepositoryAsZIP(
-        token,
-        selectedRepository?.full_name,
-        branchName ? branchName : selectedBranch?.name,
+      console.log(token, selectedRepository.full_name, selectedBranch.name);
+      const response = await fetch(
+        `https://github.com/${
+          selectedRepository?.full_name
+        }/archive/refs/heads/${
+          branchName ? branchName : selectedBranch?.name
+        }.zip`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
+      const JSONResponse = await response.json();
+      // const JSONResponse = await getRepositoryAsZIP(
+      //   token,
+      //   selectedRepository?.full_name,
+      //   branchName ? branchName : selectedBranch?.name,
+      // );
       if (JSONResponse !== undefined) {
         const paths = JSONResponse.fileArray.filter(
           (z: { name: string | string[] }) => z.name.includes('.md'),
@@ -238,33 +253,47 @@ const editor = () => {
         setRepositoriesFromSearch(undefined);
         setDownloadZIP(false);
         setDownloadModal(false);
+        createToast(ToastType.SUCCESS, 'Done.');
       } else {
         setDownloadZIP(false);
         setDownloadModal(false);
+        createToast(ToastType.SUCCESS, 'Error while downloading repository.');
       }
     }
   };
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
     setSelectedRepository(item);
+
     if (token) {
       const promiseBranches = getRepositoryBranches(token, item.full_name);
       const promisePullRequest = getRepositoryPullRequests(
         token,
         item.full_name,
       );
-      const [branches, pullRequests] = await Promise.all([
+      const promiseForks = getRepositoryForks(token, item.full_name);
+      const [branches, pullRequests, forks] = await Promise.all([
         promiseBranches,
         promisePullRequest,
+        promiseForks,
       ]);
+      if (!branches) {
+        createToast(ToastType.ERROR, 'We cannot download this repository');
+        return;
+      }
       setAvailablePullRequests(pullRequests);
+      setForksOnRepo(forks);
       if (branches.length) {
         setDownloadModal(true);
         setAvailableBranches(branches);
         setSelectedBranch(branches[0]);
         setValuePullRequestForm('selectedTargetBranch', branches[0].name);
+      } else {
+        createToast(ToastType.ERROR, 'We cannot download this repository');
+        setDownloadModal(false);
       }
     }
   };
+
   const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {
     setSubmittingCommit(true);
     const filesToSend: { path: string; contents: string }[] = [];
@@ -367,6 +396,7 @@ const editor = () => {
                     resetState();
                     confirmBranchClick(ref.name).then(() => {
                       setPullRequest(false);
+
                       setMenuModal(undefined);
                     });
                   }
@@ -392,6 +422,7 @@ const editor = () => {
           ?.map((x) => `%20org:${x.login}`)
           .toString()
           .replaceAll(',', '');
+        console.log(organizationsString);
         const response = await fetch(
           `https://api.github.com/search/repositories?q=${autoCompleteValue}${
             searchingMode === SearchingType.USER ||
@@ -403,7 +434,7 @@ const editor = () => {
             searchingMode === SearchingType.ALLALLOWED
               ? organizationsString
               : ''
-          }&per_page=100`,
+          }${includeForks ? '%20fork:true' : ''}&per_page=100`,
           {
             signal: signal,
             method: 'GET',
@@ -424,7 +455,7 @@ const editor = () => {
       controller.abort();
       clearTimeout(timer);
     };
-  }, [autoCompleteValue]);
+  }, [autoCompleteValue, includeForks, searchingMode]);
 
   return (
     <Layout isEditor pageTitle="MDtx Editor">
@@ -498,6 +529,12 @@ const editor = () => {
       )}
       <div className="relative">
         <Menu
+          searchingMode={searchingMode}
+          setSearchingMode={setSearchingMode}
+          forksOnRepo={forksOnRepo}
+          includeForks={includeForks}
+          setIncludeForks={setIncludeForks}
+          selectedRepository={selectedRepository}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
           isOpen={openMenu}
