@@ -221,7 +221,6 @@ const editor = () => {
   const confirmBranchClick = async (branchName?: string) => {
     if (token && selectedRepository && selectedBranch) {
       setDownloadZIP(true);
-
       const JSONResponse = await getRepositoryAsZIP(
         token,
         selectedRepository?.full_name,
@@ -442,7 +441,12 @@ const editor = () => {
       clearTimeout(timer);
     };
   }, [autoCompleteValue, includeForks, searchingMode]);
-
+  const backToSearch = () => {
+    setRepositoryTree(undefined);
+    setSelectedBranch(undefined);
+    setAvailableBranches(undefined);
+    setAvailablePullRequests(undefined);
+  };
   return (
     <Layout isEditor pageTitle="MDtx Editor">
       {downloadModal && availableBranches?.length && (
@@ -521,6 +525,7 @@ const editor = () => {
           includeForks={includeForks}
           setIncludeForks={setIncludeForks}
           selectedRepository={selectedRepository}
+          backToSearch={backToSearch}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
           isOpen={openMenu}

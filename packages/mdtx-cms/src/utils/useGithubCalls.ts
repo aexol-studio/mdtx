@@ -64,6 +64,20 @@ export const useGithubCalls = () => {
     const availableForksResponse = await response.json();
     return availableForksResponse;
   };
+  const doRepositoryFork = async (token: string, full_name: string) => {
+    const response = await fetch(
+      `https://api.github.com/repos/${full_name}/forks`,
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/vnd.github+json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const availableForksResponse = await response.json();
+    return availableForksResponse;
+  };
   const getRepositoryPullRequests = async (
     token: string,
     full_name: string,
@@ -127,6 +141,7 @@ export const useGithubCalls = () => {
     getRepositoryForks,
     getRepositoryAsZIP,
     getRepositoryPullRequests,
+    doRepositoryFork,
     createFork,
   };
 };
