@@ -8,7 +8,7 @@ export type FileType = {
 };
 
 const FileStateContainer = createContainer(() => {
-  const [files, setFiles] = useState<FileType[]>();
+  const [files, setFiles] = useState<FileType[]>([]);
   const [orginalFiles, setOrginalFiles] = useState<FileType[]>();
   const [modifiedFiles, setModifiedFiles] = useState<FileType[]>([]);
   const [pickedFilePath, setPickedFilePath] = useState<string>();
@@ -17,7 +17,7 @@ const FileStateContainer = createContainer(() => {
   const resetState = () => {
     setOrginalFiles(undefined);
     setModifiedFiles([]);
-    setFiles(undefined);
+    setFiles([]);
     setPickedFilePath(undefined);
     setIsFilesDirty(false);
   };
@@ -95,6 +95,7 @@ const FileStateContainer = createContainer(() => {
     setSelectedFileContentByPath,
     isFilesDirty,
     resetState,
+    setModifiedFiles,
   };
 });
 

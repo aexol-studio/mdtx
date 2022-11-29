@@ -407,7 +407,6 @@ const editor = () => {
           ?.map((x) => `%20org:${x.login}`)
           .toString()
           .replaceAll(',', '');
-        console.log(organizationsString);
         const response = await fetch(
           `https://api.github.com/search/repositories?q=${autoCompleteValue}${
             searchingMode === SearchingType.USER ||
@@ -446,6 +445,7 @@ const editor = () => {
     setSelectedBranch(undefined);
     setAvailableBranches(undefined);
     setAvailablePullRequests(undefined);
+    setRepositoryTree(undefined);
   };
   return (
     <Layout isEditor pageTitle="MDtx Editor">
@@ -511,14 +511,16 @@ const editor = () => {
           />
         </Modal>
       )}
-      {isFilesDirty && (
+      {isFilesDirty && repositoryTree && selectedRepository && (
         <ButtonMenu
-          permissions={selectedRepository?.permissions}
+          forksOnRepo={forksOnRepo}
+          selectedRepository={selectedRepository}
           setMenuModal={setMenuModal}
         />
       )}
       <div className="relative">
         <Menu
+          setRepositoryTree={setRepositoryTree}
           searchingMode={searchingMode}
           setSearchingMode={setSearchingMode}
           forksOnRepo={forksOnRepo}

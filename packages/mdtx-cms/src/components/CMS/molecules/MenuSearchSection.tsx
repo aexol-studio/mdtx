@@ -53,14 +53,12 @@ export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
       </div>
 
       <div className="mx-auto w-[80%]">
-        <div
-          onClick={() => {
-            setIncludeForks((prev) => !prev);
-          }}
-          className="w-fit cursor-pointer flex items-center gap-[0.8rem]"
-        >
+        <div className="w-fit flex items-center gap-[0.8rem]">
           <input
             checked={includeForks}
+            onChange={() => {
+              setIncludeForks((prev) => !prev);
+            }}
             className="cursor-pointer min-w-[1.2rem] min-h-[1.2rem] max-w-[1.2rem] max-h-[1.2rem]"
             type={'checkbox'}
           />

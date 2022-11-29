@@ -1,6 +1,6 @@
 import { MDtxLogo } from '@/src/assets';
 import FilterIcon from '@/src/assets/svgs/FilterIcon';
-import { useAuthState } from '@/src/containers';
+import { useAuthState, useFileState } from '@/src/containers';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import { TreeMenu } from '@/src/utils/treeBuilder';
 import { useState } from 'react';
@@ -34,6 +34,7 @@ export interface MenuInteface {
   }[];
   searchingMode: SearchingType;
   setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
+  setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
 }
 
 export const Menu: React.FC<MenuInteface> = ({
@@ -51,7 +52,9 @@ export const Menu: React.FC<MenuInteface> = ({
   forksOnRepo,
   searchingMode,
   setSearchingMode,
+  setRepositoryTree,
 }) => {
+  const { files } = useFileState();
   const { loggedData, logOut } = useAuthState();
   return (
     <div
@@ -85,14 +88,16 @@ export const Menu: React.FC<MenuInteface> = ({
           </p>
           <div className="mt-[1.6rem] relative w-full flex items-center justify-between">
             <div className="flex justify-center items-center gap-[0.8rem]">
-              <Image
-                priority
-                width={24}
-                height={24}
-                className="rounded-full"
-                alt="User Logo"
-                src={selectedRepository?.owner.avatar_url || ''}
-              />
+              {selectedRepository && (
+                <Image
+                  priority
+                  width={24}
+                  height={24}
+                  className="rounded-full"
+                  alt="User Logo"
+                  src={selectedRepository?.owner.avatar_url || ''}
+                />
+              )}
               <p className="text-white select-none text-center text-[1.2rem]">
                 {selectedRepository?.owner.login}
               </p>
@@ -106,7 +111,7 @@ export const Menu: React.FC<MenuInteface> = ({
             <strong>{!selectedRepository?.fork ? 'yes' : 'no'}</strong>
           </p>
           {forksOnRepo?.find((x) =>
-            x.full_name.includes(loggedData!.login),
+            x.full_name.includes(loggedData ? loggedData.login : ''),
           ) && (
             <p className="text-white select-none text-[1.2rem]">
               Already forked by logged user: <strong>yes</strong>
@@ -116,7 +121,9 @@ export const Menu: React.FC<MenuInteface> = ({
           <p className="text-white select-none text-[1.2rem]">
             Is your repository:{' '}
             <strong>
-              {selectedRepository?.full_name.includes(loggedData!.login)
+              {selectedRepository?.full_name.includes(
+                loggedData ? loggedData.login : '',
+              )
                 ? 'yes'
                 : 'no'}
             </strong>
@@ -154,7 +161,13 @@ export const Menu: React.FC<MenuInteface> = ({
           {repositoryTree &&
             repositoryTree.length > 0 &&
             repositoryTree.map((x) => (
-              <RepositoryTree key={x.name} root tree={x} />
+              <RepositoryTree
+                files={files}
+                setRepositoryTree={setRepositoryTree}
+                key={x.name}
+                root
+                tree={x}
+              />
             ))}
           {!loadingFullTree && !repositoryTree && !repositoriesFromSearch && (
             <div className="px-[1.6rem] mt-[2.4rem]">

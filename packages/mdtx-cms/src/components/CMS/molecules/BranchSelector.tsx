@@ -87,8 +87,8 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
             <div className="flex flex-col justify-end">
               <p className="w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
                 Selected repository:{' '}
-                <span className="text-mdtxOrange1 font-[500]">
-                  {selectedRepository?.name}
+                <span className="ml-[0.4rem] text-mdtxOrange1 font-[500]">
+                  {selectedRepository?.full_name}
                 </span>
               </p>
             </div>
@@ -177,7 +177,13 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
           >
             <div className="mt-[6.4rem] min-w-fit">
               <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
-                Your access to repository
+                Your access to repository:{' '}
+                <span className="ml-[1.6rem] text-[1rem]">
+                  Do you need more access?{' '}
+                  <span className="text-mdtxOrange1 hover:underline cursor-pointer">
+                    Do fork!
+                  </span>
+                </span>
               </p>
               <PermissionsTable permissions={selectedRepository?.permissions} />
             </div>
