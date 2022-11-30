@@ -54,7 +54,6 @@ export const Menu: React.FC<MenuInteface> = ({
   setSearchingMode,
   setRepositoryTree,
 }) => {
-  const { files } = useFileState();
   const { loggedData, logOut } = useAuthState();
   return (
     <div
@@ -148,7 +147,12 @@ export const Menu: React.FC<MenuInteface> = ({
             setAutoCompleteValue={setAutoCompleteValue}
           />
         </div>
-        <div className="mt-[1.6rem] pb-[1.6rem] border-t-[1px] border-mdtxOrange0 w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar">
+        <div
+          onContextMenu={(e) => {
+            e.preventDefault();
+          }}
+          className="mt-[1.6rem] pb-[1.6rem] border-t-[1px] border-mdtxOrange0 w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar"
+        >
           {loadingFullTree ? (
             <div className="mt-[4.2rem] flex justify-center w-full">
               <PulseLoader size={'16px'} color="#FF7200" />
@@ -167,7 +171,6 @@ export const Menu: React.FC<MenuInteface> = ({
             repositoryTree.length > 0 &&
             repositoryTree.map((x) => (
               <RepositoryTree
-                files={files}
                 setRepositoryTree={setRepositoryTree}
                 key={x.name}
                 root

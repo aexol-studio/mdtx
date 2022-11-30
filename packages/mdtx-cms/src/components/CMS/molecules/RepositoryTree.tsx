@@ -1,4 +1,4 @@
-import { FileIcon, FilePlusIcon, FolderIcon } from '@/src/assets';
+import { FileIcon, FilePlusIcon, FolderIcon, ThrashIcon } from '@/src/assets';
 import {
   FileType,
   ToastType,
@@ -8,27 +8,31 @@ import {
 } from '@/src/containers';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
 import { treeBuilder, TreeMenu, TreeObject } from '@/src/utils/treeBuilder';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const RepositoryTree: React.FC<{
   tree?: TreeObject;
   root?: boolean;
   activePath?: string;
   activeFile?: TreeObject;
-  files: FileType[];
   setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
-}> = ({ files, tree, root, activePath, activeFile, setRepositoryTree }) => {
+}> = ({ tree, root, activePath, activeFile, setRepositoryTree }) => {
   const [creatingModal, setCreatingModal] = useState(false);
   const [creatingFile, setCreatingFile] = useState(false);
   const [creatingFilePath, setCreatingFilePath] = useState<string>();
   const [fileName, setFileName] = useState<string>();
+  const [fileWithOpenContext, setFileWithOpenContext] = useState<TreeObject>();
   const {
+    files,
+    orginalFiles,
     setPickedFilePath,
     pickedFilePath,
     modifiedFiles,
     setFiles,
-    setModifiedFiles,
+    deletions,
+    setDeletions,
   } = useFileState();
+
   const hasChildren = !!tree?.children;
   const isFolder = hasChildren && !root;
   const [path, setPath] = useState(activePath);
@@ -51,6 +55,19 @@ export const RepositoryTree: React.FC<{
   useOutsideClick(ref, () => setTimeout(() => setCreatingModal(false), 150));
   const { createToast } = useToasts();
 
+  const deletingHandler = () => {
+    const found = orginalFiles?.find(
+      (x) => x.name === fileWithOpenContext?.path,
+    );
+    if (found)
+      setDeletions((prev) => {
+        return [...prev, found];
+      });
+    const newFiles = files.filter((x) => x.name !== fileWithOpenContext?.path);
+    setFiles(newFiles);
+    const treex = treeBuilder(newFiles);
+    setRepositoryTree(treex);
+  };
   const addingHandler = () => {
     const cleanFileName = fileName?.replaceAll('.md', '');
     if (creatingFilePath && fileName) {
@@ -60,16 +77,6 @@ export const RepositoryTree: React.FC<{
       if (!found) {
         const x = creatingFilePath.slice(0, creatingFilePath.lastIndexOf('/'));
         setPath(x.slice(x.lastIndexOf('/') + 1));
-        setModifiedFiles((prev) => {
-          return [
-            ...prev,
-            {
-              content: '',
-              dir: false,
-              name: creatingFilePath + cleanFileName + '.md',
-            },
-          ];
-        });
         setFiles((prev) => {
           return [
             ...prev,
@@ -103,9 +110,57 @@ export const RepositoryTree: React.FC<{
       refInput.current.focus();
     }
   }, [creatingFile]);
+
+  const [contextMenuState, setContextMenuState] = useState<{
+    xPos: string;
+    yPos: string;
+    showMenu: boolean;
+  }>({
+    showMenu: false,
+    xPos: '0px',
+    yPos: '0px',
+  });
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      e.preventDefault();
+      setContextMenuState({
+        xPos: `${e.pageX}px`,
+        yPos: `${e.pageY}px`,
+        showMenu: true,
+      });
+    },
+    [contextMenuState?.xPos, contextMenuState?.yPos],
+  );
+  const refContextMenu = useRef<HTMLDivElement>(null);
+  useOutsideClick(refContextMenu, () =>
+    setContextMenuState({
+      showMenu: false,
+      xPos: '0px',
+      yPos: '0px',
+    }),
+  );
+  console.log(deletions);
   return (
     <>
       <div className={`pl-[0.8rem] w-full relative`}>
+        {contextMenuState.showMenu && (
+          <div
+            ref={refContextMenu}
+            className="z-[102] w-[12rem] py-[1.2rem] items-center top-[2.4rem] bg-mdtxBlack border-mdtxOrange1 border-[1px] absolute flex flex-col"
+          >
+            <div
+              onClick={deletingHandler}
+              className="group flex gap-[0.4rem] items-center cursor-pointer w-fit"
+            >
+              <div className="min-w-[2rem] min-h-[2rem]">
+                <ThrashIcon />
+              </div>
+              <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite">
+                Delete file
+              </p>
+            </div>
+          </div>
+        )}
         {tree?.name && (
           <div
             className={`${
@@ -131,6 +186,12 @@ export const RepositoryTree: React.FC<{
               )}
               {!(hasChildren && root) && (
                 <div
+                  onContextMenu={(e) => {
+                    if (!isFolder) {
+                      handleContextMenu(e);
+                      setFileWithOpenContext(tree);
+                    }
+                  }}
                   onClick={() => !(hasChildren && root) && clickHandler()}
                   className="cursor-pointer"
                 >
@@ -188,7 +249,6 @@ export const RepositoryTree: React.FC<{
           tree.children?.map((v) => {
             return (
               <RepositoryTree
-                files={files}
                 setRepositoryTree={setRepositoryTree}
                 key={v.name}
                 activeFile={activeFile}

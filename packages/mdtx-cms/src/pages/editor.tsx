@@ -634,7 +634,7 @@ const editor = () => {
           previewOptions={{
             transformImageUri: (src) => {
               return !src.includes('https') || !src.includes('http')
-                ? `https://github.com/${selectedRepository?.full_name}/blob/${selectedBranch?.name}/${src}?raw=true`
+                ? `https://github.com/${selectedRepository?.full_name}/blob${selectedBranch?.name}/${src}?raw=true`
                 : src;
             },
           }}
