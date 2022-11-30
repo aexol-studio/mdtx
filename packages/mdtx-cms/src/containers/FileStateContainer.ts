@@ -20,6 +20,7 @@ const FileStateContainer = createContainer(() => {
     setOrginalFiles(undefined);
     setModifiedFiles([]);
     setFiles([]);
+    setDeletions([]);
     setPickedFilePath(undefined);
     setIsFilesDirty(false);
   };
