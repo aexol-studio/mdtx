@@ -1,34 +1,43 @@
-import { FileIcon, FolderIcon } from '@/src/assets';
-import { useAuthState, useFileState } from '@/src/containers';
-import { TreeObject } from '@/src/utils/treeBuilder';
-import { useState } from 'react';
-import Image from 'next/image';
-import { RepositoryFromSearch } from '@/src/pages/editor';
+import { FileIcon, FilePlusIcon, FolderIcon, ThrashIcon } from '@/src/assets';
+import {
+  FileType,
+  ToastType,
+  useAuthState,
+  useFileState,
+  useToasts,
+} from '@/src/containers';
+import { useOutsideClick } from '@/src/hooks/useOutsideClick';
+import { treeBuilder, TreeMenu, TreeObject } from '@/src/utils/treeBuilder';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export const RepositoryTree: React.FC<{
   tree?: TreeObject;
   root?: boolean;
   activePath?: string;
   activeFile?: TreeObject;
-  selectedRepository?: RepositoryFromSearch;
-  forksOnRepo?: {
-    full_name: string;
-  }[];
-}> = ({
-  tree,
-  root,
-  activePath,
-  activeFile,
-  selectedRepository,
-  forksOnRepo,
-}) => {
-  const { loggedData } = useAuthState();
-  const [tooltip, setTooltip] = useState(false);
+  setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
+}> = ({ tree, root, activePath, activeFile, setRepositoryTree }) => {
   const [creatingModal, setCreatingModal] = useState(false);
-  const { setPickedFilePath, pickedFilePath, modifiedFiles } = useFileState();
+  const [creatingFile, setCreatingFile] = useState(false);
+  const [creatingFilePath, setCreatingFilePath] = useState<string>();
+  const [fileName, setFileName] = useState<string>();
+  const [fileWithOpenContext, setFileWithOpenContext] = useState<TreeObject>();
+  const {
+    files,
+    orginalFiles,
+    setPickedFilePath,
+    pickedFilePath,
+    modifiedFiles,
+    setFiles,
+    deletions,
+    setDeletions,
+  } = useFileState();
+
   const hasChildren = !!tree?.children;
   const isFolder = hasChildren && !root;
   const [path, setPath] = useState(activePath);
+  const ref = useRef<HTMLDivElement>(null);
+  const refInput = useRef<HTMLInputElement>(null);
   const clickHandler = () => {
     if (!isFolder && pickedFilePath !== tree?.path && tree) {
       setPickedFilePath(tree.path);
@@ -43,129 +52,237 @@ export const RepositoryTree: React.FC<{
       setPath(undefined);
     }
   };
-  return (
-    <div className={`pl-[0.8rem] w-full relative`}>
-      {tree?.name && (
-        <div
-          className={`${
-            hasChildren && root
-              ? 'mb-[1.2rem] cursor-default'
-              : 'items-center py-[0.1rem]'
-          } w-full flex`}
-        >
-          {hasChildren && root && (
-            <div className="relative w-full flex items-center justify-between">
-              {tooltip ? (
-                <div className="z-[102] absolute top-[3.2rem] right-0">
-                  <div className="shadow-mdtxShadow0 max-w-[25rem] py-[1.6rem] px-[0.8rem] bg-mdtxBlack border-[1px] border-mdtxOrange0 rounded-[0.6rem]">
-                    <p className="text-white select-none text-[1.2rem]">
-                      Repository name:{' '}
-                      <strong>{selectedRepository?.name}</strong>
-                    </p>
-                    <p className="text-white select-none text-[1.2rem]">
-                      Is forked respository:{' '}
-                      <strong>{selectedRepository?.fork ? 'yes' : 'no'}</strong>
-                    </p>
-                    <p className="text-white select-none text-[1.2rem]">
-                      Already forked by logged user:{' '}
-                      <strong>
-                        {forksOnRepo?.find((x) =>
-                          x.full_name.includes(loggedData!.login),
-                        )
-                          ? 'yes'
-                          : 'no'}
-                      </strong>
-                    </p>
-                    <p className="text-white select-none text-[1.2rem]">
-                      Is your repository:{' '}
-                      <strong>
-                        {selectedRepository?.full_name.includes(
-                          loggedData!.login,
-                        )
-                          ? 'yes'
-                          : 'no'}
-                      </strong>
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <></>
-              )}
-              <p className="text-white leading-[1.8rem] select-none text-center text-[1.2rem] font-[700] uppercase tracking-wider">
-                Repository:&nbsp;
-              </p>
-              <div className="flex justify-center items-center gap-[0.8rem]">
-                <p className="text-white select-none text-center text-[1.2rem]">
-                  {selectedRepository?.owner.login}
-                </p>
-                <Image
-                  onMouseEnter={() => {
-                    setTooltip(true);
-                  }}
-                  onMouseLeave={() => {
-                    setTooltip(false);
-                  }}
-                  priority
-                  width={24}
-                  height={24}
-                  className="cursor-help rounded-full"
-                  alt="User Logo"
-                  src={selectedRepository?.owner.avatar_url || ''}
-                />
-              </div>
-            </div>
-          )}
-          <div className="flex w-fit flex-1 gap-[0.8rem]">
-            {isFolder && (
-              <div className="w-fit flex items-center justify-center">
-                <FolderIcon selected={path === tree.name} />
-              </div>
-            )}
+  useOutsideClick(ref, () => setTimeout(() => setCreatingModal(false), 150));
+  const { createToast } = useToasts();
 
-            {!hasChildren && (
-              <div className="w-fit flex items-center justify-center">
-                <FileIcon
-                  edited={!!modifiedFiles.find((x) => x.name === tree.path)}
-                  selected={tree.path === pickedFilePath}
-                />
+  const deletingHandler = () => {
+    const found = orginalFiles?.find(
+      (x) => x.name === fileWithOpenContext?.path,
+    );
+    if (found)
+      setDeletions((prev) => {
+        return [...prev, found];
+      });
+    const newFiles = files.filter((x) => x.name !== fileWithOpenContext?.path);
+    setFiles(newFiles);
+    const treex = treeBuilder(newFiles);
+    setRepositoryTree(treex);
+  };
+  const addingHandler = () => {
+    const cleanFileName = fileName?.replaceAll('.md', '');
+    if (creatingFilePath && fileName) {
+      const found = files.find(
+        (x) => x.name === creatingFilePath + fileName + '.md',
+      );
+      if (!found) {
+        const x = creatingFilePath.slice(0, creatingFilePath.lastIndexOf('/'));
+        setPath(x.slice(x.lastIndexOf('/') + 1));
+        setFiles((prev) => {
+          return [
+            ...prev,
+            {
+              content: '',
+              dir: false,
+              name: creatingFilePath + cleanFileName + '.md',
+            },
+          ];
+        });
+        const treex = treeBuilder([
+          ...files,
+          {
+            content: '',
+            dir: false,
+            name: creatingFilePath + cleanFileName + '.md',
+          },
+        ]);
+        setRepositoryTree(treex);
+        setCreatingFile(false);
+        createToast(ToastType.SUCCESS, 'Created file');
+      } else {
+        createToast(ToastType.ERROR, 'Cannot make file');
+      }
+    } else {
+      createToast(ToastType.ERROR, 'Cannot make file');
+    }
+  };
+  useEffect(() => {
+    if (refInput.current) {
+      refInput.current.focus();
+    }
+  }, [creatingFile]);
+
+  const [contextMenuState, setContextMenuState] = useState<{
+    xPos: string;
+    yPos: string;
+    showMenu: boolean;
+  }>({
+    showMenu: false,
+    xPos: '0px',
+    yPos: '0px',
+  });
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      e.preventDefault();
+      setContextMenuState({
+        xPos: `${e.pageX}px`,
+        yPos: `${e.pageY}px`,
+        showMenu: true,
+      });
+    },
+    [contextMenuState?.xPos, contextMenuState?.yPos],
+  );
+  const refContextMenu = useRef<HTMLDivElement>(null);
+  useOutsideClick(refContextMenu, () =>
+    setContextMenuState({
+      showMenu: false,
+      xPos: '0px',
+      yPos: '0px',
+    }),
+  );
+  console.log(deletions);
+  return (
+    <>
+      <div className={`pl-[0.8rem] w-full relative`}>
+        {contextMenuState.showMenu && (
+          <div
+            ref={refContextMenu}
+            className="z-[102] w-[12rem] py-[1.2rem] items-center top-[2.4rem] bg-mdtxBlack border-mdtxOrange1 border-[1px] absolute flex flex-col"
+          >
+            <div
+              onClick={deletingHandler}
+              className="group flex gap-[0.4rem] items-center cursor-pointer w-fit"
+            >
+              <div className="min-w-[2rem] min-h-[2rem]">
+                <ThrashIcon />
               </div>
-            )}
-            {!(hasChildren && root) && (
-              <div
-                onClick={() => !(hasChildren && root) && clickHandler()}
-                className="cursor-pointer"
-              >
-                <p className={`hover:underline text-[1.4rem] text-white`}>
-                  {tree?.name}
+              <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite">
+                Delete file
+              </p>
+            </div>
+          </div>
+        )}
+        {tree?.name && (
+          <div
+            className={`${
+              hasChildren && root
+                ? 'mb-[1.2rem] cursor-default'
+                : 'items-center py-[0.1rem]'
+            } w-full flex`}
+          >
+            <div className="flex w-fit flex-1 gap-[0.8rem]">
+              {isFolder && (
+                <div className="w-fit flex items-center justify-center">
+                  <FolderIcon selected={path === tree.name} />
+                </div>
+              )}
+
+              {!hasChildren && (
+                <div className="w-fit flex items-center justify-center">
+                  <FileIcon
+                    edited={!!modifiedFiles.find((x) => x.name === tree.path)}
+                    selected={tree.path === pickedFilePath}
+                  />
+                </div>
+              )}
+              {!(hasChildren && root) && (
+                <div
+                  onContextMenu={(e) => {
+                    if (!isFolder) {
+                      handleContextMenu(e);
+                      setFileWithOpenContext(tree);
+                    }
+                  }}
+                  onClick={() => !(hasChildren && root) && clickHandler()}
+                  className="cursor-pointer"
+                >
+                  <p className={`hover:underline text-[1.4rem] text-white`}>
+                    {tree?.name}
+                  </p>
+                </div>
+              )}
+            </div>
+            {((hasChildren && root) || isFolder) && (
+              <div className="relative flex items-center justify-center">
+                <p
+                  id={tree.name}
+                  onClick={(e) => {
+                    const { id } = e.currentTarget;
+                    const pathFile = tree.path?.slice(
+                      0,
+                      tree.path.indexOf(id) + id.length + 1,
+                    );
+                    setCreatingFilePath(pathFile);
+                    setCreatingModal((prev) => !prev);
+                  }}
+                  className="text-mdtxWhite cursor-pointer"
+                >
+                  +
                 </p>
+                {creatingModal && (
+                  <div
+                    ref={ref}
+                    className="w-[13.2rem] flex items-center justify-center z-[100] bg-mdtxBlack py-[1.2rem] top-[1.8rem] right-[0rem] absolute border-mdtxWhite border-[1px]"
+                  >
+                    <div
+                      onClick={() => {
+                        setCreatingFile(true);
+                        setCreatingModal(false);
+                      }}
+                      className="flex cursor-pointer group gap-[0.8rem]"
+                    >
+                      <p className="group-hover:underline cursor-pointer w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite group-hover:text-mdtxOrange0">
+                        Add new MD file
+                      </p>
+                      <div>
+                        <FilePlusIcon />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-          {isFolder && (
-            <div
-              onClick={() => {
-                setCreatingModal(true);
-              }}
-              className="flex items-center justify-center"
-            >
-              <p className="text-mdtxWhite cursor-pointer">+</p>
-            </div>
-          )}
+        )}
+
+        {hasChildren &&
+          (path === tree.name || root) &&
+          tree.children?.map((v) => {
+            return (
+              <RepositoryTree
+                setRepositoryTree={setRepositoryTree}
+                key={v.name}
+                activeFile={activeFile}
+                activePath={tree.name}
+                tree={v}
+              />
+            );
+          })}
+      </div>
+      {creatingFile && (
+        <div className="flex items-center gap-[1.2rem]">
+          <input
+            ref={refInput}
+            className="w-[16rem] text-mdtxWhite ml-[1.2rem] my-[0.8rem] pl-[0.8rem] bg-transparent border-mdtxWhite border-[1px]"
+            value={fileName ? fileName : ''}
+            onBlur={() => {
+              setCreatingFile(false);
+            }}
+            onKeyDown={(e) => {
+              if (e.code === 'Enter' || e.code === 'NumpadEnter') {
+                addingHandler();
+              }
+            }}
+            onChange={(e) => {
+              setFileName(e.target.value);
+            }}
+          />
+          <div className="min-w-fit" onClick={addingHandler}>
+            <p className="text-mdtxOrange0 text-[1rem] uppercase tracking-wide font-[700]">
+              Press enter
+            </p>
+          </div>
         </div>
       )}
-
-      {hasChildren &&
-        (path === tree.name || root) &&
-        tree.children?.map((v) => {
-          return (
-            <RepositoryTree
-              key={v.name}
-              activeFile={activeFile}
-              activePath={tree.name}
-              tree={v}
-            />
-          );
-        })}
-    </div>
+    </>
   );
 };

@@ -27,3 +27,5 @@ export * from './RepoIcon';
 export * from './WhatIsMDtxHead';
 export * from './PullRequestIcon';
 export * from './FilterIcon';
+export * from './FilePlusIcon';
+export * from './ThrashIcon';

@@ -1,5 +1,5 @@
 import { useFileState } from '@/src/containers';
-import  { useState } from 'react';
+import { useState } from 'react';
 import ReactDiffViewer, {
   ReactDiffViewerStylesOverride,
 } from 'react-diff-viewer-continued';
@@ -49,11 +49,17 @@ export const ChangesModal: React.FC<IChangesModal> = ({
             onClick={() => {
               setSelectedFile(file.name);
               const found = orginalFiles?.find((o) => o.name === file.name);
-              if (found)
+              if (found) {
                 setPreviewChanges({
                   changedFile: file.content,
                   orginalFile: found.content,
                 });
+              } else {
+                setPreviewChanges({
+                  changedFile: file.content,
+                  orginalFile: '',
+                });
+              }
             }}
             className="w-fit cursor-pointer"
           >
@@ -74,13 +80,17 @@ export const ChangesModal: React.FC<IChangesModal> = ({
           styles={newStyles}
           oldValue={
             previewChanges?.orginalFile
-              ? previewChanges.orginalFile
-              : 'Pick file to see changes'
+              ? previewChanges.orginalFile === ''
+                ? ''
+                : 'Pick file to see changes'
+              : ''
           }
           newValue={
             previewChanges?.changedFile
-              ? previewChanges.changedFile
-              : 'Pick file to see changes'
+              ? previewChanges.changedFile === ''
+                ? ''
+                : 'Pick file to see changes'
+              : ''
           }
         />
       </div>

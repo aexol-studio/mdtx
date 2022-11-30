@@ -1,6 +1,6 @@
-import { MDtxLogo } from '@/src/assets';
+import { ArrowLeft, MDtxLogo } from '@/src/assets';
 import FilterIcon from '@/src/assets/svgs/FilterIcon';
-import { useAuthState } from '@/src/containers';
+import { useAuthState, useFileState } from '@/src/containers';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import { TreeMenu } from '@/src/utils/treeBuilder';
 import { useState } from 'react';
@@ -12,6 +12,7 @@ import {
   RepositoryTree,
   SearchingType,
 } from '../molecules';
+import Image from 'next/image';
 
 export interface MenuInteface {
   autoCompleteValue?: string;
@@ -22,6 +23,7 @@ export interface MenuInteface {
   loadingFullTree: boolean;
   repositoriesFromSearch?: RepositoryFromSearch[];
   selectedRepository?: RepositoryFromSearch;
+  backToSearch: () => void;
   selectedBranch?: availableBranchType;
   repositoryTree?: TreeMenu;
   handleRepositoryPick: (item: RepositoryFromSearch) => Promise<void>;
@@ -32,6 +34,7 @@ export interface MenuInteface {
   }[];
   searchingMode: SearchingType;
   setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
+  setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
 }
 
 export const Menu: React.FC<MenuInteface> = ({
@@ -42,15 +45,16 @@ export const Menu: React.FC<MenuInteface> = ({
   loadingFullTree,
   repositoriesFromSearch,
   repositoryTree,
+  backToSearch,
   handleRepositoryPick,
   includeForks,
   setIncludeForks,
   forksOnRepo,
   searchingMode,
   setSearchingMode,
+  setRepositoryTree,
 }) => {
   const { loggedData, logOut } = useAuthState();
-  const [searching, setSearching] = useState(true);
   return (
     <div
       className={`${
@@ -68,21 +72,73 @@ export const Menu: React.FC<MenuInteface> = ({
           <MDtxLogo small />
           <UserInfo logOut={logOut} loggedData={loggedData} />
         </div>
-        <div className="mt-[3.2rem] relative w-full">
+        <div
+          className={`${
+            !(selectedRepository && repositoryTree)
+              ? 'translate-x-[200%] invisible'
+              : 'left-[50%] translate-x-[-50%]'
+          } top-[5.4rem] w-[90%] transition-all duration-300 ease-in-out absolute py-[1.6rem] px-[0.8rem]`}
+        >
           <div
-            onClick={() => {
-              setSearching((prev) => !prev);
-            }}
-            className={`${
-              !searching ? 'border-mdtxWhite' : 'border-mdtxOrange0'
-            } cursor-pointer flex justify-center items-center rounded-t-[0.4rem] w-[2.8rem] h-[2.8rem] bg-mdtxBlack border-l-[2px] border-t-[2px] border-r-[2px] absolute bottom-[-4.8rem] right-[0.8rem]`}
+            className="w-fit group cursor-pointer flex gap-[0.8rem] items-center"
+            onClick={backToSearch}
           >
-            <div className="min-w-[1.6rem] min-h-[1.6rem">
-              <FilterIcon active={!searching} />
+            <div className="min-w-[2rem] min-h-[2rem]">
+              <ArrowLeft small />
+            </div>
+            <p className="text-white select-none text-[1.2rem] group-hover:underline w-fit">
+              Back to search
+            </p>
+          </div>
+          <div className="mt-[1.6rem] relative w-full flex items-center justify-between">
+            <div className="flex justify-center items-center gap-[0.8rem]">
+              {selectedRepository && (
+                <Image
+                  priority
+                  width={24}
+                  height={24}
+                  className="rounded-full"
+                  alt="User Logo"
+                  src={selectedRepository?.owner.avatar_url || ''}
+                />
+              )}
+              <p className="text-white select-none text-center text-[1.2rem]">
+                {selectedRepository?.owner.login}
+              </p>
             </div>
           </div>
+          <p className="mt-[0.8rem] text-white select-none text-[1.2rem]">
+            Repository name: <strong>{selectedRepository?.name}</strong>
+          </p>
+          <p className="text-white select-none text-[1.2rem]">
+            Is orginal respository:{' '}
+            <strong>{!selectedRepository?.fork ? 'yes' : 'no'}</strong>
+          </p>
+          {forksOnRepo?.find((x) =>
+            x.full_name.includes(loggedData ? loggedData.login : ''),
+          ) && (
+            <p className="text-white select-none text-[1.2rem]">
+              Already forked by logged user: <strong>yes</strong>
+            </p>
+          )}
+
+          <p className="text-white select-none text-[1.2rem]">
+            Is your repository:{' '}
+            <strong>
+              {selectedRepository?.full_name.includes(
+                loggedData ? loggedData.login : '',
+              )
+                ? 'yes'
+                : 'no'}
+            </strong>
+          </p>
+        </div>
+        <div
+          className={`${
+            selectedRepository && repositoryTree ? 'translate-x-[-200%]' : ''
+          } transition-all duration-300 ease-in-out relative w-full`}
+        >
           <MenuSearchSection
-            searching={searching}
             searchingMode={searchingMode}
             setSearchingMode={setSearchingMode}
             includeForks={includeForks}
@@ -91,7 +147,12 @@ export const Menu: React.FC<MenuInteface> = ({
             setAutoCompleteValue={setAutoCompleteValue}
           />
         </div>
-        <div className="mt-[4.8rem] pb-[1.6rem] border-t-[1px] border-mdtxOrange0 w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar">
+        <div
+          onContextMenu={(e) => {
+            e.preventDefault();
+          }}
+          className="mt-[1.6rem] pb-[1.6rem] border-t-[1px] border-mdtxOrange0 w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar"
+        >
           {loadingFullTree ? (
             <div className="mt-[4.2rem] flex justify-center w-full">
               <PulseLoader size={'16px'} color="#FF7200" />
@@ -110,8 +171,7 @@ export const Menu: React.FC<MenuInteface> = ({
             repositoryTree.length > 0 &&
             repositoryTree.map((x) => (
               <RepositoryTree
-                forksOnRepo={forksOnRepo}
-                selectedRepository={selectedRepository}
+                setRepositoryTree={setRepositoryTree}
                 key={x.name}
                 root
                 tree={x}

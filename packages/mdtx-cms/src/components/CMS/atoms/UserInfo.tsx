@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { UserType } from '@/src/containers';
 import { Chevron } from '@/src/assets';
+import Link from 'next/link';
 
 export const UserInfo: React.FC<{
   loggedData?: UserType;
@@ -28,7 +29,7 @@ export const UserInfo: React.FC<{
                 src={loggedData.avatar_url}
               />
             )}
-            <p className="cursor-pointer text-[1.4rem] text-center font-[400] text-white">
+            <p className="cursor-pointer text-[1.2rem] text-center font-[400] text-white">
               {loggedData.name ? loggedData.name : loggedData.login}
             </p>
           </div>
@@ -44,11 +45,18 @@ export const UserInfo: React.FC<{
               onMouseLeave={() => {
                 setOpenMenu(false);
               }}
-              className="border-l-[1px] border-b-[1px] border-r-[1px] rounded-b-[0.8rem] border-t-none border-mdtxOrange1 absolute left-0 top-[2.6rem] w-[100%]"
+              className="bg-mdtxBlack pt-[0.8rem] z-[99] border-l-[1px] border-b-[1px] border-r-[1px] rounded-b-[0.8rem] border-t-none border-mdtxOrange1 absolute left-0 top-[2.6rem] w-[100%]"
             >
+              <Link
+                href={loggedData.html_url + '?tab=repositories'}
+                target={'_blank'}
+                className="cursor-pointer pl-[1.2rem] py-[0.8rem] text-white w-fit text-[1.2rem] font-[400] hover:underline"
+              >
+                Go to GitHub
+              </Link>
               <p
                 onClick={logOut}
-                className="cursor-pointer pl-[1.2rem] py-[0.2rem] text-white w-fit text-[1.4rem] font-[400] hover:underline"
+                className="cursor-pointer pl-[1.2rem] py-[0.8rem] text-white w-fit text-[1.2rem] font-[400] hover:underline"
               >
                 Log out
               </p>

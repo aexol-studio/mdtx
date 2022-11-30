@@ -26,7 +26,7 @@ const selectToast = (type: ToastType) => {
     case ToastType.ERROR:
       return { color: 'bg-red-900', icon: <ErrorIcon /> };
     case ToastType.MESSAGE:
-      return { color: '', icon: <Message /> };
+      return { color: 'bg-blue-900', icon: <Message /> };
   }
 };
 

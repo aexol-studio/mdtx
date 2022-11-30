@@ -1,6 +1,7 @@
 import { Hamburger, CloseIconSvg } from '@/src/assets';
-import { useFileState } from '@/src/containers';
+import { useAuthState, useFileState } from '@/src/containers';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
+import { RepositoryFromSearch } from '@/src/pages/editor';
 import { useRef, useState } from 'react';
 
 export enum MenuModalType {
@@ -10,25 +11,29 @@ export enum MenuModalType {
   CHANGES = 'CHANGES',
 }
 export const ButtonMenu: React.FC<{
-  permissions?: {
-    admin: boolean;
-    maintain: boolean;
-    push: boolean;
-    triage: boolean;
-    pull: boolean;
-  };
+  selectedRepository: RepositoryFromSearch;
+  forksOnRepo?: {
+    full_name: string;
+  }[];
   setMenuModal: React.Dispatch<React.SetStateAction<MenuModalType | undefined>>;
-}> = ({ permissions, setMenuModal }) => {
+}> = ({ selectedRepository, setMenuModal, forksOnRepo }) => {
+  const { loggedData } = useAuthState();
   const { modifiedFiles } = useFileState();
   const [optionsMenu, setOptionsMenu] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useOutsideClick(ref, () => setOptionsMenu(false));
+  const { permissions } = selectedRepository;
   const onlyView =
     permissions?.triage &&
     !permissions.admin &&
     !permissions.maintain &&
     !permissions.pull &&
     !permissions.push;
+  const canDoFork =
+    !forksOnRepo?.find((x) =>
+      x.full_name.includes(loggedData ? loggedData.login : ''),
+    ) &&
+    !selectedRepository?.full_name.includes(loggedData ? loggedData.login : '');
 
   return (
     <div
@@ -97,17 +102,25 @@ export const ButtonMenu: React.FC<{
                 Commit
               </p>
             </div>
-            <div
+            {/* <div
               className="flex justify-end"
               onClick={() => {
-                // setMenuModal(MenuModalType.FORK);
-                // setOptionsMenu(false);
+                if (canDoFork) {
+                  setMenuModal(MenuModalType.FORK);
+                  setOptionsMenu(false);
+                }
               }}
             >
-              <p className="w-fit text-right text-mdtxBlack uppercase text-[1.4rem] font-[700] select-none line-through">
+              <p
+                className={`${
+                  canDoFork
+                    ? 'text-mdtxWhite hover:underline cursor-pointer'
+                    : 'text-mdtxBlack line-through'
+                } w-fit text-right uppercase text-[1.4rem] font-[700] select-none`}
+              >
                 Fork
               </p>
-            </div>
+            </div> */}
             <div
               className="flex justify-end"
               onClick={() => {

@@ -7,7 +7,6 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
       case 'POST':
         res.setHeader('Access-Control-Allow-Origin', '*');
         const trueReq = JSON.parse(req.body);
-        console.log(trueReq);
         const responseToken = await fetch(
           'https://github.com/login/oauth/access_token',
           {

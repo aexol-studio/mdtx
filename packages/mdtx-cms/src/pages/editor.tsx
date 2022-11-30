@@ -110,6 +110,10 @@ const editor = () => {
     getRepositoryBranches,
     getRepositoryForks,
     getRepositoryPullRequests,
+    getRepositoryFullInfo,
+    getGithubUserRepos,
+    getRepository,
+    doRepositoryFork,
   } = useGithubCalls();
   const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
     useGithubActions();
@@ -131,9 +135,25 @@ const editor = () => {
     loggedData,
     setTokenWithLocal,
     setIsLoggedIn,
+    logOut,
   } = useAuthState();
   const [includeForks, setIncludeForks] = useState(true);
   const [forksOnRepo, setForksOnRepo] = useState<{ full_name: string }[]>();
+
+  const [userRepos, setUserRepos] = useState<
+    {
+      full_name: string;
+    }[]
+  >();
+  const [userForks, setUserForks] = useState<
+    {
+      full_name: string;
+      source: { full_name: string; owner: { login: string } };
+    }[]
+  >();
+
+  const [foundedFork, setFoundedFork] = useState(false);
+
   const [searchingMode, setSearchingMode] = useState<SearchingType>(
     SearchingType.ALL,
   );
@@ -162,6 +182,7 @@ const editor = () => {
   const [submittingCommit, setSubmittingCommit] = useState(false);
   const [submittingPullRequest, setPullRequest] = useState(false);
   const [downloadZIP, setDownloadZIP] = useState(false);
+  const [doingFork, setDoingFork] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
   const { createToast } = useToasts();
   useEffect(() => {
@@ -185,8 +206,10 @@ const editor = () => {
         .then((response) => response.json())
         .then((data) => {
           setTokenWithLocal(data.accessToken);
-          router.replace('/editor');
           setIsLoggedIn(true);
+        })
+        .finally(() => {
+          router.replace('/editor');
         });
     }
   }, []);
@@ -206,27 +229,48 @@ const editor = () => {
 
   useEffect(() => {
     if (isLoggedIn && token) {
-      getGithubUser(token).then((res) => {
+      getGithubUser(token).then(async (res) => {
         if (res) {
-          getUserOrganizations(token).then((response) =>
-            setOrganizations(response),
-          );
-          setIsLoggedIn(true);
-          setLoggedData(res);
+          const promiseORGS = getUserOrganizations(token);
+          const promiseUserRepos = getGithubUserRepos(token);
+          const [orgs, repos] = await Promise.all([
+            promiseORGS,
+            promiseUserRepos,
+          ]);
+          setOrganizations(orgs);
+          if (repos.length) {
+            const tempArr: {
+              full_name: string;
+              source: { full_name: string; owner: { login: string } };
+            }[] = [];
+            repos
+              .filter((x: { fork: boolean }) => x.fork)
+              .map((z: { full_name: string }) =>
+                getRepository(token, z.full_name).then((x) => tempArr.push(x)),
+              );
+            setUserRepos(repos);
+            setUserForks(tempArr);
+            setIsLoggedIn(true);
+            setLoggedData(res);
+          } else {
+            logOut();
+          }
         }
       });
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, token]);
+  const controllerZIP = new AbortController();
 
   const confirmBranchClick = async (branchName?: string) => {
     if (token && selectedRepository && selectedBranch) {
       setDownloadZIP(true);
-
       const JSONResponse = await getRepositoryAsZIP(
         token,
         selectedRepository?.full_name,
         branchName ? branchName : selectedBranch?.name,
+        controllerZIP,
       );
+
       if (JSONResponse !== undefined) {
         const paths = JSONResponse.fileArray.filter(
           (z: { name: string | string[] }) => z.name.includes('.md'),
@@ -249,7 +293,6 @@ const editor = () => {
   };
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
     setSelectedRepository(item);
-
     if (token) {
       const promiseBranches = getRepositoryBranches(token, item.full_name);
       const promisePullRequest = getRepositoryPullRequests(
@@ -257,10 +300,12 @@ const editor = () => {
         item.full_name,
       );
       const promiseForks = getRepositoryForks(token, item.full_name);
-      const [branches, pullRequests, forks] = await Promise.all([
+      const promiseAboutFork = getRepositoryFullInfo(token, item.full_name);
+      const [branches, pullRequests, forks, aboutFork] = await Promise.all([
         promiseBranches,
         promisePullRequest,
         promiseForks,
+        promiseAboutFork,
       ]);
       if (!branches) {
         createToast(ToastType.ERROR, 'We cannot download this repository');
@@ -268,6 +313,20 @@ const editor = () => {
       }
       setAvailablePullRequests(pullRequests);
       setForksOnRepo(forks);
+      const isForked =
+        userForks?.find(
+          (x) => x?.source?.full_name === aboutFork?.source?.full_name,
+        ) ||
+        userForks?.find((x) => x?.source?.full_name === item.full_name) ||
+        item.full_name === aboutFork?.source?.full_name;
+      if (
+        !!isForked ||
+        !!userRepos?.find((x) => x.full_name === item.full_name)
+      ) {
+        setFoundedFork(true);
+      } else {
+        setFoundedFork(false);
+      }
       if (branches.length) {
         setDownloadModal(true);
         setAvailableBranches(branches);
@@ -408,7 +467,6 @@ const editor = () => {
           ?.map((x) => `%20org:${x.login}`)
           .toString()
           .replaceAll(',', '');
-        console.log(organizationsString);
         const response = await fetch(
           `https://api.github.com/search/repositories?q=${autoCompleteValue}${
             searchingMode === SearchingType.USER ||
@@ -442,18 +500,47 @@ const editor = () => {
       clearTimeout(timer);
     };
   }, [autoCompleteValue, includeForks, searchingMode]);
+  const backToSearch = () => {
+    setRepositoryTree(undefined);
+    setSelectedBranch(undefined);
+    setAvailableBranches(undefined);
+    setAvailablePullRequests(undefined);
+    setRepositoryTree(undefined);
+  };
+  const doForkFunction = (fullName: string) => {
+    if (token) {
+      setDoingFork(true);
+      createToast(ToastType.MESSAGE, 'Creating fork!');
+      doRepositoryFork(token, fullName).then((response) => {
+        if (response) {
+          createToast(ToastType.SUCCESS, 'Fork created!');
+          setAutoCompleteValue('');
+          backToSearch();
+          resetState();
+          setDoingFork(false);
+        }
+      });
+    }
+  };
 
   return (
     <Layout isEditor pageTitle="MDtx Editor">
       {downloadModal && availableBranches?.length && (
         <Modal
           customClassName="flex flex-col w-[60rem] h-[40rem]"
-          blockingState={downloadZIP}
           closeFnc={() => {
             setDownloadModal(false);
+            backToSearch();
+            resetState();
+            setDownloadZIP(false);
+            setDoingFork(false);
+            controllerZIP.abort();
           }}
         >
           <BranchSelector
+            doForkFunction={doForkFunction}
+            foundedFork={foundedFork}
+            doingFork={doingFork}
             downloadZIP={downloadZIP}
             selectedRepository={selectedRepository}
             availableBranches={availableBranches}
@@ -507,20 +594,23 @@ const editor = () => {
           />
         </Modal>
       )}
-      {isFilesDirty && (
+      {isFilesDirty && repositoryTree && selectedRepository && (
         <ButtonMenu
-          permissions={selectedRepository?.permissions}
+          forksOnRepo={forksOnRepo}
+          selectedRepository={selectedRepository}
           setMenuModal={setMenuModal}
         />
       )}
       <div className="relative">
         <Menu
+          setRepositoryTree={setRepositoryTree}
           searchingMode={searchingMode}
           setSearchingMode={setSearchingMode}
           forksOnRepo={forksOnRepo}
           includeForks={includeForks}
           setIncludeForks={setIncludeForks}
           selectedRepository={selectedRepository}
+          backToSearch={backToSearch}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
           isOpen={openMenu}
@@ -544,7 +634,7 @@ const editor = () => {
           previewOptions={{
             transformImageUri: (src) => {
               return !src.includes('https') || !src.includes('http')
-                ? `https://github.com/${selectedRepository?.full_name}/blob/${selectedBranch?.name}/${src}?raw=true`
+                ? `https://github.com/${selectedRepository?.full_name}/blob${selectedBranch?.name}/${src}?raw=true`
                 : src;
             },
           }}
