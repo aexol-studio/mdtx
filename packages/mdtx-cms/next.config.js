@@ -5,6 +5,7 @@ const nextConfig = {
   swcMinify: true,
   reactStrictMode: false,
   images: {
+    unoptimized: true,
     domains: ['avatars.githubusercontent.com', 'github.githubassets.com'],
   },
 };

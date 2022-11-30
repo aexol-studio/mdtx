@@ -49,7 +49,7 @@ export const SelectBranch: React.FC<SelectProps<availableBranchType>> = ({
         <div
           className={`${
             open ? 'opacity-1 visible' : 'opacity-0 invisible'
-          } scrollbar max-h-[10rem] transition-all duration-300 delay-75 ease-in-out left-[-1px] top-[calc(100%-1px)] absolute z-[101] w-[calc(100%+2px)] bg-mdtxWhite border-[1px] border-mdtxOrange0 overflow-y-auto rounded-b-[0.8rem]`}
+          } scrollbar max-h-[10rem] transition-all duration-300 delay-75 ease-in-out left-[-1px] top-[calc(100%-1px)] absolute z-[110] w-[calc(100%+2px)] bg-mdtxWhite border-[1px] border-mdtxOrange0 overflow-y-auto rounded-b-[0.8rem]`}
         >
           {options.map((o, idx) => (
             <div

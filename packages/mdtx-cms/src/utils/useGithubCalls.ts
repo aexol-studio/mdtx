@@ -12,6 +12,20 @@ export const useGithubCalls = () => {
     const JSONdata: UserType = await loginData.json();
     return JSONdata;
   };
+  const getGithubUserRepos = async (token: string) => {
+    const repos = await fetch(
+      'https://api.github.com/user/repos?affiliation=owner%20&per_page=100',
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    const JSONdata = await repos.json();
+    return JSONdata;
+  };
   const getUserOrganizations = async (token: string) => {
     const loginData = await fetch(`https://api.github.com/user/orgs`, {
       method: 'GET',
@@ -95,16 +109,41 @@ export const useGithubCalls = () => {
     const PullRequestsResponse = await response.json();
     return PullRequestsResponse;
   };
+  const getRepository = async (token: string, full_name: string) => {
+    const response = await fetch(`https://api.github.com/repos/${full_name}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const PullRequestsResponse = await response.json();
+    return PullRequestsResponse;
+  };
+  const getRepositoryFullInfo = async (token: string, full_name: string) => {
+    const response = await fetch(`https://api.github.com/repos/${full_name}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    const PullRequestsResponse = await response.json();
+    return PullRequestsResponse;
+  };
+
   const getRepositoryAsZIP = async (
     token: string,
     full_name: string,
     branch: string,
+    controllerZIP: AbortController,
   ) => {
     const response = await fetch('/api/getRepositoryAsZIP', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      signal: controllerZIP.signal,
       body: JSON.stringify({
         token: token,
         fullName: full_name,
@@ -118,20 +157,6 @@ export const useGithubCalls = () => {
       return JSONResponse;
     }
   };
-  const createFork = async (token: string, full_name: string) => {
-    const response = await fetch(
-      `https://api.github.com/repos/${full_name}/forks`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'application/vnd.github+json',
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-    const JSONResponse = await response.json();
-    return JSONResponse;
-  };
 
   return {
     getGithubUser,
@@ -142,6 +167,8 @@ export const useGithubCalls = () => {
     getRepositoryAsZIP,
     getRepositoryPullRequests,
     doRepositoryFork,
-    createFork,
+    getRepositoryFullInfo,
+    getRepository,
+    getGithubUserRepos,
   };
 };

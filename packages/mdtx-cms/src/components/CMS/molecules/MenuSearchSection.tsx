@@ -59,10 +59,10 @@ export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
             onChange={() => {
               setIncludeForks((prev) => !prev);
             }}
-            className="cursor-pointer min-w-[1.2rem] min-h-[1.2rem] max-w-[1.2rem] max-h-[1.2rem]"
+            className="accent-mdtxOrange1 cursor-pointer min-w-[1.2rem] min-h-[1.2rem] max-w-[1.2rem] max-h-[1.2rem]"
             type={'checkbox'}
           />
-          <p className="w-fit text-mdtxWhite text-[1.2rem] font-[500] leading-[2.4rem] select-none">
+          <p className="w-fit text-mdtxWhite text-[1.2rem] font-[500] select-none">
             Include forks
           </p>
         </div>

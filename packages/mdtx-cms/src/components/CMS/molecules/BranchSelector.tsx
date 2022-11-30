@@ -10,6 +10,7 @@ import { PulseLoader } from 'react-spinners';
 import { Button, PermissionsTable, SelectBranch } from '../atoms';
 
 interface IBranchSelector {
+  foundedFork: boolean;
   downloadZIP: boolean;
   selectedRepository?: RepositoryFromSearch;
   confirmBranchClick: () => Promise<void>;
@@ -19,9 +20,12 @@ interface IBranchSelector {
   setSelectedBranch: React.Dispatch<
     React.SetStateAction<availableBranchType | undefined>
   >;
+  doForkFunction: (fullName: string) => void;
+  doingFork: boolean;
 }
 
 export const BranchSelector: React.FC<IBranchSelector> = ({
+  foundedFork,
   downloadZIP,
   selectedRepository,
   confirmBranchClick,
@@ -29,14 +33,16 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
   availableBranches,
   selectedBranch,
   setSelectedBranch,
+  doForkFunction,
+  doingFork,
 }) => {
   const [pullRequestView, setPullRequestView] = useState(false);
   return (
     <div className="flex flex-col w-[80%] mx-auto h-full overflow-hidden">
-      {downloadZIP ? (
+      {downloadZIP || doingFork ? (
         <div className="flex h-full justify-center items-center flex-col gap-[4.2rem]">
           <p className="text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
-            Loading repository...
+            {doingFork ? 'Doing fork...' : 'Loading repository...'}
           </p>
           <PulseLoader size={'16px'} color="#FF7200" />
         </div>
@@ -54,7 +60,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                       onClick={() => {
                         setPullRequestView(true);
                       }}
-                      className="z-[102] absolute bottom-[1.6rem] left-[1.6rem]"
+                      className="absolute bottom-[1.6rem] left-[1.6rem]"
                     >
                       <p className="hover:underline cursor-pointer w-fit text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wider">
                         <span className="text-mdtxOrange1 font-[500] text-[1rem]">{`<<`}</span>{' '}
@@ -83,7 +89,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
               {pullRequestView ? 'Select PR to work' : 'Select branch to work'}
             </p>
           </div>
-          <div className="mt-[0.8rem] flex justify-between">
+          <div className="mt-[2.4rem] flex justify-between">
             <div className="flex flex-col justify-end">
               <p className="w-fit text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
                 Selected repository:{' '}
@@ -175,16 +181,27 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                 : 'translate-x-0 visible'
             } transition-transform duration-300 ease-in-out`}
           >
-            <div className="mt-[6.4rem] min-w-fit">
-              <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
-                Your access to repository:{' '}
-                <span className="ml-[1.6rem] text-[1rem]">
-                  Do you need more access?{' '}
-                  <span className="text-mdtxOrange1 hover:underline cursor-pointer">
-                    Do fork!
-                  </span>
-                </span>
-              </p>
+            <div className="mt-[4.8rem] ">
+              <div className="w-full flex items-end">
+                <p className="w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none tracking-wide">
+                  Your access to repository:{' '}
+                </p>
+                {!foundedFork && (
+                  <p className="ml-[4.2rem] w-fit mt-[1.6rem] text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wide">
+                    Do you need more access?{' '}
+                    <span
+                      onClick={() => {
+                        if (selectedRepository)
+                          doForkFunction(selectedRepository.full_name);
+                      }}
+                      className={`ml-[0.4rem] text-[1rem] hover:underline cursor-pointer text-mdtxOrange1`}
+                    >
+                      Do fork!
+                    </span>
+                  </p>
+                )}
+              </div>
+
               <PermissionsTable permissions={selectedRepository?.permissions} />
             </div>
             <div className="mt-[2.4rem] flex justify-between gap-[4.2rem]">

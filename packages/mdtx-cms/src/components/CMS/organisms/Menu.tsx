@@ -1,4 +1,4 @@
-import { MDtxLogo } from '@/src/assets';
+import { ArrowLeft, MDtxLogo } from '@/src/assets';
 import FilterIcon from '@/src/assets/svgs/FilterIcon';
 import { useAuthState, useFileState } from '@/src/containers';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
@@ -80,12 +80,17 @@ export const Menu: React.FC<MenuInteface> = ({
               : 'left-[50%] translate-x-[-50%]'
           } top-[5.4rem] w-[90%] transition-all duration-300 ease-in-out absolute py-[1.6rem] px-[0.8rem]`}
         >
-          <p
-            className="text-white select-none text-[1.2rem] hover:underline cursor-pointer w-fit"
+          <div
+            className="w-fit group cursor-pointer flex gap-[0.8rem] items-center"
             onClick={backToSearch}
           >
-            Back to search
-          </p>
+            <div className="min-w-[2rem] min-h-[2rem]">
+              <ArrowLeft small />
+            </div>
+            <p className="text-white select-none text-[1.2rem] group-hover:underline w-fit">
+              Back to search
+            </p>
+          </div>
           <div className="mt-[1.6rem] relative w-full flex items-center justify-between">
             <div className="flex justify-center items-center gap-[0.8rem]">
               {selectedRepository && (
