@@ -139,7 +139,6 @@ export const RepositoryTree: React.FC<{
       yPos: '0px',
     }),
   );
-  console.log(deletions);
   return (
     <>
       <div className={`pl-[0.8rem] w-full relative`}>
