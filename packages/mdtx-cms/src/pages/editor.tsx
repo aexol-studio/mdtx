@@ -252,8 +252,6 @@ const editor = () => {
             setUserForks(tempArr);
             setIsLoggedIn(true);
             setLoggedData(res);
-          } else {
-            logOut();
           }
         }
       });
