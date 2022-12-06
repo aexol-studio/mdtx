@@ -189,9 +189,9 @@ const editor = () => {
     const url = window.location.href;
     const hasCode = url.includes('?code=');
     const hasError = url.includes('?error=');
-    if (hasError) {
-      router.push('/');
-    }
+    // if (hasError) {
+    //   router.push('/');
+    // }
     if (!token && hasCode) {
       const newUrl = url.split('?code=');
       const newestUrl = newUrl[1].split('&');
