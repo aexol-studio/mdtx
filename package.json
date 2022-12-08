@@ -41,6 +41,7 @@
   "workspaces": [
     "./packages/mdtx-core",
     "./packages/mdtx-cli",
+    "./packages/mdtx-proxy",
     "./packages/mdtx-plugin-nextjs",
     "./packages/mdtx-cms",
     "./sandbox/mdtx-example",

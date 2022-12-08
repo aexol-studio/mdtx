@@ -26,6 +26,7 @@ import { Layout } from '../layouts';
 import { useGithubCalls } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
 import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
+import { Octokit } from 'octokit';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export type Organization = {
@@ -520,7 +521,39 @@ const editor = () => {
       });
     }
   };
+  const octokit = new Octokit({
+    auth: token,
+    log: {
+      debug: () => {},
+      info: () => {},
+      warn: console.warn,
+      error: console.error,
+    },
+  });
 
+  const getRepoZip = async () => {
+    const request = octokit.rest.repos.downloadZipballArchive.endpoint({
+      owner: 'aexol-studio',
+      repo: 'mdtx',
+      ref: 'develop',
+    });
+    const url = new URL(request.url);
+    const { headers } = await octokit.request(`GET ${url.pathname}`, {
+      request: {
+        fetch: (url: string, opts: RequestInit | undefined) => {
+          return fetch(
+            `http://localhost:9999/api${new URL(url).pathname}`,
+            opts,
+          );
+        },
+      },
+    });
+  };
+  useEffect(() => {
+    if (token) {
+      getRepoZip();
+    }
+  }, [token]);
   return (
     <Layout isEditor pageTitle="MDtx Editor">
       {downloadModal && availableBranches?.length && (
