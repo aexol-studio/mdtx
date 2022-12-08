@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import {
@@ -15,6 +14,7 @@ import {
   PullRequestInput,
   PullRequestModal,
   SearchingType,
+  Editor,
 } from '../components';
 import {
   useFileState,
@@ -27,7 +27,6 @@ import { useGithubCalls } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
 import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
 import { Octokit } from 'octokit';
-const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export type Organization = {
   login: string;
@@ -190,23 +189,22 @@ const editor = () => {
     const url = window.location.href;
     const hasCode = url.includes('?code=');
     const hasError = url.includes('?error=');
-    // if (hasError) {
-    //   router.push('/');
-    // }
+    if (hasError) {
+      router.push('/');
+    }
     if (!token && hasCode) {
       const newUrl = url.split('?code=');
-      const newestUrl = newUrl[1].split('&');
-      const requestData = {
-        code: newestUrl[0],
-      };
-      const proxy_url = process.env.NEXT_PUBLIC_PROXY || '';
-      fetch(proxy_url, {
-        method: 'POST',
-        body: JSON.stringify(requestData),
+      const splittedUrl = newUrl[1].split('&');
+      const requestCode = splittedUrl[0];
+      fetch(`http://localhost:9999/authenticate/${requestCode}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
         .then((response) => response.json())
         .then((data) => {
-          setTokenWithLocal(data.accessToken);
+          setTokenWithLocal(data);
           setIsLoggedIn(true);
         })
         .finally(() => {
@@ -540,14 +538,20 @@ const editor = () => {
     const url = new URL(request.url);
     const { headers } = await octokit.request(`GET ${url.pathname}`, {
       request: {
-        fetch: (url: string, opts: RequestInit | undefined) => {
-          return fetch(
+        fetch: async (url: string, opts: RequestInit | undefined) => {
+          console.log('sdafsfsd');
+          const x = await fetch(
             `http://localhost:9999/api${new URL(url).pathname}`,
-            opts,
+            {
+              ...opts,
+              method: 'GET',
+            },
           );
+          console.log(x);
         },
       },
     });
+    console.log('dupa', headers);
   };
   useEffect(() => {
     if (token) {
@@ -659,19 +663,9 @@ const editor = () => {
         />
       </div>
       <div className="w-full">
-        <MDEditor
-          height={'100vh'}
-          value={getSelectedFileByPath()?.content}
-          previewOptions={{
-            transformImageUri: (src) => {
-              return !src.includes('https') || !src.includes('http')
-                ? `https://github.com/${selectedRepository?.full_name}/blob/${selectedBranch?.name}/${src}?raw=true`
-                : src;
-            },
-          }}
-          onChange={(e) => {
-            setSelectedFileContentByPath(e ? e : '');
-          }}
+        <Editor
+          selectedRepository={selectedRepository}
+          selectedBranch={selectedBranch}
         />
       </div>
     </Layout>
