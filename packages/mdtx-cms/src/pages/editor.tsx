@@ -664,6 +664,7 @@ const editor = () => {
       </div>
       <div className="w-full">
         <Editor
+          menuFnc={() => setMenuModal(MenuModalType.CHANGES)}
           selectedRepository={selectedRepository}
           selectedBranch={selectedBranch}
         />

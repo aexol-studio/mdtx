@@ -5,8 +5,8 @@
   "version": "0.1.0",
   "description": "Enables client-side applications to dance OAuth with Github.",
   "scripts": {
-    "build": "tsc",
-    "start": "node ./lib/index.js"
+    "build": "rimraf lib tsconfig.build.tsbuildinfo && ttsc --build tsconfig.build.json",
+    "start": "npm run build && node ./lib/index.js"
   },
   "dependencies": {
     "express": "^4.18.2",

@@ -3,8 +3,7 @@ import qs from 'querystring';
 import express from 'express';
 import proxy from 'express-http-proxy';
 import { IncomingHttpHeaders } from 'http';
-
-export const app = express();
+import { Response } from 'express-serve-static-core';
 
 const requriedEnv = <T extends string>(...envs: T[]): Record<T, string> =>
   envs.reduce((pv, cv: T) => {
@@ -53,6 +52,7 @@ const {
   },
   ...optionalEnv('PROXY_HOST', 'PORT'),
 };
+
 export const github = {
   clientId,
   clientSecret,
@@ -61,18 +61,28 @@ export const github = {
   path,
   method,
 };
+
 export const config = { host, port };
 if (isNaN(github.port)) {
   throw new Error('port must be a nubmer');
 }
 
-function authenticate(code, cb) {
+const authenticate = (
+  code: string,
+  cb: {
+    (err: string, token?: string | undefined): Response<
+      any,
+      Record<string, any>,
+      number
+    >;
+    (arg0: string | null, arg1: string | string[] | undefined): void;
+  },
+) => {
   const data = qs.stringify({
     client_id: github.clientId,
     client_secret: github.clientSecret,
     code: code,
   });
-
   const reqOptions = {
     host: github.host,
     port: github.port,
@@ -80,7 +90,6 @@ function authenticate(code, cb) {
     method: github.method,
     headers: { 'content-length': data.length },
   };
-
   let body = '';
   const req = https.request(reqOptions, function (res) {
     res.setEncoding('utf8');
@@ -91,16 +100,16 @@ function authenticate(code, cb) {
       cb(null, qs.parse(body).access_token);
     });
   });
-
   req.write(data);
   req.end();
   req.on('error', function (e) {
     cb(e.message);
   });
-}
+};
 
-// Convenience for allowing CORS on routes - GET only
-app.all('*', function (req, res, next) {
+export const app = express();
+
+app.all('*', (_req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -108,8 +117,8 @@ app.all('*', function (req, res, next) {
 });
 
 app.get('/authenticate/:code', (req, res) =>
-  authenticate(req.params.code, (err, token) =>
-    err || !token ? { error: err || 'bad_code' } : { token },
+  authenticate(req.params.code, (err: string, token?: string) =>
+    err || !token ? res.send({ error: err || 'bad_code' }) : res.send(token),
   ),
 );
 
@@ -130,7 +139,7 @@ app.use(
         const url = new URL(headers.location);
         if (url.host.includes('codeload')) {
           url.pathname = '/codeload' + url.pathname;
-          headers.location = config.host + url.pathname;
+          headers.location = config.host + url.pathname.replace('legacy.', '');
         }
       }
       return corsHeaders(headers);
@@ -142,15 +151,15 @@ app.use(
   '/codeload',
   proxy('codeload.github.com', {
     https: true,
-    proxyReqPathResolver: (req) => {
-      console.log(req);
-
-      return ``;
+    proxyReqPathResolver: (req) => req.url,
+    userResHeaderDecorator(headers) {
+      return corsHeaders(headers);
     },
 
-    userResHeaderDecorator: corsHeaders,
     filter: (req) => req.method !== 'OPTIONS',
   }),
 );
 
-app.options('/codeload/*', (_, res) => 'OK');
+app.options('/codeload/*', (req, res, next) => {
+  return 'OK';
+});
