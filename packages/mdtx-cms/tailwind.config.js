@@ -14,6 +14,12 @@ module.exports = {
         darkGray: '#232A2F',
         gray2: '#E6E6E6',
         gray3: '#B5BFCA',
+        editorWhite: '#E4E9EF',
+        editorBlack: '#0B0B0F',
+        editorYellow: '#F4FD3A',
+        editorBlue: '#005EEE',
+        editorGray0: '#8F8F8F',
+        editorGray1: '#545454',
       },
       keyframes: {
         mdtxPulse: {

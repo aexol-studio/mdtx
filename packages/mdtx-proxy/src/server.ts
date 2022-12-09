@@ -112,13 +112,15 @@ export const app = express();
 app.all('*', (_req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
   res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
 });
 
 app.get('/authenticate/:code', (req, res) =>
   authenticate(req.params.code, (err: string, token?: string) =>
-    err || !token ? res.send({ error: err || 'bad_code' }) : res.send(token),
+    err || !token
+      ? res.send({ error: err || 'bad_code' })
+      : res.send({ token }),
   ),
 );
 
@@ -146,20 +148,14 @@ app.use(
     },
   }),
 );
-///`https://codeload.github.com/aexol-studio/mdtx/legacy.zip/refs/heads/develop`
 app.use(
   '/codeload',
   proxy('codeload.github.com', {
     https: true,
     proxyReqPathResolver: (req) => req.url,
-    userResHeaderDecorator(headers) {
-      return corsHeaders(headers);
-    },
-
+    userResHeaderDecorator: corsHeaders,
     filter: (req) => req.method !== 'OPTIONS',
   }),
 );
 
-app.options('/codeload/*', (req, res, next) => {
-  return 'OK';
-});
+app.options('/codeload/*', (_, res) => res.send('OK'));

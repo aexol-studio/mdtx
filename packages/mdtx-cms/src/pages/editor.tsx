@@ -204,7 +204,7 @@ const editor = () => {
       })
         .then((response) => response.json())
         .then((data) => {
-          setTokenWithLocal(data);
+          setTokenWithLocal(data.token);
           setIsLoggedIn(true);
         })
         .finally(() => {
@@ -529,35 +529,28 @@ const editor = () => {
     },
   });
 
-  const getRepoZip = async () => {
-    const request = octokit.rest.repos.downloadZipballArchive.endpoint({
-      owner: 'aexol-studio',
-      repo: 'mdtx',
-      ref: 'develop',
-    });
-    const url = new URL(request.url);
-    const { headers } = await octokit.request(`GET ${url.pathname}`, {
-      request: {
-        fetch: async (url: string, opts: RequestInit | undefined) => {
-          console.log('sdafsfsd');
-          const x = await fetch(
-            `http://localhost:9999/api${new URL(url).pathname}`,
-            {
-              ...opts,
-              method: 'GET',
-            },
-          );
-          console.log(x);
-        },
-      },
-    });
-    console.log('dupa', headers);
-  };
-  useEffect(() => {
-    if (token) {
-      getRepoZip();
-    }
-  }, [token]);
+  // const getRepoZip = async () => {
+  //   const request = octokit.rest.repos.downloadZipballArchive.endpoint({
+  //     owner: 'aexol-studio',
+  //     repo: 'mdtx',
+  //     ref: 'master',
+  //   });
+  //   const url = new URL(request.url);
+  //   const { headers } = await octokit.request(`GET ${url.pathname}`, {
+  //     request: {
+  //       fetch: async (url: string, opts: RequestInit | undefined) =>
+  //         fetch(`http://localhost:9999/api${new URL(url).pathname}`, {
+  //           ...opts,
+  //         }),
+  //     },
+  //   });
+  //   console.log('dupa', headers);
+  // };
+  // useEffect(() => {
+  //   if (token) {
+  //     getRepoZip();
+  //   }
+  // }, [token]);
   return (
     <Layout isEditor pageTitle="MDtx Editor">
       {downloadModal && availableBranches?.length && (
