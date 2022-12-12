@@ -12,12 +12,14 @@ export const RepositoriesList: React.FC<{
         className="items-start mt-[1.2rem] flex gap-[0.8rem]"
       >
         <div className="relative max-w-[1.6rem] min-w-[1.6rem] max-h-[1.6rem] min-h-[1.6rem]">
-          <Image
-            width={32}
-            height={32}
-            alt={item.full_name}
-            src={item.owner.avatar_url}
-          />
+          {item.owner && (
+            <Image
+              width={32}
+              height={32}
+              alt={item.full_name}
+              src={item.owner.avatar_url}
+            />
+          )}
         </div>
         <p
           onClick={() => {

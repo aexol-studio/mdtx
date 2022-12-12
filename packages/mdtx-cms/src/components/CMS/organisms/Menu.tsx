@@ -99,11 +99,11 @@ export const Menu: React.FC<MenuInteface> = ({
                   height={24}
                   className="rounded-full"
                   alt="User Logo"
-                  src={selectedRepository?.owner.avatar_url || ''}
+                  src={selectedRepository?.owner?.avatar_url || ''}
                 />
               )}
               <p className="text-white select-none text-center text-[1.2rem]">
-                {selectedRepository?.owner.login}
+                {selectedRepository?.owner?.login}
               </p>
             </div>
           </div>
