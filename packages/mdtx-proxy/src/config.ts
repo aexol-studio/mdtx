@@ -15,48 +15,34 @@ const optionalEnv = <T extends string>(
       ...pv,
       ...(process.env[cv] && { [cv]: process.env[cv] }),
     }),
-    {} as Partial<Record<T, string>>
+    {} as Partial<Record<T, string>>,
   );
-
-const createPort = (() => {
-  if (process.env.FUNCTIONS_CUSTOMHANDLER_PORT) {
-    const envPort = parseInt(process.env.FUNCTIONS_CUSTOMHANDLER_PORT);
-    if (isNaN(envPort) || !envPort) {
-      throw new Error(
-        `${process.env.FUNCTIONS_CUSTOMHANDLER_PORT} is not a valid value for FUNCTIONS_CUSTOMHANDLER_PORT`
-      );
-    }
-    return envPort;
-  }
-  return process.env.PROXY_PORT;
-})();
 
 const {
   PROXY_HOST: host,
-  PROXY_PORT: port = createPort,
   github: {
     GITHUB_APPLICATION_CLIENT_ID: clientId,
     GITHUB_APPLICATION_CLIENT_SECRET: clientSecret,
-    GITHUB_APPLICATION_CLIENT_HOST: ghHost = "github.com",
-    GITHUB_APPLICATION_CLIENT_PORT: ghPort = "443",
-    GITHUB_APPLICATION_CLIENT_PATH: path = "/login/oauth/access_token",
-    GITHUB_APPLICATION_CLIENT_METHOD: method = "POST",
+    GITHUB_APPLICATION_CLIENT_HOST: ghHost = 'github.com',
+    GITHUB_APPLICATION_CLIENT_PORT: ghPort = '443',
+    GITHUB_APPLICATION_CLIENT_PATH: path = '/login/oauth/access_token',
+    GITHUB_APPLICATION_CLIENT_METHOD: method = 'POST',
   },
 } = {
   github: {
     ...requriedEnv(
-      "GITHUB_APPLICATION_CLIENT_ID",
-      "GITHUB_APPLICATION_CLIENT_SECRET"
+      'GITHUB_APPLICATION_CLIENT_ID',
+      'GITHUB_APPLICATION_CLIENT_SECRET',
     ),
     ...optionalEnv(
-      "PROXY_HOST",
-      "GITHUB_APPLICATION_CLIENT_HOST",
-      "GITHUB_APPLICATION_CLIENT_PORT",
-      "GITHUB_APPLICATION_CLIENT_PATH",
-      "GITHUB_APPLICATION_CLIENT_METHOD"
+      'PROXY_HOST',
+      'GITHUB_APPLICATION_CLIENT_HOST',
+      'GITHUB_APPLICATION_CLIENT_PORT',
+      'GITHUB_APPLICATION_CLIENT_PATH',
+      'GITHUB_APPLICATION_CLIENT_METHOD',
     ),
   },
-  ...optionalEnv("PROXY_HOST", "PROXY_PORT"),
+  ...optionalEnv('PROXY_HOST'),
 };
 
 export const github = {
@@ -68,7 +54,7 @@ export const github = {
   method,
 };
 
-export const config = { host, port };
+export const config = { host };
 if (isNaN(github.port)) {
-  throw new Error("port must be a number");
+  throw new Error('port must be a number');
 }
