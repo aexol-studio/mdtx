@@ -10,6 +10,7 @@ const httpTrigger: AzureFunction = async (_, req) => {
       headers: { ...req.headers, host: 'codeload.github.com' },
     },
   );
+  response.headers.delete('access-control-allow-origin');
   const body = await response.buffer();
   return {
     res: {
