@@ -6,7 +6,7 @@ export type UserType = {
   login: string;
   html_url: string;
   avatar_url: string;
-  name?: string;
+  name: string | null;
 };
 
 const AuthConatiner = createContainer(() => {

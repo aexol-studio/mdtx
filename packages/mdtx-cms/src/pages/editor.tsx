@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import {
@@ -15,6 +14,7 @@ import {
   PullRequestInput,
   PullRequestModal,
   SearchingType,
+  Editor,
 } from '../components';
 import {
   useFileState,
@@ -23,10 +23,9 @@ import {
   ToastType,
 } from '../containers';
 import { Layout } from '../layouts';
-import { useGithubCalls } from '../utils';
+import { useGitHub } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
 import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
-const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export type Organization = {
   login: string;
@@ -36,19 +35,19 @@ export type RepositoryFromSearch = {
   name: string;
   full_name: string;
   default_branch: string;
-  id: string;
+  id: number;
   node_id: string;
   fork: boolean;
   owner: {
     avatar_url: string;
     login: string;
-  };
-  permissions: {
+  } | null;
+  permissions?: {
     admin: boolean;
-    maintain: boolean;
-    push: boolean;
-    triage: boolean;
-    pull: boolean;
+    maintain?: boolean;
+    push?: boolean;
+    triage?: boolean;
+    pull?: boolean;
   };
 };
 export type availableBranchType = {
@@ -57,7 +56,7 @@ export type availableBranchType = {
     url: string;
   };
   name: string;
-  protected: false;
+  protected?: boolean;
 };
 export type PullRequestsType = {
   base: {
@@ -69,9 +68,9 @@ export type PullRequestsType = {
   user: {
     avatar_url: string;
     login: string;
-  };
+  } | null;
   title: string;
-  body: string;
+  body: string | null;
   updated_at: string;
 };
 export enum CommitingModes {
@@ -103,30 +102,11 @@ const editor = () => {
     formState: { errors: errorsPullRequest },
   } = useForm<PullRequestInput>();
 
-  const {
-    getGithubUser,
-    getUserOrganizations,
-    getRepositoryAsZIP,
-    getRepositoryBranches,
-    getRepositoryForks,
-    getRepositoryPullRequests,
-    getRepositoryFullInfo,
-    getGithubUserRepos,
-    getRepository,
-    doRepositoryFork,
-  } = useGithubCalls();
   const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
     useGithubActions();
 
-  const {
-    getSelectedFileByPath,
-    setSelectedFileContentByPath,
-    setFiles,
-    setOrginalFiles,
-    isFilesDirty,
-    modifiedFiles,
-    resetState,
-  } = useFileState();
+  const { setFiles, setOrginalFiles, isFilesDirty, modifiedFiles, resetState } =
+    useFileState();
 
   const {
     token,
@@ -148,7 +128,7 @@ const editor = () => {
   const [userForks, setUserForks] = useState<
     {
       full_name: string;
-      source: { full_name: string; owner: { login: string } };
+      source?: { full_name: string; owner: { login: string } };
     }[]
   >();
 
@@ -185,31 +165,36 @@ const editor = () => {
   const [doingFork, setDoingFork] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
   const { createToast } = useToasts();
+
+  const {
+    getGitHubToken,
+    getGitHubAfterLoginInfo,
+    getGitHubRepositoryAsZIP,
+    getGitHubRepositoryInfo,
+    getGitHubSearchRepositories,
+    getGitHubRepositoryBranches,
+    getGitHubRepositoryPullRequests,
+    getGitHubRepositoryForks,
+    doGitHubFork,
+  } = useGitHub();
+
   useEffect(() => {
     const url = window.location.href;
     const hasCode = url.includes('?code=');
     const hasError = url.includes('?error=');
-    // if (hasError) {
-    //   router.push('/');
-    // }
-    if (!token && hasCode) {
+    if (hasError) router.push('/');
+    if (!isLoggedIn && hasCode) {
       const newUrl = url.split('?code=');
-      const newestUrl = newUrl[1].split('&');
-      const requestData = {
-        code: newestUrl[0],
-      };
-      const proxy_url = process.env.NEXT_PUBLIC_PROXY || '';
-      fetch(proxy_url, {
-        method: 'POST',
-        body: JSON.stringify(requestData),
-      })
-        .then((response) => response.json())
+      const splittedUrl = newUrl[1].split('&');
+      const requestCode = splittedUrl[0];
+      getGitHubToken(requestCode)
         .then((data) => {
-          setTokenWithLocal(data.accessToken);
+          setTokenWithLocal(data.token);
           setIsLoggedIn(true);
-        })
-        .finally(() => {
           router.replace('/editor');
+        })
+        .catch(() => {
+          logOut();
         });
     }
   }, []);
@@ -227,52 +212,50 @@ const editor = () => {
     return () => window.removeEventListener('beforeunload', unloadCallback);
   }, []);
 
-  useEffect(() => {
-    if (isLoggedIn && token) {
-      getGithubUser(token).then(async (res) => {
-        if (res) {
-          const promiseORGS = getUserOrganizations(token);
-          const promiseUserRepos = getGithubUserRepos(token);
-          const [orgs, repos] = await Promise.all([
-            promiseORGS,
-            promiseUserRepos,
-          ]);
-          setOrganizations(orgs);
-          if (repos.length) {
-            const tempArr: {
-              full_name: string;
-              source: { full_name: string; owner: { login: string } };
-            }[] = [];
-            repos
-              .filter((x: { fork: boolean }) => x.fork)
-              .map((z: { full_name: string }) =>
-                getRepository(token, z.full_name).then((x) => tempArr.push(x)),
-              );
-            setUserRepos(repos);
-            setUserForks(tempArr);
-            setIsLoggedIn(true);
-            setLoggedData(res);
-          }
-        }
-      });
+  const afterLoginInfo = async () => {
+    const { orgs, repos, user } = await getGitHubAfterLoginInfo();
+    setOrganizations(orgs);
+    setUserRepos(repos);
+    if (repos.length) {
+      const tempArr: {
+        full_name: string;
+        source?: { full_name: string; owner: { login: string } };
+      }[] = [];
+      repos
+        .filter((x) => x.fork)
+        .map((z: { full_name: string }) =>
+          getGitHubRepositoryInfo({
+            owner: z.full_name.split('/')[0],
+            repo: z.full_name.split('/')[1],
+          }).then((x) => {
+            if (x) {
+              tempArr.push(x);
+            }
+          }),
+        );
+      setUserForks(tempArr);
+      setLoggedData(user);
+      setIsLoggedIn(true);
     }
-  }, [isLoggedIn, token]);
+  };
+  useEffect(() => {
+    if (isLoggedIn) {
+      afterLoginInfo();
+    }
+  }, [isLoggedIn]);
   const controllerZIP = new AbortController();
 
   const confirmBranchClick = async (branchName?: string) => {
-    if (token && selectedRepository && selectedBranch) {
+    if (isLoggedIn && selectedRepository && selectedBranch) {
       setDownloadZIP(true);
-      const JSONResponse = await getRepositoryAsZIP(
-        token,
-        selectedRepository?.full_name,
-        branchName ? branchName : selectedBranch?.name,
-        controllerZIP,
-      );
+      const response = await getGitHubRepositoryAsZIP({
+        owner: selectedRepository?.full_name.split('/')[0],
+        repo: selectedRepository?.full_name.split('/')[1],
+        ref: branchName ? branchName : selectedBranch.name,
+      });
 
-      if (JSONResponse !== undefined) {
-        const paths = JSONResponse.fileArray.filter(
-          (z: { name: string | string[] }) => z.name.includes('.md'),
-        );
+      if (response !== undefined) {
+        const paths = response.filter((z) => z.name.includes('.md'));
         const tree = treeBuilder(paths);
         setRepositoryTree(tree);
         setFiles(paths);
@@ -291,14 +274,15 @@ const editor = () => {
   };
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
     setSelectedRepository(item);
-    if (token) {
-      const promiseBranches = getRepositoryBranches(token, item.full_name);
-      const promisePullRequest = getRepositoryPullRequests(
-        token,
-        item.full_name,
-      );
-      const promiseForks = getRepositoryForks(token, item.full_name);
-      const promiseAboutFork = getRepositoryFullInfo(token, item.full_name);
+    if (isLoggedIn) {
+      const input = {
+        owner: item.full_name.split('/')[0],
+        repo: item.full_name.split('/')[1],
+      };
+      const promiseBranches = getGitHubRepositoryBranches(input);
+      const promisePullRequest = getGitHubRepositoryPullRequests(input);
+      const promiseForks = getGitHubRepositoryForks(input);
+      const promiseAboutFork = getGitHubRepositoryInfo(input);
       const [branches, pullRequests, forks, aboutFork] = await Promise.all([
         promiseBranches,
         promisePullRequest,
@@ -351,6 +335,7 @@ const editor = () => {
       token &&
       filesToSend &&
       selectedRepository &&
+      selectedRepository.owner &&
       modifiedFiles &&
       selectedBranch
     ) {
@@ -398,6 +383,7 @@ const editor = () => {
       token &&
       filesToSend &&
       selectedRepository &&
+      selectedRepository.owner &&
       modifiedFiles &&
       selectedBranch
     ) {
@@ -451,10 +437,11 @@ const editor = () => {
       });
     }
   };
+
   const controller = new AbortController();
   const { signal } = controller;
   useEffect(() => {
-    const timer = setTimeout(async () => {
+    const timer = setTimeout(() => {
       if (autoCompleteValue !== '' && autoCompleteValue !== undefined) {
         setLoadingFullTree(true);
         setRepositoriesFromSearch(undefined);
@@ -462,33 +449,27 @@ const editor = () => {
         setRepositoryTree(undefined);
         resetState();
         const organizationsString = organizations
-          ?.map((x) => `%20org:${x.login}`)
+          ?.map((x) => ` org:${x.login}`)
           .toString()
           .replaceAll(',', '');
-        const response = await fetch(
-          `https://api.github.com/search/repositories?q=${autoCompleteValue}${
-            searchingMode === SearchingType.USER ||
-            searchingMode === SearchingType.ALLALLOWED
-              ? `%20user:${loggedData?.login}`
-              : ''
-          }${
-            searchingMode === SearchingType.ORGANIZATIONS ||
-            searchingMode === SearchingType.ALLALLOWED
-              ? organizationsString
-              : ''
-          }${includeForks ? '%20fork:true' : ''}&per_page=100`,
-          {
-            signal: signal,
-            method: 'GET',
-            headers: {
-              Accept: 'application/vnd.github+json',
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-        const res = await response.json();
-        setRepositoriesFromSearch(res.items);
-        setLoadingFullTree(false);
+        const queryString = `${autoCompleteValue}${
+          searchingMode === SearchingType.USER ||
+          searchingMode === SearchingType.ALLALLOWED
+            ? ` user:${loggedData?.login}`
+            : ''
+        }${
+          searchingMode === SearchingType.ORGANIZATIONS
+            ? organizationsString
+            : ''
+        }${includeForks ? ` fork:true` : ``}`;
+        getGitHubSearchRepositories(queryString, signal)
+          .then((res) => {
+            setRepositoriesFromSearch(res.items);
+            setLoadingFullTree(false);
+          })
+          .catch(() => {
+            setLoadingFullTree(false);
+          });
       }
     }, 500);
     return () => {
@@ -498,6 +479,7 @@ const editor = () => {
       clearTimeout(timer);
     };
   }, [autoCompleteValue, includeForks, searchingMode]);
+
   const backToSearch = () => {
     setRepositoryTree(undefined);
     setSelectedBranch(undefined);
@@ -505,11 +487,15 @@ const editor = () => {
     setAvailablePullRequests(undefined);
     setRepositoryTree(undefined);
   };
+
   const doForkFunction = (fullName: string) => {
-    if (token) {
+    if (isLoggedIn) {
       setDoingFork(true);
       createToast(ToastType.MESSAGE, 'Creating fork!');
-      doRepositoryFork(token, fullName).then((response) => {
+      doGitHubFork({
+        owner: fullName.split('/')[0],
+        repo: fullName.split('/')[1],
+      }).then((response) => {
         if (response) {
           createToast(ToastType.SUCCESS, 'Fork created!');
           setAutoCompleteValue('');
@@ -626,19 +612,10 @@ const editor = () => {
         />
       </div>
       <div className="w-full">
-        <MDEditor
-          height={'100vh'}
-          value={getSelectedFileByPath()?.content}
-          previewOptions={{
-            transformImageUri: (src) => {
-              return !src.includes('https') || !src.includes('http')
-                ? `https://github.com/${selectedRepository?.full_name}/blob/${selectedBranch?.name}/${src}?raw=true`
-                : src;
-            },
-          }}
-          onChange={(e) => {
-            setSelectedFileContentByPath(e ? e : '');
-          }}
+        <Editor
+          menuFnc={() => setMenuModal(MenuModalType.CHANGES)}
+          selectedRepository={selectedRepository}
+          selectedBranch={selectedBranch}
         />
       </div>
     </Layout>

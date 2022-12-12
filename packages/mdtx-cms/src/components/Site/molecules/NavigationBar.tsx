@@ -1,20 +1,35 @@
 import Link from 'next/link';
-import  { useEffect, useState } from 'react';
-import { GithubIcon,  MDtxLogo } from '@/src/assets';
+import { useEffect, useState } from 'react';
+import { GithubIcon, MDtxLogo } from '@/src/assets';
 import { NavigationData } from '@/src/datas/NavigationData';
 import { GithubStars, MobileNavbar } from '@/src/components/Site/atoms/';
-import { useGithubCalls } from '@/src/utils/useGithubCalls';
+
+const getRepositoryMDtx = async () => {
+  const response = await fetch(
+    'https://api.github.com/repos/aexol-studio/mdtx',
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+  const responseParse = await response.json();
+  return responseParse;
+};
+
+const LoginLink = `https://github.com/login/oauth/authorize?scope=repo%20read:user%20write:org%20read:org&client_id=${process.env.NEXT_PUBLIC_CLIENT_ID}&redirect_uri=${process.env.NEXT_PUBLIC_REDIRECT_URI}`;
 
 export const NavigationBar = () => {
   const [stars, setStars] = useState<number>();
   const [hideNavbar, setHideNavbar] = useState(false);
-  const { getRepositoryMDtx } = useGithubCalls();
 
   useEffect(() => {
-    getRepositoryMDtx().then((response) => {
-      const { stargazers_count } = response;
-      setStars(stargazers_count);
-    });
+    if (!stars)
+      getRepositoryMDtx().then((response) => {
+        const { stargazers_count } = response;
+        setStars(stargazers_count);
+      });
   }, []);
 
   useEffect(() => {
@@ -45,7 +60,7 @@ export const NavigationBar = () => {
     >
       <div className="max-w-[90%] mx-auto w-full xl:max-w-[1068px] flex justify-between items-center relative">
         <div className="w-full h-full absolute right-[0]">
-          <MobileNavbar/>
+          <MobileNavbar />
         </div>
         <div className="z-[99] min-w-[12rem] min-h-[4.8rem] flex items-center justify-center">
           <Link aria-label="MDtx" href={'/'}>
@@ -71,7 +86,7 @@ export const NavigationBar = () => {
             ))}
             <Link
               className="w-fit flex items-center gap-[0.8rem] select-none ml-[1.6rem] lg:ml-[3.2rem] font-[400] text-[1.4rem] leading-[2.4rem] text-mdtxWhite"
-              href={'/api/githublogin'}
+              href={LoginLink}
             >
               Sign in with GitHub
               <div className="mb-[0.6rem]">

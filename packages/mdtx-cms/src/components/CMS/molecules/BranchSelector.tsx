@@ -143,7 +143,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
 
                   <div className="w-full justify-between mt-[1.2rem] flex">
                     <div className="flex items-center gap-[0.8rem] ">
-                      {pr.user.avatar_url && (
+                      {pr?.user?.avatar_url && (
                         <Image
                           priority
                           width={24}
@@ -154,7 +154,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                         />
                       )}
                       <p className="select-none text-[1.2rem] text-center font-[400] text-white">
-                        Authored by: {pr.user.login}
+                        Authored by: {pr?.user?.login}
                       </p>
                     </div>
                     <Button

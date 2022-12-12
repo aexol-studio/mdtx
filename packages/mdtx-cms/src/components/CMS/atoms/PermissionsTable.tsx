@@ -3,10 +3,10 @@ import { Check, NotCheck } from '@/src/assets';
 export const PermissionsTable: React.FC<{
   permissions?: {
     admin: boolean;
-    maintain: boolean;
-    push: boolean;
-    triage: boolean;
-    pull: boolean;
+    maintain?: boolean;
+    push?: boolean;
+    triage?: boolean;
+    pull?: boolean;
   };
 }> = ({ permissions }) => (
   <div className="flex flex-col w-full">

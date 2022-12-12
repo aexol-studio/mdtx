@@ -10,6 +10,7 @@
     "build": "npm run build --ws --if-present",
     "buildCore": "npm run build -w packages/mdtx-core",
     "cms": "npm run dev -w packages/mdtx-cms",
+    "proxy": "npm run start -w packages/mdtx-proxy",
     "examplestart": "node packages/mdtx-cli/lib/CLI.js",
     "exampleinit": "node packages/mdtx-cli/lib/CLI.js init",
     "dev": "npm run dev -w sandbox/mdtx-nextjs-example"
@@ -35,12 +36,13 @@
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
     "ttypescript": "^1.5.13",
-    "typescript": "^4.8.4",
+    "typescript": "4.8.4",
     "typescript-transform-paths": "^3.3.1"
   },
   "workspaces": [
     "./packages/mdtx-core",
     "./packages/mdtx-cli",
+    "./packages/mdtx-proxy",
     "./packages/mdtx-plugin-nextjs",
     "./packages/mdtx-cms",
     "./sandbox/mdtx-example",

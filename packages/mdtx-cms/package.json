@@ -11,7 +11,7 @@
   "dependencies": {
     "@next/font": "^13.0.3",
     "@typed/uuid": "^9.7.0",
-    "@uiw/react-md-editor": "^3.19.3",
+    "@uiw/react-md-editor": "^3.19.8",
     "graphql": "^16.6.0",
     "graphql-zeus": "^5.2.0",
     "jszip": "^3.10.1",
@@ -19,6 +19,7 @@
     "mdtx-plugin-nextjs": "*",
     "next": "latest",
     "next-remove-imports": "^1.0.8",
+    "octokit": "^2.0.10",
     "react": "^18.2.0",
     "react-diff-viewer-continued": "^3.2.3",
     "react-dom": "^18.2.0",

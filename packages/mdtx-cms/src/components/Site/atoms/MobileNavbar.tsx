@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { Hamburger, CloseIconSvg, GithubIcon, AexolAsSvg } from '@/src/assets';
 import { NavigationData } from '@/src/datas/NavigationData';
 
+const LoginLink = `https://github.com/login/oauth/authorize?scope=repo%20read:user%20write:org%20read:org&client_id=${process.env.NEXT_PUBLIC_CLIENT_ID}&redirect_uri=${process.env.NEXT_PUBLIC_REDIRECT_URI}`;
+
 export const MobileNavbar = () => {
   const [navVisible, setNavVisible] = useState(false);
   useEffect(() => {
@@ -39,7 +41,7 @@ export const MobileNavbar = () => {
             ))}
             <Link
               className="w-fit flex items-center gap-[1.6rem] select-none ml-[4.2rem] font-[400] text-[2.4rem] leading-[2.4rem] text-mdtxWhite"
-              href={'/api/githublogin'}
+              href={LoginLink}
             >
               Sign in with GitHub
               <div className="mb-[0.6rem]">

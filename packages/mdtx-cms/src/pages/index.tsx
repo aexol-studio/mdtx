@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Layout } from '@/src/layouts';
 import { WhatIsMDtxContent } from '@/src/datas/WhatIsMDtxData';
 import { HeroSection } from '@/src/components/Site';
