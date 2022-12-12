@@ -7,6 +7,7 @@ export const useGitHub = () => {
   const octokit = new Octokit({
     auth: token,
   });
+
   //USE: FOR SEARCH FOR REPOSITORIES
   const getGitHubSearchRepositories = async (
     q: string,
@@ -14,8 +15,6 @@ export const useGitHub = () => {
   ) => {
     const { data } = await octokit.rest.search.repos({
       q,
-      sort: 'updated',
-      order: 'desc',
       per_page: 100,
       request: { signal },
     });
