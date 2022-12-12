@@ -109,6 +109,7 @@ const editor = () => {
     useFileState();
 
   const {
+    token,
     isLoggedIn,
     setLoggedData,
     loggedData,
@@ -319,124 +320,123 @@ const editor = () => {
       }
     }
   };
-  const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {};
-  const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {};
-  // const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {
-  //   setSubmittingCommit(true);
-  //   const filesToSend: { path: string; contents: string }[] = [];
-  //   modifiedFiles.map((x) => {
-  //     const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
-  //     filesToSend.push({
-  //       path: x.name.slice(x.name.indexOf('/') + 1),
-  //       contents: doBuffer,
-  //     });
-  //   });
-  //   if (
-  //     token &&
-  //     filesToSend &&
-  //     selectedRepository &&
-  //     selectedRepository.owner &&
-  //     modifiedFiles &&
-  //     selectedBranch
-  //   ) {
-  //     getOid(token, {
-  //       branchName: selectedBranch.name,
-  //       repositoryName: selectedRepository.name,
-  //       repositoryOwner: selectedRepository.owner.login,
-  //     }).then((oidArray) => {
-  //       createCommitOnBranch(token, {
-  //         branch: {
-  //           branchName: selectedBranch.name,
-  //           repositoryNameWithOwner: selectedRepository.full_name,
-  //         },
-  //         expectedHeadOid: oidArray[0].oid,
-  //         message: {
-  //           headline: data.commitHeadlineMessage,
-  //           body: data.commitBodyMessage,
-  //         },
-  //         fileChanges: {
-  //           additions: filesToSend,
-  //         },
-  //       }).then((createdCommit) => {
-  //         if (createdCommit.commit?.oid) {
-  //           resetState();
-  //           confirmBranchClick().then(() => {
-  //             setSubmittingCommit(false);
-  //             setMenuModal(undefined);
-  //           });
-  //         }
-  //       });
-  //     });
-  //   }
-  // };
-  // const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {
-  //   setPullRequest(true);
-  //   const filesToSend: { path: string; contents: string }[] = [];
-  //   modifiedFiles.map((x) => {
-  //     const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
-  //     filesToSend.push({
-  //       path: x.name.slice(x.name.indexOf('/') + 1),
-  //       contents: doBuffer,
-  //     });
-  //   });
-  //   if (
-  //     token &&
-  //     filesToSend &&
-  //     selectedRepository &&
-  //     selectedRepository.owner &&
-  //     modifiedFiles &&
-  //     selectedBranch
-  //   ) {
-  //     getOid(token, {
-  //       branchName: selectedBranch.name,
-  //       repositoryName: selectedRepository.name,
-  //       repositoryOwner: selectedRepository.owner.login,
-  //     }).then((oidArray) => {
-  //       createBranch(token, {
-  //         name: `refs/heads/${data.newBranchName}`,
-  //         oid: oidArray[0].oid,
-  //         repositoryId: selectedRepository.node_id,
-  //       }).then((createdBranch) => {
-  //         const ref = createdBranch.ref;
-  //         if (ref) {
-  //           createCommitOnBranch(token, {
-  //             branch: {
-  //               branchName: ref.name,
-  //               repositoryNameWithOwner: selectedRepository.full_name,
-  //             },
-  //             expectedHeadOid: oidArray[0].oid,
-  //             message: {
-  //               headline: data.commitHeadlineMessage,
-  //               body: data.commitBodyMessage,
-  //             },
-  //             fileChanges: {
-  //               additions: filesToSend,
-  //             },
-  //           }).then((createdCommit) => {
-  //             if (createdCommit) {
-  //               createPullRequest(token, {
-  //                 baseRefName: data.selectedTargetBranch,
-  //                 headRefName: ref.name,
-  //                 repositoryId: selectedRepository.node_id,
-  //                 title: data.pullRequestTitle,
-  //                 body: data.pullRequestMessage,
-  //               }).then((pr) => {
-  //                 if (pr.pullRequest) {
-  //                   resetState();
-  //                   confirmBranchClick(ref.name).then(() => {
-  //                     setPullRequest(false);
 
-  //                     setMenuModal(undefined);
-  //                   });
-  //                 }
-  //               });
-  //             }
-  //           });
-  //         }
-  //       });
-  //     });
-  //   }
-  // };
+  const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {
+    setSubmittingCommit(true);
+    const filesToSend: { path: string; contents: string }[] = [];
+    modifiedFiles.map((x) => {
+      const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+      filesToSend.push({
+        path: x.name.slice(x.name.indexOf('/') + 1),
+        contents: doBuffer,
+      });
+    });
+    if (
+      token &&
+      filesToSend &&
+      selectedRepository &&
+      selectedRepository.owner &&
+      modifiedFiles &&
+      selectedBranch
+    ) {
+      getOid(token, {
+        branchName: selectedBranch.name,
+        repositoryName: selectedRepository.name,
+        repositoryOwner: selectedRepository.owner.login,
+      }).then((oidArray) => {
+        createCommitOnBranch(token, {
+          branch: {
+            branchName: selectedBranch.name,
+            repositoryNameWithOwner: selectedRepository.full_name,
+          },
+          expectedHeadOid: oidArray[0].oid,
+          message: {
+            headline: data.commitHeadlineMessage,
+            body: data.commitBodyMessage,
+          },
+          fileChanges: {
+            additions: filesToSend,
+          },
+        }).then((createdCommit) => {
+          if (createdCommit.commit?.oid) {
+            resetState();
+            confirmBranchClick().then(() => {
+              setSubmittingCommit(false);
+              setMenuModal(undefined);
+            });
+          }
+        });
+      });
+    }
+  };
+  const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {
+    setPullRequest(true);
+    const filesToSend: { path: string; contents: string }[] = [];
+    modifiedFiles.map((x) => {
+      const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+      filesToSend.push({
+        path: x.name.slice(x.name.indexOf('/') + 1),
+        contents: doBuffer,
+      });
+    });
+    if (
+      token &&
+      filesToSend &&
+      selectedRepository &&
+      selectedRepository.owner &&
+      modifiedFiles &&
+      selectedBranch
+    ) {
+      getOid(token, {
+        branchName: selectedBranch.name,
+        repositoryName: selectedRepository.name,
+        repositoryOwner: selectedRepository.owner.login,
+      }).then((oidArray) => {
+        createBranch(token, {
+          name: `refs/heads/${data.newBranchName}`,
+          oid: oidArray[0].oid,
+          repositoryId: selectedRepository.node_id,
+        }).then((createdBranch) => {
+          const ref = createdBranch.ref;
+          if (ref) {
+            createCommitOnBranch(token, {
+              branch: {
+                branchName: ref.name,
+                repositoryNameWithOwner: selectedRepository.full_name,
+              },
+              expectedHeadOid: oidArray[0].oid,
+              message: {
+                headline: data.commitHeadlineMessage,
+                body: data.commitBodyMessage,
+              },
+              fileChanges: {
+                additions: filesToSend,
+              },
+            }).then((createdCommit) => {
+              if (createdCommit) {
+                createPullRequest(token, {
+                  baseRefName: data.selectedTargetBranch,
+                  headRefName: ref.name,
+                  repositoryId: selectedRepository.node_id,
+                  title: data.pullRequestTitle,
+                  body: data.pullRequestMessage,
+                }).then((pr) => {
+                  if (pr.pullRequest) {
+                    resetState();
+                    confirmBranchClick(ref.name).then(() => {
+                      setPullRequest(false);
+
+                      setMenuModal(undefined);
+                    });
+                  }
+                });
+              }
+            });
+          }
+        });
+      });
+    }
+  };
 
   const controller = new AbortController();
   const { signal } = controller;

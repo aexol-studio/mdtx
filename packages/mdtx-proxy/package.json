@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "start": "npm run build && func start",
-    "build": "rimraf lib && tsc"
+    "build": "rimraf lib && tsc",
+    "deploy": "func azure functionapp publish mdtx-proxy-github-dev -b remote"
   },
   "keywords": [],
   "author": "",

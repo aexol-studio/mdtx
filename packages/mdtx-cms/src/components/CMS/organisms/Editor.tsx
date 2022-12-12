@@ -1,11 +1,15 @@
-import React, { CSSProperties, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useFileState } from '@/src/containers';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import { TextAreaTextApi, TextState } from '@uiw/react-md-editor';
+import { Code } from '../editor-functions';
+import { Bold } from '../editor-functions/Bold';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 type commandsType = typeof import('@uiw/react-md-editor/lib/commands/index');
+export type utilsType =
+  typeof import('@uiw/react-md-editor/lib/utils/markdownUtils');
 
 export const Editor: React.FC<{
   selectedRepository: RepositoryFromSearch | undefined;
@@ -16,11 +20,16 @@ export const Editor: React.FC<{
     useFileState();
 
   const [commands, setCommands] = useState<commandsType>();
+  const [utils, setUtils] = useState<utilsType>();
 
   const loaderCommands = async () => {
     const commands = await import('@uiw/react-md-editor').then(
       (mod) => mod.commands,
     );
+    const utils = await import('@uiw/react-md-editor').then(
+      (mod) => mod.MarkdownUtil,
+    );
+    setUtils(utils);
     setCommands(commands);
   };
 
@@ -61,32 +70,6 @@ export const Editor: React.FC<{
     },
   ];
 
-  const Bold = {
-    name: 'Bold',
-    keyCommand: 'Bold',
-    buttonProps: { 'aria-label': 'Insert bold' },
-    icon: (
-      <svg
-        width="24"
-        height="25"
-        viewBox="0 0 24 25"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M6 12.5H14C16.2091 12.5 18 10.7091 18 8.5C18 6.29086 16.2091 4.5 14 4.5H6V12.5ZM6 12.5H15C17.2091 12.5 19 14.2909 19 16.5C19 18.7091 17.2091 20.5 15 20.5H6V12.5Z"
-          stroke="#E1E5EE"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    ),
-    execute: () => {
-      console.log('Bold');
-    },
-  };
-
   const Italic = {
     name: 'Bold',
     keyCommand: 'Bold',
@@ -108,8 +91,19 @@ export const Editor: React.FC<{
         />
       </svg>
     ),
-    execute: () => {
-      console.log('Italic');
+    execute: (state: TextState, api: TextAreaTextApi) => {
+      if (utils) {
+        const newSelectionRange = utils.selectWord({
+          text: state.text,
+          selection: state.selection,
+        });
+        const state1 = api.setSelectionRange(newSelectionRange);
+        const state2 = api.replaceSelection(`*${state1.selectedText}*`);
+        api.setSelectionRange({
+          start: state2.selection.end - 1 - state1.selectedText.length,
+          end: state2.selection.end - 1,
+        });
+      }
     },
   };
 
@@ -131,8 +125,118 @@ export const Editor: React.FC<{
         />
       </svg>
     ),
-    execute: () => {
-      console.log('LineThrough');
+    execute: (state: TextState, api: TextAreaTextApi) => {
+      if (utils) {
+        const newSelectionRange = utils.selectWord({
+          text: state.text,
+          selection: state.selection,
+        });
+        const state1 = api.setSelectionRange(newSelectionRange);
+        const state2 = api.replaceSelection(`~~${state1.selectedText}~~`);
+        api.setSelectionRange({
+          start: state2.selection.end - 2 - state1.selectedText.length,
+          end: state2.selection.end - 2,
+        });
+      }
+    },
+  };
+
+  const Quotes = {
+    name: 'Quotes',
+    keyCommand: 'Quotes',
+    buttonProps: { 'aria-label': 'Insert quotes' },
+    icon: (
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 16 17"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M16 3.44629V7.44629C16 11.7281 14.0655 13.9478 10.0012 15.0368C9.52546 15.1643 9.05834 14.8044 9.05834 14.3119V13.2527C9.05834 12.9384 9.25296 12.6548 9.54856 12.548C11.611 11.803 12.75 11.2605 12.75 8.94629H10.5C9.67156 8.94629 9 8.27473 9 7.44629V3.44629C9 2.61785 9.67156 1.94629 10.5 1.94629H14.5C15.3284 1.94629 16 2.61785 16 3.44629ZM5.5 1.94629H1.5C0.671562 1.94629 0 2.61785 0 3.44629V7.44629C0 8.27473 0.671562 8.94629 1.5 8.94629H3.75C3.75 11.2605 2.61096 11.803 0.548558 12.548C0.252964 12.6548 0.0583389 12.9384 0.0583389 13.2527V14.3119C0.0583389 14.8044 0.525464 15.1643 1.00125 15.0368C5.06546 13.9478 7 11.7281 7 7.44629V3.44629C7 2.61785 6.32844 1.94629 5.5 1.94629Z"
+          fill="#E1E5EE"
+        />
+      </svg>
+    ),
+    execute: (state: TextState, api: TextAreaTextApi) => {
+      if (utils) {
+        const newSelectionRange = utils.selectWord({
+          text: state.text,
+          selection: state.selection,
+        });
+        const state1 = api.setSelectionRange(newSelectionRange);
+        const breaksBeforeCount = utils.getBreaksNeededForEmptyLineBefore(
+          state1.text,
+          state1.selection.start,
+        );
+        const breaksBefore = Array(breaksBeforeCount + 1).join('\n');
+        const breaksAfterCount = utils.getBreaksNeededForEmptyLineAfter(
+          state1.text,
+          state1.selection.end,
+        );
+        const breaksAfter = Array(breaksAfterCount + 1).join('\n');
+        api.replaceSelection(
+          `${breaksBefore}> ${state1.selectedText}${breaksAfter}`,
+        );
+        const selectionStart = state1.selection.start + breaksBeforeCount + 2;
+        const selectionEnd = selectionStart + state1.selectedText.length;
+        api.setSelectionRange({
+          start: selectionStart,
+          end: selectionEnd,
+        });
+      }
+    },
+  };
+
+  const CodeBlock = {
+    name: 'CodeBlock',
+    keyCommand: 'CodeBlock',
+    buttonProps: { 'aria-label': 'Insert CodeBlock' },
+    icon: (
+      <svg
+        width="24"
+        height="25"
+        viewBox="0 0 24 25"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M17 17.5L22 12.5L17 7.5M7 7.5L2 12.5L7 17.5M14 3.5L10 21.5"
+          stroke="#E1E5EE"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+    execute: (tate: TextState, api: TextAreaTextApi) => {
+      if (utils) {
+        const newSelectionRange = utils.selectWord({
+          text: tate.text,
+          selection: tate.selection,
+        });
+        const state1 = api.setSelectionRange(newSelectionRange);
+        const breaksBeforeCount = utils.getBreaksNeededForEmptyLineBefore(
+          state1.text,
+          state1.selection.start,
+        );
+        const breaksBefore = Array(breaksBeforeCount + 1).join('\n');
+        const breaksAfterCount = utils.getBreaksNeededForEmptyLineAfter(
+          state1.text,
+          state1.selection.end,
+        );
+        const breaksAfter = Array(breaksAfterCount + 1).join('\n');
+        api.replaceSelection(
+          `${breaksBefore}\`\`\`\n${state1.selectedText}\n\`\`\`${breaksAfter}`,
+        );
+        const selectionStart = state1.selection.start + breaksBeforeCount + 4;
+        const selectionEnd = selectionStart + state1.selectedText.length;
+        api.setSelectionRange({
+          start: selectionStart,
+          end: selectionEnd,
+        });
+      }
     },
   };
 
@@ -194,8 +298,16 @@ export const Editor: React.FC<{
     .wmde-markdown-color {
       background-color: #1E1E2C !important;
     }
+    .w-md-editor-preview {
+      height: 100%;
+      width: 40%;
+    }
+    .w-md-editor-input {
+      height: 100%;
+      width: 60%;
+    }
   `;
-  return commands ? (
+  return commands && utils ? (
     <>
       <style>{hardStyles}</style>
       <MDEditor
@@ -258,11 +370,17 @@ export const Editor: React.FC<{
             ),
           }),
           commands.divider,
-          commands.group([], Bold),
+          commands.group([], Bold(utils)),
           commands.divider,
           commands.group([], Italic),
           commands.divider,
           commands.group([], Through),
+          commands.divider,
+          commands.group([], Quotes),
+          commands.divider,
+          commands.group([], Code(utils)),
+          commands.divider,
+          commands.group([], CodeBlock),
         ]}
       />
     </>
