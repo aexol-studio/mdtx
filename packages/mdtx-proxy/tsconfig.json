@@ -2,7 +2,7 @@
   "compilerOptions": {
     "sourceMap": true,
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "CommonJS",
     "experimentalDecorators": true,
     "skipLibCheck": true,
     "declaration": true,
@@ -12,19 +12,10 @@
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "outDir": "./lib",
-    "rootDir": "./src",
+    "rootDir": ".",
     "paths": {
       "@/*": ["./*"]
     },
-    "plugins": [
-      {
-        "transform": "typescript-transform-paths"
-      },
-      {
-        "transform": "typescript-transform-paths",
-        "afterDeclarations": true
-      }
-    ],
     "baseUrl": "./"
   },
   "exclude": ["node_modules", "lib", "coverage", "jest.config.ts"]

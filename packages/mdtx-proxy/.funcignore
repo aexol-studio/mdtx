@@ -1,0 +1,9 @@
+*.js.map
+.git*
+.env
+.vscode
+local.settings.json
+package-lock.json
+node_modules/@types/
+node_modules/azure-functions-core-tools/
+node_modules/typescript/

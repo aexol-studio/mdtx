@@ -23,10 +23,9 @@ import {
   ToastType,
 } from '../containers';
 import { Layout } from '../layouts';
-import { useGithubCalls } from '../utils';
+import { useGitHub, useGithubCalls } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
 import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
-import { Octokit } from 'octokit';
 
 export type Organization = {
   login: string;
@@ -36,19 +35,19 @@ export type RepositoryFromSearch = {
   name: string;
   full_name: string;
   default_branch: string;
-  id: string;
+  id: number;
   node_id: string;
   fork: boolean;
   owner: {
     avatar_url: string;
     login: string;
-  };
-  permissions: {
+  } | null;
+  permissions?: {
     admin: boolean;
-    maintain: boolean;
-    push: boolean;
-    triage: boolean;
-    pull: boolean;
+    maintain?: boolean;
+    push?: boolean;
+    triage?: boolean;
+    pull?: boolean;
   };
 };
 export type availableBranchType = {
@@ -104,29 +103,17 @@ const editor = () => {
   } = useForm<PullRequestInput>();
 
   const {
-    getGithubUser,
-    getUserOrganizations,
     getRepositoryAsZIP,
     getRepositoryBranches,
     getRepositoryForks,
     getRepositoryPullRequests,
     getRepositoryFullInfo,
-    getGithubUserRepos,
-    getRepository,
-    doRepositoryFork,
   } = useGithubCalls();
   const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
     useGithubActions();
 
-  const {
-    getSelectedFileByPath,
-    setSelectedFileContentByPath,
-    setFiles,
-    setOrginalFiles,
-    isFilesDirty,
-    modifiedFiles,
-    resetState,
-  } = useFileState();
+  const { setFiles, setOrginalFiles, isFilesDirty, modifiedFiles, resetState } =
+    useFileState();
 
   const {
     token,
@@ -148,7 +135,7 @@ const editor = () => {
   const [userForks, setUserForks] = useState<
     {
       full_name: string;
-      source: { full_name: string; owner: { login: string } };
+      source?: { full_name: string; owner: { login: string } };
     }[]
   >();
 
@@ -185,30 +172,33 @@ const editor = () => {
   const [doingFork, setDoingFork] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
   const { createToast } = useToasts();
+
+  const {
+    getGitHubToken,
+    getGitHubAfterLoginInfo,
+    getGitHubRepositoryAsZIP,
+    getGitHubRepositoryInfo,
+    getGitHubSearchRepositories,
+    doGitHubFork,
+  } = useGitHub();
+
   useEffect(() => {
     const url = window.location.href;
     const hasCode = url.includes('?code=');
     const hasError = url.includes('?error=');
-    if (hasError) {
-      router.push('/');
-    }
+    if (hasError) router.push('/');
     if (!token && hasCode) {
       const newUrl = url.split('?code=');
       const splittedUrl = newUrl[1].split('&');
       const requestCode = splittedUrl[0];
-      fetch(`http://localhost:9999/authenticate/${requestCode}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-        .then((response) => response.json())
+      getGitHubToken(requestCode)
         .then((data) => {
           setTokenWithLocal(data.token);
           setIsLoggedIn(true);
-        })
-        .finally(() => {
           router.replace('/editor');
+        })
+        .catch(() => {
+          logOut();
         });
     }
   }, []);
@@ -226,34 +216,35 @@ const editor = () => {
     return () => window.removeEventListener('beforeunload', unloadCallback);
   }, []);
 
+  const afterLoginInfo = async () => {
+    const { orgs, repos, user } = await getGitHubAfterLoginInfo();
+    setOrganizations(orgs);
+    setUserRepos(repos);
+    if (repos.length) {
+      const tempArr: {
+        full_name: string;
+        source?: { full_name: string; owner: { login: string } };
+      }[] = [];
+      repos
+        .filter((x) => x.fork)
+        .map((z: { full_name: string }) =>
+          getGitHubRepositoryInfo({
+            owner: z.full_name.split('/')[0],
+            repo: z.full_name.split('/')[1],
+          }).then((x) => {
+            if (x) {
+              tempArr.push(x);
+            }
+          }),
+        );
+      setUserForks(tempArr);
+      setLoggedData(user);
+      setIsLoggedIn(true);
+    }
+  };
   useEffect(() => {
     if (isLoggedIn && token) {
-      getGithubUser(token).then(async (res) => {
-        if (res) {
-          const promiseORGS = getUserOrganizations(token);
-          const promiseUserRepos = getGithubUserRepos(token);
-          const [orgs, repos] = await Promise.all([
-            promiseORGS,
-            promiseUserRepos,
-          ]);
-          setOrganizations(orgs);
-          if (repos.length) {
-            const tempArr: {
-              full_name: string;
-              source: { full_name: string; owner: { login: string } };
-            }[] = [];
-            repos
-              .filter((x: { fork: boolean }) => x.fork)
-              .map((z: { full_name: string }) =>
-                getRepository(token, z.full_name).then((x) => tempArr.push(x)),
-              );
-            setUserRepos(repos);
-            setUserForks(tempArr);
-            setIsLoggedIn(true);
-            setLoggedData(res);
-          }
-        }
-      });
+      afterLoginInfo();
     }
   }, [isLoggedIn, token]);
   const controllerZIP = new AbortController();
@@ -350,6 +341,7 @@ const editor = () => {
       token &&
       filesToSend &&
       selectedRepository &&
+      selectedRepository.owner &&
       modifiedFiles &&
       selectedBranch
     ) {
@@ -397,6 +389,7 @@ const editor = () => {
       token &&
       filesToSend &&
       selectedRepository &&
+      selectedRepository.owner &&
       modifiedFiles &&
       selectedBranch
     ) {
@@ -450,10 +443,11 @@ const editor = () => {
       });
     }
   };
+
   const controller = new AbortController();
   const { signal } = controller;
   useEffect(() => {
-    const timer = setTimeout(async () => {
+    const timer = setTimeout(() => {
       if (autoCompleteValue !== '' && autoCompleteValue !== undefined) {
         setLoadingFullTree(true);
         setRepositoriesFromSearch(undefined);
@@ -461,33 +455,23 @@ const editor = () => {
         setRepositoryTree(undefined);
         resetState();
         const organizationsString = organizations
-          ?.map((x) => `%20org:${x.login}`)
+          ?.map((x) => ` org:${x.login}`)
           .toString()
           .replaceAll(',', '');
-        const response = await fetch(
-          `https://api.github.com/search/repositories?q=${autoCompleteValue}${
-            searchingMode === SearchingType.USER ||
-            searchingMode === SearchingType.ALLALLOWED
-              ? `%20user:${loggedData?.login}`
-              : ''
-          }${
-            searchingMode === SearchingType.ORGANIZATIONS ||
-            searchingMode === SearchingType.ALLALLOWED
-              ? organizationsString
-              : ''
-          }${includeForks ? '%20fork:true' : ''}&per_page=100`,
-          {
-            signal: signal,
-            method: 'GET',
-            headers: {
-              Accept: 'application/vnd.github+json',
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-        const res = await response.json();
-        setRepositoriesFromSearch(res.items);
-        setLoadingFullTree(false);
+        const queryString = `${autoCompleteValue}${
+          searchingMode === SearchingType.USER ||
+          searchingMode === SearchingType.ALLALLOWED
+            ? ` user:${loggedData?.login}`
+            : ''
+        }${includeForks ? ` fork:true` : ``}`;
+        getGitHubSearchRepositories(queryString, signal)
+          .then((res) => {
+            setRepositoriesFromSearch(res.items);
+            setLoadingFullTree(false);
+          })
+          .catch(() => {
+            setLoadingFullTree(false);
+          });
       }
     }, 500);
     return () => {
@@ -497,6 +481,7 @@ const editor = () => {
       clearTimeout(timer);
     };
   }, [autoCompleteValue, includeForks, searchingMode]);
+
   const backToSearch = () => {
     setRepositoryTree(undefined);
     setSelectedBranch(undefined);
@@ -504,11 +489,15 @@ const editor = () => {
     setAvailablePullRequests(undefined);
     setRepositoryTree(undefined);
   };
+
   const doForkFunction = (fullName: string) => {
     if (token) {
       setDoingFork(true);
       createToast(ToastType.MESSAGE, 'Creating fork!');
-      doRepositoryFork(token, fullName).then((response) => {
+      doGitHubFork({
+        owner: fullName.split('/')[0],
+        repo: fullName.split('/')[1],
+      }).then((response) => {
         if (response) {
           createToast(ToastType.SUCCESS, 'Fork created!');
           setAutoCompleteValue('');
@@ -519,38 +508,7 @@ const editor = () => {
       });
     }
   };
-  const octokit = new Octokit({
-    auth: token,
-    log: {
-      debug: () => {},
-      info: () => {},
-      warn: console.warn,
-      error: console.error,
-    },
-  });
 
-  // const getRepoZip = async () => {
-  //   const request = octokit.rest.repos.downloadZipballArchive.endpoint({
-  //     owner: 'aexol-studio',
-  //     repo: 'mdtx',
-  //     ref: 'master',
-  //   });
-  //   const url = new URL(request.url);
-  //   const { headers } = await octokit.request(`GET ${url.pathname}`, {
-  //     request: {
-  //       fetch: async (url: string, opts: RequestInit | undefined) =>
-  //         fetch(`http://localhost:9999/api${new URL(url).pathname}`, {
-  //           ...opts,
-  //         }),
-  //     },
-  //   });
-  //   console.log('dupa', headers);
-  // };
-  // useEffect(() => {
-  //   if (token) {
-  //     getRepoZip();
-  //   }
-  // }, [token]);
   return (
     <Layout isEditor pageTitle="MDtx Editor">
       {downloadModal && availableBranches?.length && (
