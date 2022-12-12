@@ -34,9 +34,14 @@ export const useGitHub = () => {
     const { data } = await octokit.request(`GET ${url.pathname}`, {
       request: {
         fetch: async (url: string, opts: RequestInit | undefined) =>
-          fetch(`http://localhost:7071/api${new URL(url).pathname}`, {
-            ...opts,
-          }),
+          fetch(
+            `https://mdtx-proxy-github-dev.azurewebsites.net/api${
+              new URL(url).pathname
+            }`,
+            {
+              ...opts,
+            },
+          ),
       },
     });
     const fileArray = await unzipFunction(data);
@@ -48,12 +53,15 @@ export const useGitHub = () => {
   };
   //USE: FOR AUTHENTICATE
   const getGitHubToken = async (code: string) => {
-    const response = await fetch(`http://localhost:7071/authenticate/${code}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `https://mdtx-proxy-github-dev.azurewebsites.net/authenticate/${code}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       },
-    }).catch(() => {});
+    ).catch(() => {});
     if (!response) throw new Error('Bad response from getGitHubToken()');
     return await response.json();
   };
@@ -89,6 +97,35 @@ export const useGitHub = () => {
   }) => {
     const { data } = await octokit.rest.repos.get(input);
     if (!data) throw new Error('Bad response from getGitHubRepositoryInfo()');
+    return data;
+  };
+  //USE: FOR GET ALL REPOSITORY BRANCHES
+  const getGitHubRepositoryBranches = async (input: {
+    owner: string;
+    repo: string;
+  }) => {
+    const { data } = await octokit.rest.repos.listBranches(input);
+    if (!data)
+      throw new Error('Bad response from getGitHubRepositoryBranches()');
+    return data;
+  };
+  //USE: FOR GET ALL REPOSITORY PULL REQUESTS
+  const getGitHubRepositoryPullRequests = async (input: {
+    owner: string;
+    repo: string;
+  }) => {
+    const { data } = await octokit.rest.pulls.list(input);
+    if (!data)
+      throw new Error('Bad response from getGitHubRepositoryPullRequests()');
+    return data;
+  };
+  //USE: FOR GET ALL REPOSITORY FORKS
+  const getGitHubRepositoryForks = async (input: {
+    owner: string;
+    repo: string;
+  }) => {
+    const { data } = await octokit.rest.repos.listForks(input);
+    if (!data) throw new Error('Bad response from getGitHubRepositoryForks()');
     return data;
   };
   //USE: FOR FORK
@@ -140,8 +177,11 @@ export const useGitHub = () => {
     getGitHubAfterLoginInfo,
     getGitHubUserRepositoriesInfo,
     getGitHubUserOrganisationsInfo,
+    getGitHubRepositoryBranches,
     getGitHubRepositoryAsZIP,
     getGitHubSearchRepositories,
+    getGitHubRepositoryPullRequests,
+    getGitHubRepositoryForks,
     doGitHubFork,
   };
 };

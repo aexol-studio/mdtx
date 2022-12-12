@@ -10,7 +10,8 @@
   },
   "extensions": {
 	  "http": {
-		  "routePrefix": ""
+		  "routePrefix": "",
+      "EnableChunkedRequestBinding": true
 	  }
   },
   "extensionBundle": {

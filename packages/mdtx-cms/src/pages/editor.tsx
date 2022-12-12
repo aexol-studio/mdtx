@@ -23,7 +23,7 @@ import {
   ToastType,
 } from '../containers';
 import { Layout } from '../layouts';
-import { useGitHub, useGithubCalls } from '../utils';
+import { useGitHub } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
 import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
 
@@ -56,7 +56,7 @@ export type availableBranchType = {
     url: string;
   };
   name: string;
-  protected: false;
+  protected?: boolean;
 };
 export type PullRequestsType = {
   base: {
@@ -68,9 +68,9 @@ export type PullRequestsType = {
   user: {
     avatar_url: string;
     login: string;
-  };
+  } | null;
   title: string;
-  body: string;
+  body: string | null;
   updated_at: string;
 };
 export enum CommitingModes {
@@ -102,13 +102,6 @@ const editor = () => {
     formState: { errors: errorsPullRequest },
   } = useForm<PullRequestInput>();
 
-  const {
-    getRepositoryAsZIP,
-    getRepositoryBranches,
-    getRepositoryForks,
-    getRepositoryPullRequests,
-    getRepositoryFullInfo,
-  } = useGithubCalls();
   const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
     useGithubActions();
 
@@ -116,7 +109,6 @@ const editor = () => {
     useFileState();
 
   const {
-    token,
     isLoggedIn,
     setLoggedData,
     loggedData,
@@ -179,6 +171,9 @@ const editor = () => {
     getGitHubRepositoryAsZIP,
     getGitHubRepositoryInfo,
     getGitHubSearchRepositories,
+    getGitHubRepositoryBranches,
+    getGitHubRepositoryPullRequests,
+    getGitHubRepositoryForks,
     doGitHubFork,
   } = useGitHub();
 
@@ -187,7 +182,7 @@ const editor = () => {
     const hasCode = url.includes('?code=');
     const hasError = url.includes('?error=');
     if (hasError) router.push('/');
-    if (!token && hasCode) {
+    if (!isLoggedIn && hasCode) {
       const newUrl = url.split('?code=');
       const splittedUrl = newUrl[1].split('&');
       const requestCode = splittedUrl[0];
@@ -243,26 +238,23 @@ const editor = () => {
     }
   };
   useEffect(() => {
-    if (isLoggedIn && token) {
+    if (isLoggedIn) {
       afterLoginInfo();
     }
-  }, [isLoggedIn, token]);
+  }, [isLoggedIn]);
   const controllerZIP = new AbortController();
 
   const confirmBranchClick = async (branchName?: string) => {
-    if (token && selectedRepository && selectedBranch) {
+    if (isLoggedIn && selectedRepository && selectedBranch) {
       setDownloadZIP(true);
-      const JSONResponse = await getRepositoryAsZIP(
-        token,
-        selectedRepository?.full_name,
-        branchName ? branchName : selectedBranch?.name,
-        controllerZIP,
-      );
+      const response = await getGitHubRepositoryAsZIP({
+        owner: selectedRepository?.full_name.split('/')[0],
+        repo: selectedRepository?.full_name.split('/')[1],
+        ref: branchName ? branchName : selectedBranch.name,
+      });
 
-      if (JSONResponse !== undefined) {
-        const paths = JSONResponse.fileArray.filter(
-          (z: { name: string | string[] }) => z.name.includes('.md'),
-        );
+      if (response !== undefined) {
+        const paths = response.filter((z) => z.name.includes('.md'));
         const tree = treeBuilder(paths);
         setRepositoryTree(tree);
         setFiles(paths);
@@ -281,14 +273,15 @@ const editor = () => {
   };
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
     setSelectedRepository(item);
-    if (token) {
-      const promiseBranches = getRepositoryBranches(token, item.full_name);
-      const promisePullRequest = getRepositoryPullRequests(
-        token,
-        item.full_name,
-      );
-      const promiseForks = getRepositoryForks(token, item.full_name);
-      const promiseAboutFork = getRepositoryFullInfo(token, item.full_name);
+    if (isLoggedIn) {
+      const input = {
+        owner: item.full_name.split('/')[0],
+        repo: item.full_name.split('/')[1],
+      };
+      const promiseBranches = getGitHubRepositoryBranches(input);
+      const promisePullRequest = getGitHubRepositoryPullRequests(input);
+      const promiseForks = getGitHubRepositoryForks(input);
+      const promiseAboutFork = getGitHubRepositoryInfo(input);
       const [branches, pullRequests, forks, aboutFork] = await Promise.all([
         promiseBranches,
         promisePullRequest,
@@ -326,123 +319,124 @@ const editor = () => {
       }
     }
   };
+  const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {};
+  const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {};
+  // const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {
+  //   setSubmittingCommit(true);
+  //   const filesToSend: { path: string; contents: string }[] = [];
+  //   modifiedFiles.map((x) => {
+  //     const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+  //     filesToSend.push({
+  //       path: x.name.slice(x.name.indexOf('/') + 1),
+  //       contents: doBuffer,
+  //     });
+  //   });
+  //   if (
+  //     token &&
+  //     filesToSend &&
+  //     selectedRepository &&
+  //     selectedRepository.owner &&
+  //     modifiedFiles &&
+  //     selectedBranch
+  //   ) {
+  //     getOid(token, {
+  //       branchName: selectedBranch.name,
+  //       repositoryName: selectedRepository.name,
+  //       repositoryOwner: selectedRepository.owner.login,
+  //     }).then((oidArray) => {
+  //       createCommitOnBranch(token, {
+  //         branch: {
+  //           branchName: selectedBranch.name,
+  //           repositoryNameWithOwner: selectedRepository.full_name,
+  //         },
+  //         expectedHeadOid: oidArray[0].oid,
+  //         message: {
+  //           headline: data.commitHeadlineMessage,
+  //           body: data.commitBodyMessage,
+  //         },
+  //         fileChanges: {
+  //           additions: filesToSend,
+  //         },
+  //       }).then((createdCommit) => {
+  //         if (createdCommit.commit?.oid) {
+  //           resetState();
+  //           confirmBranchClick().then(() => {
+  //             setSubmittingCommit(false);
+  //             setMenuModal(undefined);
+  //           });
+  //         }
+  //       });
+  //     });
+  //   }
+  // };
+  // const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {
+  //   setPullRequest(true);
+  //   const filesToSend: { path: string; contents: string }[] = [];
+  //   modifiedFiles.map((x) => {
+  //     const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+  //     filesToSend.push({
+  //       path: x.name.slice(x.name.indexOf('/') + 1),
+  //       contents: doBuffer,
+  //     });
+  //   });
+  //   if (
+  //     token &&
+  //     filesToSend &&
+  //     selectedRepository &&
+  //     selectedRepository.owner &&
+  //     modifiedFiles &&
+  //     selectedBranch
+  //   ) {
+  //     getOid(token, {
+  //       branchName: selectedBranch.name,
+  //       repositoryName: selectedRepository.name,
+  //       repositoryOwner: selectedRepository.owner.login,
+  //     }).then((oidArray) => {
+  //       createBranch(token, {
+  //         name: `refs/heads/${data.newBranchName}`,
+  //         oid: oidArray[0].oid,
+  //         repositoryId: selectedRepository.node_id,
+  //       }).then((createdBranch) => {
+  //         const ref = createdBranch.ref;
+  //         if (ref) {
+  //           createCommitOnBranch(token, {
+  //             branch: {
+  //               branchName: ref.name,
+  //               repositoryNameWithOwner: selectedRepository.full_name,
+  //             },
+  //             expectedHeadOid: oidArray[0].oid,
+  //             message: {
+  //               headline: data.commitHeadlineMessage,
+  //               body: data.commitBodyMessage,
+  //             },
+  //             fileChanges: {
+  //               additions: filesToSend,
+  //             },
+  //           }).then((createdCommit) => {
+  //             if (createdCommit) {
+  //               createPullRequest(token, {
+  //                 baseRefName: data.selectedTargetBranch,
+  //                 headRefName: ref.name,
+  //                 repositoryId: selectedRepository.node_id,
+  //                 title: data.pullRequestTitle,
+  //                 body: data.pullRequestMessage,
+  //               }).then((pr) => {
+  //                 if (pr.pullRequest) {
+  //                   resetState();
+  //                   confirmBranchClick(ref.name).then(() => {
+  //                     setPullRequest(false);
 
-  const onCommitSubmit: SubmitHandler<CommitInput> = async (data) => {
-    setSubmittingCommit(true);
-    const filesToSend: { path: string; contents: string }[] = [];
-    modifiedFiles.map((x) => {
-      const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
-      filesToSend.push({
-        path: x.name.slice(x.name.indexOf('/') + 1),
-        contents: doBuffer,
-      });
-    });
-    if (
-      token &&
-      filesToSend &&
-      selectedRepository &&
-      selectedRepository.owner &&
-      modifiedFiles &&
-      selectedBranch
-    ) {
-      getOid(token, {
-        branchName: selectedBranch.name,
-        repositoryName: selectedRepository.name,
-        repositoryOwner: selectedRepository.owner.login,
-      }).then((oidArray) => {
-        createCommitOnBranch(token, {
-          branch: {
-            branchName: selectedBranch.name,
-            repositoryNameWithOwner: selectedRepository.full_name,
-          },
-          expectedHeadOid: oidArray[0].oid,
-          message: {
-            headline: data.commitHeadlineMessage,
-            body: data.commitBodyMessage,
-          },
-          fileChanges: {
-            additions: filesToSend,
-          },
-        }).then((createdCommit) => {
-          if (createdCommit.commit?.oid) {
-            resetState();
-            confirmBranchClick().then(() => {
-              setSubmittingCommit(false);
-              setMenuModal(undefined);
-            });
-          }
-        });
-      });
-    }
-  };
-  const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {
-    setPullRequest(true);
-    const filesToSend: { path: string; contents: string }[] = [];
-    modifiedFiles.map((x) => {
-      const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
-      filesToSend.push({
-        path: x.name.slice(x.name.indexOf('/') + 1),
-        contents: doBuffer,
-      });
-    });
-    if (
-      token &&
-      filesToSend &&
-      selectedRepository &&
-      selectedRepository.owner &&
-      modifiedFiles &&
-      selectedBranch
-    ) {
-      getOid(token, {
-        branchName: selectedBranch.name,
-        repositoryName: selectedRepository.name,
-        repositoryOwner: selectedRepository.owner.login,
-      }).then((oidArray) => {
-        createBranch(token, {
-          name: `refs/heads/${data.newBranchName}`,
-          oid: oidArray[0].oid,
-          repositoryId: selectedRepository.node_id,
-        }).then((createdBranch) => {
-          const ref = createdBranch.ref;
-          if (ref) {
-            createCommitOnBranch(token, {
-              branch: {
-                branchName: ref.name,
-                repositoryNameWithOwner: selectedRepository.full_name,
-              },
-              expectedHeadOid: oidArray[0].oid,
-              message: {
-                headline: data.commitHeadlineMessage,
-                body: data.commitBodyMessage,
-              },
-              fileChanges: {
-                additions: filesToSend,
-              },
-            }).then((createdCommit) => {
-              if (createdCommit) {
-                createPullRequest(token, {
-                  baseRefName: data.selectedTargetBranch,
-                  headRefName: ref.name,
-                  repositoryId: selectedRepository.node_id,
-                  title: data.pullRequestTitle,
-                  body: data.pullRequestMessage,
-                }).then((pr) => {
-                  if (pr.pullRequest) {
-                    resetState();
-                    confirmBranchClick(ref.name).then(() => {
-                      setPullRequest(false);
-
-                      setMenuModal(undefined);
-                    });
-                  }
-                });
-              }
-            });
-          }
-        });
-      });
-    }
-  };
+  //                     setMenuModal(undefined);
+  //                   });
+  //                 }
+  //               });
+  //             }
+  //           });
+  //         }
+  //       });
+  //     });
+  //   }
+  // };
 
   const controller = new AbortController();
   const { signal } = controller;
@@ -462,6 +456,10 @@ const editor = () => {
           searchingMode === SearchingType.USER ||
           searchingMode === SearchingType.ALLALLOWED
             ? ` user:${loggedData?.login}`
+            : ''
+        }${
+          searchingMode === SearchingType.ORGANIZATIONS
+            ? organizationsString
             : ''
         }${includeForks ? ` fork:true` : ``}`;
         getGitHubSearchRepositories(queryString, signal)
@@ -491,7 +489,7 @@ const editor = () => {
   };
 
   const doForkFunction = (fullName: string) => {
-    if (token) {
+    if (isLoggedIn) {
       setDoingFork(true);
       createToast(ToastType.MESSAGE, 'Creating fork!');
       doGitHubFork({

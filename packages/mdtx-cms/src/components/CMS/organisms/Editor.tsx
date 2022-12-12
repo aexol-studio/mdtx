@@ -32,12 +32,12 @@ export const Editor: React.FC<{
     {
       value: '# ',
       label: 'Heading 1',
-      size: 24,
+      size: 22,
     },
     {
       value: '## ',
       label: 'Heading 2',
-      size: 22,
+      size: 20,
     },
     {
       value: '### ',
@@ -236,7 +236,7 @@ export const Editor: React.FC<{
                       }}
                       className={`${
                         index !== 0 ? 'border-editorGray1 border-t-[1px]' : ''
-                      } cursor-pointer hover:bg-editorGray0 w-full flex`}
+                      } cursor-pointer hover:bg-editorGray0 w-full flex py-[0.4rem]`}
                     >
                       <p
                         style={{ fontSize: heading.size }}

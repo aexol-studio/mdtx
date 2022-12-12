@@ -3,20 +3,33 @@ import { useEffect, useState } from 'react';
 import { GithubIcon, MDtxLogo } from '@/src/assets';
 import { NavigationData } from '@/src/datas/NavigationData';
 import { GithubStars, MobileNavbar } from '@/src/components/Site/atoms/';
-import { useGithubCalls } from '@/src/utils/useGithubCalls';
+
+const getRepositoryMDtx = async () => {
+  const response = await fetch(
+    'https://api.github.com/repos/aexol-studio/mdtx',
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+  const responseParse = await response.json();
+  return responseParse;
+};
 
 const LoginLink = `https://github.com/login/oauth/authorize?scope=repo%20read:user%20write:org%20read:org&client_id=${process.env.NEXT_PUBLIC_CLIENT_ID}&redirect_uri=${process.env.NEXT_PUBLIC_REDIRECT_URI}`;
 
 export const NavigationBar = () => {
   const [stars, setStars] = useState<number>();
   const [hideNavbar, setHideNavbar] = useState(false);
-  const { getRepositoryMDtx } = useGithubCalls();
 
   useEffect(() => {
-    getRepositoryMDtx().then((response) => {
-      const { stargazers_count } = response;
-      setStars(stargazers_count);
-    });
+    if (!stars)
+      getRepositoryMDtx().then((response) => {
+        const { stargazers_count } = response;
+        setStars(stargazers_count);
+      });
   }, []);
 
   useEffect(() => {
