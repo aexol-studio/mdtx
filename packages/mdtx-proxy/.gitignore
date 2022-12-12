@@ -4,8 +4,7 @@ csx
 .vs
 edge
 Publish
-lib
-.vscode
+
 *.user
 *.suo
 *.cscfg

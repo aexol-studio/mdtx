@@ -9,16 +9,9 @@
     }
   },
   "extensions": {
-    "http": {
-      "routePrefix": ""
-    }
-  },
-  "customHandler": {
-    "description": {
-      "defaultExecutablePath": "node",
-      "arguments": ["lib/src/index.js"]
-    },
-    "enableForwardingHttpRequest": true
+	  "http": {
+		  "routePrefix": ""
+	  }
   },
   "extensionBundle": {
     "id": "Microsoft.Azure.Functions.ExtensionBundle",

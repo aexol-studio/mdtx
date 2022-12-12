@@ -1,11 +1,14 @@
 {
   "bindings": [
     {
-      "authLevel": "anonymous",
+      "authLevel": "function",
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get", "post"],
+      "methods": [
+        "get",
+        "post"
+      ],
       "route": "codeload/{owner}/{name}/legacy.zip/refs/heads/{ref}"
     },
     {
@@ -13,5 +16,6 @@
       "direction": "out",
       "name": "res"
     }
-  ]
+  ],
+  "scriptFile": "../lib/codeload/index.js"
 }
