@@ -5,6 +5,7 @@ export type FileType = {
   content: string;
   dir: boolean;
   name: string;
+  image?: ArrayBuffer;
 };
 
 const FileStateContainer = createContainer(() => {

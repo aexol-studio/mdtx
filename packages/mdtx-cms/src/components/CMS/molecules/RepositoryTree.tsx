@@ -30,6 +30,7 @@ export const RepositoryTree: React.FC<{
     modifiedFiles,
     setFiles,
     deletions,
+    getSelectedFileByPath,
     setDeletions,
   } = useFileState();
 
@@ -38,18 +39,30 @@ export const RepositoryTree: React.FC<{
   const [path, setPath] = useState(activePath);
   const ref = useRef<HTMLDivElement>(null);
   const refInput = useRef<HTMLInputElement>(null);
+  const wantedImages = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
+  const notAllowed = (p: string) => !!p.match(wantedImages);
+  const isImage = notAllowed(tree!.name);
+  const [imgURL, setImgURL] = useState<string>();
   const clickHandler = () => {
-    if (!isFolder && pickedFilePath !== tree?.path && tree) {
-      setPickedFilePath(tree.path);
-    }
-    if (!isFolder && pickedFilePath === tree?.path) {
-      setPickedFilePath(undefined);
-    }
-    if (isFolder && path !== tree.name) {
-      setPath(tree?.name);
-    }
-    if (isFolder && path === tree.name) {
-      setPath(undefined);
+    if (tree?.name) {
+      if (isImage && tree.image) {
+        const buffer = Buffer.from(tree.image);
+        const base64String = buffer.toString('base64');
+        setImgURL(base64String);
+        return;
+      }
+      if (!isFolder && pickedFilePath !== tree?.path && tree) {
+        setPickedFilePath(tree.path);
+      }
+      if (!isFolder && pickedFilePath === tree?.path) {
+        setPickedFilePath(undefined);
+      }
+      if (isFolder && path !== tree.name) {
+        setPath(tree?.name);
+      }
+      if (isFolder && path === tree.name) {
+        setPath(undefined);
+      }
     }
   };
   useOutsideClick(ref, () => setTimeout(() => setCreatingModal(false), 150));
@@ -147,6 +160,35 @@ export const RepositoryTree: React.FC<{
             ref={refContextMenu}
             className="z-[102] w-[12rem] py-[1.2rem] items-center top-[2.4rem] bg-mdtxBlack border-mdtxOrange1 border-[1px] absolute flex flex-col"
           >
+            {isImage && (
+              <div
+                onClick={() => {
+                  // if (utils) {
+                  //   const newSelectionRange = utils.selectWord({
+                  //     text: state.text,
+                  //     selection: state.selection,
+                  //   });
+                  //   const state1 = api.setSelectionRange(newSelectionRange);
+                  //   const state2 = api.replaceSelection(
+                  //     `![Alt](${state1.selectedText})`,
+                  //   );
+                  //   api.setSelectionRange({
+                  //     start:
+                  //       state2.selection.end - 1 - state1.selectedText.length,
+                  //     end: state2.selection.end - 1,
+                  //   });
+                  // }
+                }}
+                className="mb-[1.6rem] group flex gap-[0.4rem] items-center cursor-pointer w-fit"
+              >
+                {/* <div className="min-w-[2rem] min-h-[2rem]">
+                  <ThrashIcon />
+                </div> */}
+                <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite">
+                  Insert photo
+                </p>
+              </div>
+            )}
             <div
               onClick={deletingHandler}
               className="group flex gap-[0.4rem] items-center cursor-pointer w-fit"
@@ -191,7 +233,10 @@ export const RepositoryTree: React.FC<{
                       setFileWithOpenContext(tree);
                     }
                   }}
-                  onClick={() => !(hasChildren && root) && clickHandler()}
+                  onClick={(e) => {
+                    !(hasChildren && root) && clickHandler();
+                    isImage && handleContextMenu(e);
+                  }}
                   className="cursor-pointer"
                 >
                   <p className={`hover:underline text-[1.4rem] text-white`}>
@@ -242,7 +287,6 @@ export const RepositoryTree: React.FC<{
             )}
           </div>
         )}
-
         {hasChildren &&
           (path === tree.name || root) &&
           tree.children?.map((v) => {

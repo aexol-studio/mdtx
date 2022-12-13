@@ -256,7 +256,9 @@ const editor = () => {
       });
 
       if (response !== undefined) {
-        const paths = response.filter((z) => z.name.includes('.md'));
+        const wantedFiles = /(.*)\.(png|jpg|jpeg|gif|webp|md)$/;
+        const isWanted = (p: string) => !!p.match(wantedFiles);
+        const paths = response.filter((z) => isWanted(z.name));
         const tree = treeBuilder(paths);
         setRepositoryTree(tree);
         setFiles(paths);

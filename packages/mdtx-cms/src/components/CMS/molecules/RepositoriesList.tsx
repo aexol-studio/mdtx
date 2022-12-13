@@ -14,6 +14,7 @@ export const RepositoriesList: React.FC<{
         <div className="relative max-w-[1.6rem] min-w-[1.6rem] max-h-[1.6rem] min-h-[1.6rem]">
           {item.owner && (
             <Image
+              loader={({ src }) => src}
               width={32}
               height={32}
               alt={item.full_name}

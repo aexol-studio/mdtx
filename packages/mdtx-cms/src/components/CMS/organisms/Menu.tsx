@@ -61,7 +61,7 @@ export const Menu: React.FC<MenuInteface> = ({
     <div
       className={`${
         openMenu ? 'w-[32rem]' : 'w-[4.2rem]'
-      } overflow-hidden relative transition-all duration-500 ease-in-out select-none h-screen bg-mdtxBlack border-r-[2px] border-r-solid border-r-mdtxOrange0 flex flex-col items-center`}
+      } overflow-hidden relative transition-all duration-500 ease-in-out select-none h-screen bg-mdtxBlack border-r-[2px] border-r-solid border-r-mdtxBlack flex flex-col items-center`}
     >
       <BackButton state={openMenu} onClick={setOpenMenu} />
       <div
@@ -97,6 +97,7 @@ export const Menu: React.FC<MenuInteface> = ({
             <div className="flex justify-center items-center gap-[0.8rem]">
               {selectedRepository && (
                 <Image
+                  loader={({ src }) => src}
                   priority
                   width={24}
                   height={24}

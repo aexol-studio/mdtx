@@ -145,6 +145,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                     <div className="flex items-center gap-[0.8rem] ">
                       {pr?.user?.avatar_url && (
                         <Image
+                          loader={({ src }) => src}
                           priority
                           width={24}
                           height={24}
