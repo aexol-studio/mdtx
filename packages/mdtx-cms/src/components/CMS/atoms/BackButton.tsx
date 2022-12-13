@@ -6,7 +6,7 @@ export const BackButton: React.FC<{ state: boolean; onClick: () => void }> = ({
 }) => {
   return (
     <div
-      className="cursor-pointer select-none z-[99] flex justify-center items-center absolute bottom-[1.6rem] right-[-1.6rem] w-[3.2rem] h-[3.2rem] rounded-full bg-mdtxOrange0"
+      className="cursor-pointer select-none z-[100] flex justify-center items-center absolute bottom-[1.6rem] w-[3.2rem] h-[3.2rem] rounded-full bg-mdtxOrange0"
       onClick={onClick}
     >
       <div

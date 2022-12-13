@@ -5,7 +5,7 @@ import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import { TreeMenu } from '@/src/utils/treeBuilder';
 import { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
-import { UserInfo } from '../atoms';
+import { BackButton, UserInfo } from '../atoms';
 import {
   MenuSearchSection,
   RepositoriesList,
@@ -19,7 +19,8 @@ export interface MenuInteface {
   setAutoCompleteValue: React.Dispatch<
     React.SetStateAction<string | undefined>
   >;
-  isOpen: boolean;
+  openMenu: boolean;
+  setOpenMenu: () => void;
   loadingFullTree: boolean;
   repositoriesFromSearch?: RepositoryFromSearch[];
   selectedRepository?: RepositoryFromSearch;
@@ -41,7 +42,8 @@ export const Menu: React.FC<MenuInteface> = ({
   autoCompleteValue,
   setAutoCompleteValue,
   selectedRepository,
-  isOpen,
+  openMenu,
+  setOpenMenu,
   loadingFullTree,
   repositoriesFromSearch,
   repositoryTree,
@@ -58,12 +60,13 @@ export const Menu: React.FC<MenuInteface> = ({
   return (
     <div
       className={`${
-        isOpen ? 'w-[300px]' : 'invisible w-0'
-      } relative transition-all duration-500 ease-in-out select-none h-screen bg-mdtxBlack border-r-[2px] border-r-solid border-r-mdtxOrange0 flex flex-col items-center`}
+        openMenu ? 'w-[32rem]' : 'w-[4.2rem]'
+      } overflow-hidden relative transition-all duration-500 ease-in-out select-none h-screen bg-mdtxBlack border-r-[2px] border-r-solid border-r-mdtxOrange0 flex flex-col items-center`}
     >
+      <BackButton state={openMenu} onClick={setOpenMenu} />
       <div
         className={`${
-          isOpen
+          openMenu
             ? 'translate-x-[0%] duration-[900ms]'
             : 'translate-x-[-600px] duration-[300ms]'
         } w-full h-full transition-transform ease-in-out relative flex flex-col`}

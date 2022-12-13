@@ -1,6 +1,6 @@
 import { Chain, ModelTypes } from '../zeus';
 const chain = (method: 'query' | 'mutation', token: string) => {
-  return Chain(process.env.NEXT_PUBLIC_HOST + '/graphql', {
+  return Chain('https://api.github.com/graphql', {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,

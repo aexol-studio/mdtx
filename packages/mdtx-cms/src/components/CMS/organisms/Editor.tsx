@@ -5,8 +5,8 @@ import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import { TextAreaTextApi, TextState } from '@uiw/react-md-editor';
 import { Code } from '../editor-functions';
 import { Bold } from '../editor-functions/Bold';
+import { ColorPicker } from '../atoms';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
-
 type commandsType = typeof import('@uiw/react-md-editor/lib/commands/index');
 export type utilsType =
   typeof import('@uiw/react-md-editor/lib/utils/markdownUtils');
@@ -16,8 +16,12 @@ export const Editor: React.FC<{
   selectedBranch: availableBranchType | undefined;
   menuFnc: () => void;
 }> = ({ selectedRepository, selectedBranch, menuFnc }) => {
-  const { getSelectedFileByPath, setSelectedFileContentByPath } =
-    useFileState();
+  const [color, setColor] = useState('#ffffff');
+  const {
+    getSelectedFileByPath,
+    setSelectedFileContentByPath,
+    pickedFilePath,
+  } = useFileState();
 
   const [commands, setCommands] = useState<commandsType>();
   const [utils, setUtils] = useState<utilsType>();
@@ -210,11 +214,11 @@ export const Editor: React.FC<{
         />
       </svg>
     ),
-    execute: (tate: TextState, api: TextAreaTextApi) => {
+    execute: (state: TextState, api: TextAreaTextApi) => {
       if (utils) {
         const newSelectionRange = utils.selectWord({
-          text: tate.text,
-          selection: tate.selection,
+          text: state.text,
+          selection: state.selection,
         });
         const state1 = api.setSelectionRange(newSelectionRange);
         const breaksBeforeCount = utils.getBreaksNeededForEmptyLineBefore(
@@ -306,12 +310,27 @@ export const Editor: React.FC<{
       height: 100%;
       width: 60%;
     }
+    .small .react-colorful {
+      width: 120px;
+      height: 120px;
+    }
+    .small .react-colorful__hue {
+      height: 20px;
+    }
   `;
   return commands && utils ? (
     <>
+      {!pickedFilePath && (
+        <div className="fixed w-screen h-screen bg-[#13131C90] z-[99] flex justify-center items-center">
+          <p className="text-white select-none">
+            You need to select markdown file !
+          </p>
+        </div>
+      )}
       <style>{hardStyles}</style>
       <MDEditor
         height={'100vh'}
+        autoFocus
         value={getSelectedFileByPath()?.content}
         previewOptions={{
           transformImageUri: (src) => {
@@ -381,6 +400,37 @@ export const Editor: React.FC<{
           commands.group([], Code(utils)),
           commands.divider,
           commands.group([], CodeBlock),
+          commands.divider,
+          commands.group([], {
+            name: 'Colors',
+            groupName: 'Colors',
+            buttonProps: {
+              className: 'colorsButton',
+              'aria-label': 'Insert title',
+              style: { padding: 0 },
+            },
+            children: ({ close, execute, getState, textApi }) => {
+              return (
+                <div className="relative small flex flex-col gap-[1.6rem] px-[1.6rem] py-[0.4rem] items-center justify-center">
+                  <ColorPicker
+                    getState={getState}
+                    textApi={textApi}
+                    utils={utils}
+                    color={color}
+                    onChange={setColor}
+                    close={close}
+                  />
+                </div>
+              );
+            },
+            icon: (
+              <div className="hover:bg-[#FFFFFF20] transition-all duration-300 ease-in-out flex relative items-center">
+                <p className="text-[1.8rem] leading-[4rem] font-[700] text-mdtxWhite">
+                  Color
+                </p>
+              </div>
+            ),
+          }),
         ]}
       />
     </>

@@ -78,20 +78,8 @@ export const ChangesModal: React.FC<IChangesModal> = ({
           splitView
           useDarkTheme
           styles={newStyles}
-          oldValue={
-            previewChanges?.orginalFile
-              ? previewChanges.orginalFile === ''
-                ? ''
-                : 'Pick file to see changes'
-              : ''
-          }
-          newValue={
-            previewChanges?.changedFile
-              ? previewChanges.changedFile === ''
-                ? ''
-                : 'Pick file to see changes'
-              : ''
-          }
+          oldValue={previewChanges?.orginalFile}
+          newValue={previewChanges?.changedFile}
         />
       </div>
     </div>

@@ -153,6 +153,7 @@ const editor = () => {
   const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
   const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
   const [openMenu, setOpenMenu] = useState(true);
+  const handleMenu = () => setOpenMenu((prev) => !prev);
   const [menuModal, setMenuModal] = useState<MenuModalType | undefined>();
   const [previewChanges, setPreviewChanges] = useState<{
     orginalFile: string;
@@ -486,6 +487,7 @@ const editor = () => {
     setAvailableBranches(undefined);
     setAvailablePullRequests(undefined);
     setRepositoryTree(undefined);
+    resetState();
   };
 
   const doForkFunction = (fullName: string) => {
@@ -500,7 +502,6 @@ const editor = () => {
           createToast(ToastType.SUCCESS, 'Fork created!');
           setAutoCompleteValue('');
           backToSearch();
-          resetState();
           setDoingFork(false);
         }
       });
@@ -515,7 +516,6 @@ const editor = () => {
           closeFnc={() => {
             setDownloadModal(false);
             backToSearch();
-            resetState();
             setDownloadZIP(false);
             setDoingFork(false);
             controllerZIP.abort();
@@ -585,7 +585,7 @@ const editor = () => {
           setMenuModal={setMenuModal}
         />
       )}
-      <div className="relative">
+      <div className="fixed z-[100]">
         <Menu
           setRepositoryTree={setRepositoryTree}
           searchingMode={searchingMode}
@@ -597,21 +597,16 @@ const editor = () => {
           backToSearch={backToSearch}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
-          isOpen={openMenu}
+          openMenu={openMenu}
+          setOpenMenu={handleMenu}
           loadingFullTree={loadingFullTree}
           repositoryTree={repositoryTree}
           repositoriesFromSearch={repositoriesFromSearch}
           selectedBranch={selectedBranch}
           handleRepositoryPick={handleRepositoryPick}
         />
-        <BackButton
-          state={openMenu}
-          onClick={() => {
-            setOpenMenu((prev) => !prev);
-          }}
-        />
       </div>
-      <div className="w-full">
+      <div className="pl-[4.2rem] w-full">
         <Editor
           menuFnc={() => setMenuModal(MenuModalType.CHANGES)}
           selectedRepository={selectedRepository}
