@@ -28,7 +28,10 @@ const FileStateContainer = createContainer(() => {
   };
 
   useEffect(() => {
-    if (JSON.stringify(files) === JSON.stringify(orginalFiles)) {
+    if (
+      JSON.stringify(files.filter((z) => z.name.includes('.md'))) ===
+      JSON.stringify(orginalFiles?.filter((z) => z.name.includes('.md')))
+    ) {
       setIsFilesDirty(false);
       setModifiedFiles([]);
     } else {

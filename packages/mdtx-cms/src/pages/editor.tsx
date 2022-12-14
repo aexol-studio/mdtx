@@ -206,19 +206,6 @@ const editor = () => {
     }
   }, [router.isReady]);
 
-  useEffect(() => {
-    const unloadCallback = (event: {
-      preventDefault: () => void;
-      returnValue: string;
-    }) => {
-      event.preventDefault();
-      event.returnValue = '';
-      return '';
-    };
-    window.addEventListener('beforeunload', unloadCallback);
-    return () => window.removeEventListener('beforeunload', unloadCallback);
-  }, []);
-
   const afterLoginInfo = async () => {
     const { orgs, repos, user } = await getGitHubAfterLoginInfo();
     setOrganizations(orgs);
@@ -249,6 +236,16 @@ const editor = () => {
   useEffect(() => {
     if (isLoggedIn) {
       afterLoginInfo();
+      const unloadCallback = (event: {
+        preventDefault: () => void;
+        returnValue: string;
+      }) => {
+        event.preventDefault();
+        event.returnValue = '';
+        return '';
+      };
+      window.addEventListener('beforeunload', unloadCallback);
+      return () => window.removeEventListener('beforeunload', unloadCallback);
     }
   }, [isLoggedIn]);
 
