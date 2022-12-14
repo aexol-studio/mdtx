@@ -13,6 +13,7 @@ export const unzipFunction = async (data: any) => {
         const content = await v.async('arraybuffer');
         fileArray.push({
           content: Buffer.from(content).toString('utf-8'),
+          image: content,
           dir: v.dir,
           name: v.name,
         });

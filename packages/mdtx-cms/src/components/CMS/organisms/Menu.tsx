@@ -5,7 +5,7 @@ import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
 import { TreeMenu } from '@/src/utils/treeBuilder';
 import { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
-import { UserInfo } from '../atoms';
+import { BackButton, UserInfo } from '../atoms';
 import {
   MenuSearchSection,
   RepositoriesList,
@@ -19,7 +19,8 @@ export interface MenuInteface {
   setAutoCompleteValue: React.Dispatch<
     React.SetStateAction<string | undefined>
   >;
-  isOpen: boolean;
+  openMenu: boolean;
+  setOpenMenu: () => void;
   loadingFullTree: boolean;
   repositoriesFromSearch?: RepositoryFromSearch[];
   selectedRepository?: RepositoryFromSearch;
@@ -35,13 +36,15 @@ export interface MenuInteface {
   searchingMode: SearchingType;
   setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
   setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
+  handleUploadModal: (p: boolean) => void;
 }
 
 export const Menu: React.FC<MenuInteface> = ({
   autoCompleteValue,
   setAutoCompleteValue,
   selectedRepository,
-  isOpen,
+  openMenu,
+  setOpenMenu,
   loadingFullTree,
   repositoriesFromSearch,
   repositoryTree,
@@ -53,17 +56,20 @@ export const Menu: React.FC<MenuInteface> = ({
   searchingMode,
   setSearchingMode,
   setRepositoryTree,
+  selectedBranch,
+  handleUploadModal,
 }) => {
   const { loggedData, logOut } = useAuthState();
   return (
     <div
       className={`${
-        isOpen ? 'w-[300px]' : 'invisible w-0'
-      } relative transition-all duration-500 ease-in-out select-none h-screen bg-mdtxBlack border-r-[2px] border-r-solid border-r-mdtxOrange0 flex flex-col items-center`}
+        openMenu ? 'w-[32rem]' : 'w-[4.2rem]'
+      } overflow-hidden relative transition-all duration-500 ease-in-out select-none h-screen bg-mdtxBlack border-r-[2px] border-r-solid border-r-mdtxBlack flex flex-col items-center`}
     >
+      <BackButton state={openMenu} onClick={setOpenMenu} />
       <div
         className={`${
-          isOpen
+          openMenu
             ? 'translate-x-[0%] duration-[900ms]'
             : 'translate-x-[-600px] duration-[300ms]'
         } w-full h-full transition-transform ease-in-out relative flex flex-col`}
@@ -77,7 +83,7 @@ export const Menu: React.FC<MenuInteface> = ({
             !(selectedRepository && repositoryTree)
               ? 'translate-x-[200%] invisible'
               : 'left-[50%] translate-x-[-50%]'
-          } top-[5.4rem] w-[90%] transition-all duration-300 ease-in-out absolute py-[1.6rem] px-[0.8rem]`}
+          } top-[5.4rem] w-[90%] transition-all duration-300 ease-in-out absolute py-[0.2rem] px-[0.8rem]`}
         >
           <div
             className="w-fit group cursor-pointer flex gap-[0.8rem] items-center"
@@ -94,6 +100,7 @@ export const Menu: React.FC<MenuInteface> = ({
             <div className="flex justify-center items-center gap-[0.8rem]">
               {selectedRepository && (
                 <Image
+                  loader={({ src }) => src}
                   priority
                   width={24}
                   height={24}
@@ -131,6 +138,9 @@ export const Menu: React.FC<MenuInteface> = ({
                 ? 'yes'
                 : 'no'}
             </strong>
+          </p>
+          <p className="text-white select-none text-[1.2rem]">
+            Current branch: <strong>{selectedBranch?.name}</strong>
           </p>
         </div>
         <div
@@ -171,6 +181,7 @@ export const Menu: React.FC<MenuInteface> = ({
             repositoryTree.length > 0 &&
             repositoryTree.map((x) => (
               <RepositoryTree
+                handleUploadModal={handleUploadModal}
                 setRepositoryTree={setRepositoryTree}
                 key={x.name}
                 root

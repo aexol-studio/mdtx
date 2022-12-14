@@ -9,10 +9,9 @@
     }
   },
   "extensions": {
-	  "http": {
-		  "routePrefix": "",
-      "EnableChunkedRequestBinding": true
-	  }
+    "http": {
+      "routePrefix": ""
+    }
   },
   "extensionBundle": {
     "id": "Microsoft.Azure.Functions.ExtensionBundle",

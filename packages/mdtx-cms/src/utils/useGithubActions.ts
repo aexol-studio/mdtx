@@ -1,25 +1,22 @@
+import { useAuthState } from './../containers/AuthContainer';
 import { Chain, ModelTypes } from '../zeus';
-const chain = (method: 'query' | 'mutation', token: string) => {
-  return Chain(process.env.NEXT_PUBLIC_HOST + '/graphql', {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  })(method);
-};
+
 export const useGithubActions = () => {
-  const getOid = async (
-    token: string,
-    input: {
-      repositoryName: string;
-      repositoryOwner: string;
-      branchName: string;
-    },
-  ) => {
-    const response = await chain(
-      'query',
-      token,
-    )({
+  const { token } = useAuthState();
+  const chain = (method: 'query' | 'mutation') => {
+    return Chain('https://api.github.com/graphql', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })(method);
+  };
+  const getOid = async (input: {
+    repositoryName: string;
+    repositoryOwner: string;
+    branchName: string;
+  }) => {
+    const response = await chain('query')({
       repository: [
         { name: input.repositoryName, owner: input.repositoryOwner },
         {
@@ -39,13 +36,9 @@ export const useGithubActions = () => {
     return response.repository?.object?.history.nodes;
   };
   const createCommitOnBranch = async (
-    token: string,
     input: ModelTypes['CreateCommitOnBranchInput'],
   ) => {
-    const response = await chain(
-      'mutation',
-      token,
-    )({
+    const response = await chain('mutation')({
       createCommitOnBranch: [
         { input },
         {
@@ -59,14 +52,8 @@ export const useGithubActions = () => {
       throw new Error('Bad response from createCommitOnBranch()');
     return response.createCommitOnBranch;
   };
-  const createBranch = async (
-    token: string,
-    input: ModelTypes['CreateRefInput'],
-  ) => {
-    const response = await chain(
-      'mutation',
-      token,
-    )({
+  const createBranch = async (input: ModelTypes['CreateRefInput']) => {
+    const response = await chain('mutation')({
       createRef: [
         { input },
         {
@@ -86,13 +73,9 @@ export const useGithubActions = () => {
     return response.createRef;
   };
   const createPullRequest = async (
-    token: string,
     input: ModelTypes['CreatePullRequestInput'],
   ) => {
-    const response = await chain(
-      'mutation',
-      token,
-    )({
+    const response = await chain('mutation')({
       createPullRequest: [{ input }, { pullRequest: { headRefName: true } }],
     });
     if (!response.createPullRequest)

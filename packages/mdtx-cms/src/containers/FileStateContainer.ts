@@ -5,6 +5,7 @@ export type FileType = {
   content: string;
   dir: boolean;
   name: string;
+  image?: ArrayBuffer;
 };
 
 const FileStateContainer = createContainer(() => {
@@ -12,9 +13,10 @@ const FileStateContainer = createContainer(() => {
   const [orginalFiles, setOrginalFiles] = useState<FileType[]>();
   const [modifiedFiles, setModifiedFiles] = useState<FileType[]>([]);
   const [deletions, setDeletions] = useState<FileType[]>([]);
-
+  const [imageToAdd, setImageToAdd] = useState<string>();
   const [pickedFilePath, setPickedFilePath] = useState<string>();
   const [isFilesDirty, setIsFilesDirty] = useState(false);
+  const [creatingFilePath, setCreatingFilePath] = useState<string>();
 
   const resetState = () => {
     setOrginalFiles(undefined);
@@ -101,6 +103,10 @@ const FileStateContainer = createContainer(() => {
     setModifiedFiles,
     deletions,
     setDeletions,
+    imageToAdd,
+    setImageToAdd,
+    creatingFilePath,
+    setCreatingFilePath,
   };
 });
 

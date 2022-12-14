@@ -1,6 +1,7 @@
 export type TreeObject = {
   name: string;
   path?: string;
+  image?: ArrayBuffer;
   children?: TreeMenu;
 };
 
@@ -21,6 +22,7 @@ export const treeBuilder = (paths: TreeMenu) => {
               (found = {
                 path: path.name,
                 name: name,
+                image: path.image,
               }),
             );
           } else {

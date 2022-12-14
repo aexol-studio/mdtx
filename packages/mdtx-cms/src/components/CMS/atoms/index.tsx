@@ -7,3 +7,4 @@ export * from './Selects';
 export * from './Input';
 export * from './PermissionsTable';
 export * from './PullRequestView';
+export * from './ColorPicker';

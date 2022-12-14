@@ -7,7 +7,7 @@ export const useGitHub = () => {
   const octokit = new Octokit({
     auth: token,
   });
-
+  const connectURL = process.env.NEXT_PUBLIC_PROXY || 'http://localhost:7071';
   //USE: FOR SEARCH FOR REPOSITORIES
   const getGitHubSearchRepositories = async (
     q: string,
@@ -33,14 +33,9 @@ export const useGitHub = () => {
     const { data } = await octokit.request(`GET ${url.pathname}`, {
       request: {
         fetch: async (url: string, opts: RequestInit | undefined) =>
-          fetch(
-            `https://mdtx-proxy-github-dev.azurewebsites.net/api${
-              new URL(url).pathname
-            }`,
-            {
-              ...opts,
-            },
-          ),
+          fetch(`${connectURL}/api${new URL(url).pathname}`, {
+            ...opts,
+          }),
       },
     });
     const fileArray = await unzipFunction(data);
@@ -52,15 +47,12 @@ export const useGitHub = () => {
   };
   //USE: FOR AUTHENTICATE
   const getGitHubToken = async (code: string) => {
-    const response = await fetch(
-      `https://mdtx-proxy-github-dev.azurewebsites.net/authenticate/${code}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+    const response = await fetch(`${connectURL}/authenticate/${code}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    ).catch(() => {});
+    }).catch(() => {});
     if (!response) throw new Error('Bad response from getGitHubToken()');
     return await response.json();
   };
@@ -134,25 +126,16 @@ export const useGitHub = () => {
     return data;
   };
 
-  //USE: FOR COMMIT
-  const doGitHubCommit = async (input: {
+  const getContents = async (input: {
     owner: string;
     repo: string;
-    message: string;
-    tree: string;
+    path: string;
+    ref: string;
   }) => {
-    const graphqlWithAuth = octokit.graphql(`{
-      mutation {
-        createCommitOnBranch(input:${input}) {
-          commit: {
-            oid: true
-          }
-        }
-      }
-    }`);
+    const { data } = await octokit.rest.repos.getContent(input);
+    if (!data) throw new Error('Bad response from doGitHubFork()');
+    return data;
   };
-  //USE: FOR PULL REQUEST (FOR PR)
-
   const getGitHubAfterLoginInfo = async () => {
     const promiseUserInfo = getGitHubUser();
     const promiseOrganisations = getGitHubUserOrganisationsInfo();
@@ -182,5 +165,6 @@ export const useGitHub = () => {
     getGitHubRepositoryPullRequests,
     getGitHubRepositoryForks,
     doGitHubFork,
+    getContents,
   };
 };

@@ -9,6 +9,7 @@ export enum MenuModalType {
   PULL_REQUEST = 'PULL_REQUEST',
   FORK = 'FORK',
   CHANGES = 'CHANGES',
+  UPLOAD = 'UPLOAD',
 }
 export const ButtonMenu: React.FC<{
   selectedRepository: RepositoryFromSearch;

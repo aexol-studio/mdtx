@@ -11,12 +11,16 @@ const httpTrigger: AzureFunction = async (_, req) => {
     },
   );
   response.headers.delete('access-control-allow-origin');
+  response.headers.delete('Transfer-Encoding');
   const body = await response.buffer();
   return {
     res: {
       status: response.status,
       body,
-      headers: response.headers.raw(),
+      headers: {
+        ...response.headers.raw(),
+        'Content-Length': body.byteLength,
+      },
     },
   };
 };

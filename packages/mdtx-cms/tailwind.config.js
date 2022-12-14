@@ -6,7 +6,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        mdtxBlack: '#111111',
+        mdtxBlack: '#11111D',
+        mdtxBlack1: '#1E1E2C',
         mdtxWhite: '#FFFFFF',
         mdtxOrange0: '#FF9800',
         mdtxOrange1: '#FF7200',

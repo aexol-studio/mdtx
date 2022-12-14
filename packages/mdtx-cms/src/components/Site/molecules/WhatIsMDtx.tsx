@@ -20,6 +20,7 @@ export const WhatIsMDtx: React.FC<IWhatIsMDtx> = ({ image, content }) => (
     <div className="select-none flex items-start justify-start w-full md:w-1/2">
       <div className="relative md:ml-[3.2rem] w-[64rem] h-[24rem] md:h-[39rem] rounded-[6px]">
         <Image
+          loader={({ src }) => src}
           priority
           unoptimized
           src={image}

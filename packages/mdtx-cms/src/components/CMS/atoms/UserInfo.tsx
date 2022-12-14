@@ -21,6 +21,7 @@ export const UserInfo: React.FC<{
           <div className="flex items-center gap-[0.8rem]">
             {loggedData.avatar_url && (
               <Image
+                loader={({ src }) => src}
                 priority
                 width={24}
                 height={24}
