@@ -189,17 +189,12 @@ const editor = () => {
     doGitHubFork,
     getContents,
   } = useGitHub();
-
   useEffect(() => {
-    const url = window.location.href;
-    const hasCode = url.includes('?code=');
-    const hasError = url.includes('?error=');
-    if (hasError) router.push('/');
-    if (hasCode) {
-      const newUrl = url.split('?code=');
-      const splittedUrl = newUrl[1].split('&');
-      const requestCode = splittedUrl[0];
-      getGitHubToken(requestCode)
+    const error = router.query.error;
+    const code = router.query.code;
+    if (error) logOut();
+    if (code) {
+      getGitHubToken(code as string)
         .then((data) => {
           setTokenWithLocal(data.token);
           setIsLoggedIn(true);
@@ -209,7 +204,7 @@ const editor = () => {
           logOut();
         });
     }
-  }, []);
+  }, [router.isReady]);
 
   useEffect(() => {
     const unloadCallback = (event: {
