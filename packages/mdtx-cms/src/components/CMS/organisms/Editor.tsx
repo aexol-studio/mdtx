@@ -13,6 +13,7 @@ import {
 import { Bold } from '../editor-functions/Bold';
 import { ColorPicker } from '../atoms';
 import { EditorContext } from '@uiw/react-md-editor/lib/Context';
+import { useGitHub } from '@/src/utils';
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
@@ -25,6 +26,7 @@ export const Editor: React.FC<{
   selectedBranch: availableBranchType | undefined;
   menuFnc: () => void;
 }> = ({ selectedRepository, selectedBranch, menuFnc }) => {
+  const { getContents } = useGitHub();
   const [color, setColor] = useState('#ffffff');
   const {
     getSelectedFileByPath,
@@ -58,7 +60,9 @@ export const Editor: React.FC<{
     element.download = name + `-` + Date.now() + '.md';
     document.body.appendChild(element);
     element.click();
-    document.body.removeChild(element);
+    if (element) {
+      document.body.removeChild(element);
+    }
   };
   const hardStyles = `
     .headingsButton:hover {
@@ -120,7 +124,7 @@ export const Editor: React.FC<{
       height: 20px;
     }
   `;
-
+  const [privateImageUrl, setPrivateImageUrl] = useState('');
   return commands && utils ? (
     <>
       {!pickedFilePath && (
@@ -137,7 +141,26 @@ export const Editor: React.FC<{
         value={getSelectedFileByPath()?.content}
         previewOptions={{
           transformImageUri: (src) => {
-            return !src.includes('https') || !src.includes('http')
+            if (selectedRepository?.private && selectedBranch) {
+              const input = {
+                owner: selectedRepository.full_name.split('/')[0],
+                repo: selectedRepository.full_name.split('/')[1],
+                path: src,
+                ref: selectedBranch?.name,
+              };
+              getContents(input)
+                .then((x) =>
+                  setPrivateImageUrl(
+                    ('download_url' in x && x.download_url) || '',
+                  ),
+                )
+                .catch(() => {});
+            }
+            return selectedRepository?.private
+              ? !src.includes('https') || !src.includes('http')
+                ? privateImageUrl
+                : src
+              : !src.includes('https') || !src.includes('http')
               ? `https://github.com/${selectedRepository?.full_name}/blob/${selectedBranch?.name}/${src}?raw=true`
               : src;
           },
@@ -247,8 +270,8 @@ export const Editor: React.FC<{
           }),
           commands.divider,
           commands.group([], {
-            icon: <></>,
-            children: ({ getState, textApi }) => {
+            icon: undefined,
+            children: ({ getState, textApi, close }) => {
               const { imageToAdd } = useFileState();
               return (
                 <div
@@ -278,7 +301,9 @@ export const Editor: React.FC<{
                       }
                     }
                   }}
-                />
+                >
+                  x
+                </div>
               );
             },
           }),

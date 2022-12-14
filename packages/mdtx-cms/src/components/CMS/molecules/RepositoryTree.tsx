@@ -16,10 +16,17 @@ export const RepositoryTree: React.FC<{
   activePath?: string;
   activeFile?: TreeObject;
   setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
-}> = ({ tree, root, activePath, activeFile, setRepositoryTree }) => {
+  handleUploadModal: (p: boolean) => void;
+}> = ({
+  tree,
+  root,
+  activePath,
+  activeFile,
+  setRepositoryTree,
+  handleUploadModal,
+}) => {
   const [creatingModal, setCreatingModal] = useState(false);
   const [creatingFile, setCreatingFile] = useState(false);
-  const [creatingFilePath, setCreatingFilePath] = useState<string>();
   const [fileName, setFileName] = useState<string>();
   const [fileWithOpenContext, setFileWithOpenContext] = useState<TreeObject>();
   const {
@@ -33,6 +40,8 @@ export const RepositoryTree: React.FC<{
     getSelectedFileByPath,
     setDeletions,
     setImageToAdd,
+    creatingFilePath,
+    setCreatingFilePath,
   } = useFileState();
 
   const hasChildren = !!tree?.children;
@@ -44,6 +53,7 @@ export const RepositoryTree: React.FC<{
   const notAllowed = (p: string) => !!p.match(wantedImages);
   const isImage = notAllowed(tree!.name);
   const [imgURL, setImgURL] = useState<string>();
+
   const clickHandler = () => {
     if (tree?.name) {
       if (isImage && tree.image) {
@@ -137,6 +147,7 @@ export const RepositoryTree: React.FC<{
   const handleContextMenu = useCallback(
     (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       e.preventDefault();
+      setImageToAdd(tree?.path);
       setContextMenuState({
         xPos: `${e.pageX}px`,
         yPos: `${e.pageY}px`,
@@ -153,6 +164,7 @@ export const RepositoryTree: React.FC<{
       yPos: '0px',
     }),
   );
+  const executable = document.getElementById('insert-menu-image');
   return (
     <>
       <div className={`pl-[0.8rem] w-full relative`}>
@@ -164,8 +176,6 @@ export const RepositoryTree: React.FC<{
             {isImage && (
               <div
                 onClick={() => {
-                  const executable =
-                    document.getElementById('insert-menu-image');
                   if (executable) {
                     executable.click();
                   }
@@ -216,14 +226,12 @@ export const RepositoryTree: React.FC<{
               {!(hasChildren && root) && (
                 <div
                   onContextMenu={(e) => {
-                    setImageToAdd(tree?.path);
                     if (!isFolder) {
                       handleContextMenu(e);
                       setFileWithOpenContext(tree);
                     }
                   }}
                   onClick={(e) => {
-                    setImageToAdd(tree?.path);
                     !(hasChildren && root) && clickHandler();
                     if (isImage) {
                       handleContextMenu(e);
@@ -257,7 +265,7 @@ export const RepositoryTree: React.FC<{
                 {creatingModal && (
                   <div
                     ref={ref}
-                    className="w-[13.2rem] flex items-center justify-center z-[100] bg-mdtxBlack py-[1.2rem] top-[1.8rem] right-[0rem] absolute border-mdtxWhite border-[1px]"
+                    className="w-[14.8rem] flex flex-col px-[0.8rem] justify-center z-[100] bg-mdtxBlack py-[1.2rem] top-[1.8rem] right-[0rem] absolute border-mdtxWhite border-[1px]"
                   >
                     <div
                       onClick={() => {
@@ -273,6 +281,17 @@ export const RepositoryTree: React.FC<{
                         <FilePlusIcon />
                       </div>
                     </div>
+                    <div
+                      onClick={() => {
+                        setCreatingModal(false);
+                        handleUploadModal(true);
+                      }}
+                      className="flex cursor-pointer group gap-[0.8rem]"
+                    >
+                      <p className="group-hover:underline cursor-pointer w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite group-hover:text-mdtxOrange0">
+                        Add new image file
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -284,6 +303,7 @@ export const RepositoryTree: React.FC<{
           tree.children?.map((v) => {
             return (
               <RepositoryTree
+                handleUploadModal={handleUploadModal}
                 setRepositoryTree={setRepositoryTree}
                 key={v.name}
                 activeFile={activeFile}

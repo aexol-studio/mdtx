@@ -36,6 +36,7 @@ export interface MenuInteface {
   searchingMode: SearchingType;
   setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
   setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
+  handleUploadModal: (p: boolean) => void;
 }
 
 export const Menu: React.FC<MenuInteface> = ({
@@ -55,6 +56,8 @@ export const Menu: React.FC<MenuInteface> = ({
   searchingMode,
   setSearchingMode,
   setRepositoryTree,
+  selectedBranch,
+  handleUploadModal,
 }) => {
   const { loggedData, logOut } = useAuthState();
   return (
@@ -80,7 +83,7 @@ export const Menu: React.FC<MenuInteface> = ({
             !(selectedRepository && repositoryTree)
               ? 'translate-x-[200%] invisible'
               : 'left-[50%] translate-x-[-50%]'
-          } top-[5.4rem] w-[90%] transition-all duration-300 ease-in-out absolute py-[1.6rem] px-[0.8rem]`}
+          } top-[5.4rem] w-[90%] transition-all duration-300 ease-in-out absolute py-[0.2rem] px-[0.8rem]`}
         >
           <div
             className="w-fit group cursor-pointer flex gap-[0.8rem] items-center"
@@ -136,6 +139,9 @@ export const Menu: React.FC<MenuInteface> = ({
                 : 'no'}
             </strong>
           </p>
+          <p className="text-white select-none text-[1.2rem]">
+            Current branch: <strong>{selectedBranch?.name}</strong>
+          </p>
         </div>
         <div
           className={`${
@@ -175,6 +181,7 @@ export const Menu: React.FC<MenuInteface> = ({
             repositoryTree.length > 0 &&
             repositoryTree.map((x) => (
               <RepositoryTree
+                handleUploadModal={handleUploadModal}
                 setRepositoryTree={setRepositoryTree}
                 key={x.name}
                 root

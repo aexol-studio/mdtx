@@ -16,6 +16,7 @@ const FileStateContainer = createContainer(() => {
   const [imageToAdd, setImageToAdd] = useState<string>();
   const [pickedFilePath, setPickedFilePath] = useState<string>();
   const [isFilesDirty, setIsFilesDirty] = useState(false);
+  const [creatingFilePath, setCreatingFilePath] = useState<string>();
 
   const resetState = () => {
     setOrginalFiles(undefined);
@@ -104,6 +105,8 @@ const FileStateContainer = createContainer(() => {
     setDeletions,
     imageToAdd,
     setImageToAdd,
+    creatingFilePath,
+    setCreatingFilePath,
   };
 });
 

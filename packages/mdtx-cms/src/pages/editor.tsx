@@ -15,6 +15,7 @@ import {
   PullRequestModal,
   SearchingType,
   Editor,
+  UploadModal,
 } from '../components';
 import {
   useFileState,
@@ -38,6 +39,7 @@ export type RepositoryFromSearch = {
   id: number;
   node_id: string;
   fork: boolean;
+  private: boolean;
   owner: {
     avatar_url: string;
     login: string;
@@ -104,12 +106,16 @@ const editor = () => {
 
   const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
     useGithubActions();
-
-  const { setFiles, setOrginalFiles, isFilesDirty, modifiedFiles, resetState } =
-    useFileState();
+  const {
+    setFiles,
+    setOrginalFiles,
+    isFilesDirty,
+    modifiedFiles,
+    resetState,
+    creatingFilePath,
+  } = useFileState();
 
   const {
-    token,
     isLoggedIn,
     setLoggedData,
     loggedData,
@@ -117,6 +123,7 @@ const editor = () => {
     setIsLoggedIn,
     logOut,
   } = useAuthState();
+
   const [includeForks, setIncludeForks] = useState(true);
   const [forksOnRepo, setForksOnRepo] = useState<{ full_name: string }[]>();
 
@@ -133,7 +140,8 @@ const editor = () => {
   >();
 
   const [foundedFork, setFoundedFork] = useState(false);
-
+  const [file, setFile] = useState<File>();
+  const handleFile = (p: File) => setFile(p);
   const [searchingMode, setSearchingMode] = useState<SearchingType>(
     SearchingType.ALL,
   );
@@ -144,6 +152,8 @@ const editor = () => {
   const [repositoriesFromSearch, setRepositoriesFromSearch] =
     useState<RepositoryFromSearch[]>();
   const [downloadModal, setDownloadModal] = useState(false);
+  const [uploadModal, setUploadModal] = useState(false);
+  const handleUploadModal = (p: boolean) => setUploadModal(p);
   const [availableBranches, setAvailableBranches] =
     useState<availableBranchType[]>();
   const [availablePullRequests, setAvailablePullRequests] =
@@ -177,6 +187,7 @@ const editor = () => {
     getGitHubRepositoryPullRequests,
     getGitHubRepositoryForks,
     doGitHubFork,
+    getContents,
   } = useGitHub();
 
   useEffect(() => {
@@ -335,44 +346,40 @@ const editor = () => {
       });
     });
     if (
-      token &&
       filesToSend &&
-      selectedRepository &&
-      selectedRepository.owner &&
+      selectedRepository?.owner &&
       modifiedFiles &&
       selectedBranch
     ) {
-      getOid(token, {
+      const oidArray = await getOid({
         branchName: selectedBranch.name,
         repositoryName: selectedRepository.name,
         repositoryOwner: selectedRepository.owner.login,
-      }).then((oidArray) => {
-        createCommitOnBranch(token, {
-          branch: {
-            branchName: selectedBranch.name,
-            repositoryNameWithOwner: selectedRepository.full_name,
-          },
-          expectedHeadOid: oidArray[0].oid,
-          message: {
-            headline: data.commitHeadlineMessage,
-            body: data.commitBodyMessage,
-          },
-          fileChanges: {
-            additions: filesToSend,
-          },
-        }).then((createdCommit) => {
-          if (createdCommit.commit?.oid) {
-            resetState();
-            confirmBranchClick().then(() => {
-              setSubmittingCommit(false);
-              setMenuModal(undefined);
-            });
-          }
-        });
       });
+      const createdCommit = await createCommitOnBranch({
+        branch: {
+          branchName: selectedBranch.name,
+          repositoryNameWithOwner: selectedRepository.full_name,
+        },
+        expectedHeadOid: oidArray[0].oid,
+        message: {
+          headline: data.commitHeadlineMessage,
+          body: data.commitBodyMessage,
+        },
+        fileChanges: {
+          additions: filesToSend,
+        },
+      });
+      if (oidArray && createdCommit.commit?.oid) {
+        resetState();
+        confirmBranchClick().then(() => {
+          setSubmittingCommit(false);
+          setMenuModal(undefined);
+        });
+      }
     }
   };
-  const onPullRequestSubmit: SubmitHandler<PullRequestInput> = (data) => {
+  const onPullRequestSubmit: SubmitHandler<PullRequestInput> = async (data) => {
     setPullRequest(true);
     const filesToSend: { path: string; contents: string }[] = [];
     modifiedFiles.map((x) => {
@@ -383,61 +390,54 @@ const editor = () => {
       });
     });
     if (
-      token &&
       filesToSend &&
-      selectedRepository &&
-      selectedRepository.owner &&
+      selectedRepository?.owner &&
       modifiedFiles &&
       selectedBranch
     ) {
-      getOid(token, {
+      const oidArray = await getOid({
         branchName: selectedBranch.name,
         repositoryName: selectedRepository.name,
         repositoryOwner: selectedRepository.owner.login,
-      }).then((oidArray) => {
-        createBranch(token, {
-          name: `refs/heads/${data.newBranchName}`,
-          oid: oidArray[0].oid,
-          repositoryId: selectedRepository.node_id,
-        }).then((createdBranch) => {
-          const ref = createdBranch.ref;
-          if (ref) {
-            createCommitOnBranch(token, {
-              branch: {
-                branchName: ref.name,
-                repositoryNameWithOwner: selectedRepository.full_name,
-              },
-              expectedHeadOid: oidArray[0].oid,
-              message: {
-                headline: data.commitHeadlineMessage,
-                body: data.commitBodyMessage,
-              },
-              fileChanges: {
-                additions: filesToSend,
-              },
-            }).then((createdCommit) => {
-              if (createdCommit) {
-                createPullRequest(token, {
-                  baseRefName: data.selectedTargetBranch,
-                  headRefName: ref.name,
-                  repositoryId: selectedRepository.node_id,
-                  title: data.pullRequestTitle,
-                  body: data.pullRequestMessage,
-                }).then((pr) => {
-                  if (pr.pullRequest) {
-                    resetState();
-                    confirmBranchClick(ref.name).then(() => {
-                      setPullRequest(false);
-
-                      setMenuModal(undefined);
-                    });
-                  }
-                });
-              }
+      });
+      const createdBranch = await createBranch({
+        name: `refs/heads/${data.newBranchName}`,
+        oid: oidArray[0].oid,
+        repositoryId: selectedRepository.node_id,
+      });
+      const ref = createdBranch.ref;
+      if (ref) {
+        const createdCommit = await createCommitOnBranch({
+          branch: {
+            branchName: ref.name,
+            repositoryNameWithOwner: selectedRepository.full_name,
+          },
+          expectedHeadOid: oidArray[0].oid,
+          message: {
+            headline: data.commitHeadlineMessage,
+            body: data.commitBodyMessage,
+          },
+          fileChanges: {
+            additions: filesToSend,
+          },
+        });
+        if (createdCommit) {
+          const createdPullReq = await createPullRequest({
+            baseRefName: data.selectedTargetBranch,
+            headRefName: ref.name,
+            repositoryId: selectedRepository.node_id,
+            title: data.pullRequestTitle,
+            body: data.pullRequestMessage,
+          });
+          if (createdPullReq.pullRequest) {
+            resetState();
+            confirmBranchClick(ref.name).then(() => {
+              setPullRequest(false);
+              setMenuModal(undefined);
             });
           }
-        });
-      });
+        }
+      }
     }
   };
 
@@ -510,8 +510,60 @@ const editor = () => {
     }
   };
 
+  const onUploadSubmit = async () => {
+    const path = creatingFilePath?.slice(creatingFilePath.indexOf('/') + 1);
+    if (file && selectedBranch && selectedRepository?.owner) {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64 = buffer.toString('base64');
+      const oidArray = await getOid({
+        branchName: selectedBranch.name,
+        repositoryName: selectedRepository.name,
+        repositoryOwner: selectedRepository.owner.login,
+      });
+      const createdCommit = await createCommitOnBranch({
+        branch: {
+          branchName: selectedBranch.name,
+          repositoryNameWithOwner: selectedRepository.full_name,
+        },
+        expectedHeadOid: oidArray[0].oid,
+        message: {
+          headline: 'Upload image',
+          body: 'Upload image',
+        },
+        fileChanges: {
+          additions: [
+            {
+              contents: base64,
+              path: path ? path : '' + file.name,
+            },
+          ],
+        },
+      });
+      if (oidArray && createdCommit.commit?.oid) {
+        // resetState();
+        confirmBranchClick().then(() => {
+          handleUploadModal(false);
+        });
+      }
+    }
+  };
+
   return (
     <Layout isEditor pageTitle="MDtx Editor">
+      {uploadModal && (
+        <Modal
+          closeFnc={() => {
+            handleUploadModal(false);
+          }}
+        >
+          <UploadModal
+            file={file}
+            handleFile={handleFile}
+            onUploadSubmit={onUploadSubmit}
+          />
+        </Modal>
+      )}
       {downloadModal && availableBranches?.length && (
         <Modal
           customClassName="flex flex-col w-[60rem] h-[40rem]"
@@ -589,6 +641,7 @@ const editor = () => {
       )}
       <div className="fixed z-[100]">
         <Menu
+          handleUploadModal={handleUploadModal}
           setRepositoryTree={setRepositoryTree}
           searchingMode={searchingMode}
           setSearchingMode={setSearchingMode}

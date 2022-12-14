@@ -12,7 +12,7 @@ export const Modal: React.FC<{
   useOutsideClick(ref, () => !blockingState && closeFnc());
   return (
     <div
-      className={`justify-center items-center flex w-screen h-screen fixed z-[100] bg-[#11111140] backdrop-blur-[2px]`}
+      className={`justify-center items-center flex w-screen h-screen fixed z-[200] bg-[#11111140] backdrop-blur-[2px]`}
     >
       <div
         ref={ref}

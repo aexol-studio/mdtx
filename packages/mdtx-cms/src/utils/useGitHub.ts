@@ -126,25 +126,16 @@ export const useGitHub = () => {
     return data;
   };
 
-  //USE: FOR COMMIT
-  const doGitHubCommit = async (input: {
+  const getContents = async (input: {
     owner: string;
     repo: string;
-    message: string;
-    tree: string;
+    path: string;
+    ref: string;
   }) => {
-    const graphqlWithAuth = octokit.graphql(`{
-      mutation {
-        createCommitOnBranch(input:${input}) {
-          commit: {
-            oid: true
-          }
-        }
-      }
-    }`);
+    const { data } = await octokit.rest.repos.getContent(input);
+    if (!data) throw new Error('Bad response from doGitHubFork()');
+    return data;
   };
-  //USE: FOR PULL REQUEST (FOR PR)
-
   const getGitHubAfterLoginInfo = async () => {
     const promiseUserInfo = getGitHubUser();
     const promiseOrganisations = getGitHubUserOrganisationsInfo();
@@ -174,5 +165,6 @@ export const useGitHub = () => {
     getGitHubRepositoryPullRequests,
     getGitHubRepositoryForks,
     doGitHubFork,
+    getContents,
   };
 };
