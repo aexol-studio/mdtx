@@ -40,13 +40,25 @@ export const ColorPicker: React.FC<{
                   selection: state.selection,
                 });
                 const state1 = textApi.setSelectionRange(newSelectionRange);
-                const state2 = textApi.replaceSelection(
-                  `<span style="color:${value}">${state1.selectedText}</span>`,
-                );
-                textApi.setSelectionRange({
-                  start: state2.selection.end - 7 - state1.selectedText.length,
-                  end: state2.selection.end - 7,
-                });
+                if (state1.selectedText[0] === '#') {
+                  const state2 = textApi.replaceSelection(
+                    `${state1.selectedText}\n<!--rehype:style=color: ${value};-->`,
+                  );
+                  textApi.setSelectionRange({
+                    start:
+                      state2.selection.end - 36 - state1.selectedText.length,
+                    end: state2.selection.end - 36,
+                  });
+                } else {
+                  const state2 = textApi.replaceSelection(
+                    `${state1.selectedText}<!--rehype:style=color: ${value};-->`,
+                  );
+                  textApi.setSelectionRange({
+                    start:
+                      state2.selection.end - 35 - state1.selectedText.length,
+                    end: state2.selection.end - 35,
+                  });
+                }
               }
               close();
             }

@@ -13,7 +13,7 @@ const FileStateContainer = createContainer(() => {
   const [orginalFiles, setOrginalFiles] = useState<FileType[]>();
   const [modifiedFiles, setModifiedFiles] = useState<FileType[]>([]);
   const [deletions, setDeletions] = useState<FileType[]>([]);
-
+  const [imageToAdd, setImageToAdd] = useState<string>();
   const [pickedFilePath, setPickedFilePath] = useState<string>();
   const [isFilesDirty, setIsFilesDirty] = useState(false);
 
@@ -102,6 +102,8 @@ const FileStateContainer = createContainer(() => {
     setModifiedFiles,
     deletions,
     setDeletions,
+    imageToAdd,
+    setImageToAdd,
   };
 });
 

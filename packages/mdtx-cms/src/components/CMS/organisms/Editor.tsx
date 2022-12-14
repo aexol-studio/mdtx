@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useFileState } from '@/src/containers';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
@@ -12,7 +12,10 @@ import {
 } from '../editor-functions';
 import { Bold } from '../editor-functions/Bold';
 import { ColorPicker } from '../atoms';
+import { EditorContext } from '@uiw/react-md-editor/lib/Context';
+
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
+
 type commandsType = typeof import('@uiw/react-md-editor/lib/commands/index');
 export type utilsType =
   typeof import('@uiw/react-md-editor/lib/utils/markdownUtils');
@@ -38,6 +41,7 @@ export const Editor: React.FC<{
     const utils = await import('@uiw/react-md-editor').then(
       (mod) => mod.MarkdownUtil,
     );
+
     setUtils(utils);
     setCommands(commands);
   };
@@ -45,7 +49,6 @@ export const Editor: React.FC<{
   useEffect(() => {
     loaderCommands();
   }, []);
-
   const handleDownload = (text: string) => {
     const name = getSelectedFileByPath()?.name;
     if (!text) return;
@@ -57,7 +60,6 @@ export const Editor: React.FC<{
     element.click();
     document.body.removeChild(element);
   };
-
   const hardStyles = `
     .headingsButton:hover {
       background-color: transparent !important;
@@ -118,6 +120,7 @@ export const Editor: React.FC<{
       height: 20px;
     }
   `;
+
   return commands && utils ? (
     <>
       {!pickedFilePath && (
@@ -244,41 +247,39 @@ export const Editor: React.FC<{
           }),
           commands.divider,
           commands.group([], {
-            name: 'CodeBlock',
-            keyCommand: 'CodeBlock',
-            buttonProps: { 'aria-label': 'Insert CodeBlock' },
-            icon: (
-              <svg
-                width="24"
-                height="25"
-                viewBox="0 0 24 25"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M17 17.5L22 12.5L17 7.5M7 7.5L2 12.5L7 17.5M14 3.5L10 21.5"
-                  stroke="#E1E5EE"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+            icon: <></>,
+            children: ({ getState, textApi }) => {
+              const { imageToAdd } = useFileState();
+              return (
+                <div
+                  id="insert-menu-image"
+                  onClick={() => {
+                    if (getState) {
+                      const state = getState();
+                      if (utils && state) {
+                        const newSelectionRange = utils.selectWord({
+                          text: state.text,
+                          selection: state.selection,
+                        });
+                        const state1 =
+                          textApi?.setSelectionRange(newSelectionRange);
+                        const state2 = textApi?.replaceSelection(
+                          `![Alt](${imageToAdd?.slice(
+                            imageToAdd.indexOf('/') + 1,
+                          )})`,
+                        );
+                        textApi?.setSelectionRange({
+                          start:
+                            state2!.selection.end -
+                            1 -
+                            state1!.selectedText.length,
+                          end: state2!.selection.end - 1,
+                        });
+                      }
+                    }
+                  }}
                 />
-              </svg>
-            ),
-            execute: (state, api) => {
-              if (utils) {
-                const newSelectionRange = utils.selectWord({
-                  text: state.text,
-                  selection: state.selection,
-                });
-                const state1 = api.setSelectionRange(newSelectionRange);
-                const state2 = api.replaceSelection(
-                  `![Alt](${state1.selectedText})`,
-                );
-                api.setSelectionRange({
-                  start: state2.selection.end - 1 - state1.selectedText.length,
-                  end: state2.selection.end - 1,
-                });
-              }
+              );
             },
           }),
         ]}

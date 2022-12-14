@@ -32,6 +32,7 @@ export const RepositoryTree: React.FC<{
     deletions,
     getSelectedFileByPath,
     setDeletions,
+    setImageToAdd,
   } = useFileState();
 
   const hasChildren = !!tree?.children;
@@ -163,27 +164,14 @@ export const RepositoryTree: React.FC<{
             {isImage && (
               <div
                 onClick={() => {
-                  // if (utils) {
-                  //   const newSelectionRange = utils.selectWord({
-                  //     text: state.text,
-                  //     selection: state.selection,
-                  //   });
-                  //   const state1 = api.setSelectionRange(newSelectionRange);
-                  //   const state2 = api.replaceSelection(
-                  //     `![Alt](${state1.selectedText})`,
-                  //   );
-                  //   api.setSelectionRange({
-                  //     start:
-                  //       state2.selection.end - 1 - state1.selectedText.length,
-                  //     end: state2.selection.end - 1,
-                  //   });
-                  // }
+                  const executable =
+                    document.getElementById('insert-menu-image');
+                  if (executable) {
+                    executable.click();
+                  }
                 }}
                 className="mb-[1.6rem] group flex gap-[0.4rem] items-center cursor-pointer w-fit"
               >
-                {/* <div className="min-w-[2rem] min-h-[2rem]">
-                  <ThrashIcon />
-                </div> */}
                 <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite">
                   Insert photo
                 </p>
@@ -228,14 +216,18 @@ export const RepositoryTree: React.FC<{
               {!(hasChildren && root) && (
                 <div
                   onContextMenu={(e) => {
+                    setImageToAdd(tree?.path);
                     if (!isFolder) {
                       handleContextMenu(e);
                       setFileWithOpenContext(tree);
                     }
                   }}
                   onClick={(e) => {
+                    setImageToAdd(tree?.path);
                     !(hasChildren && root) && clickHandler();
-                    isImage && handleContextMenu(e);
+                    if (isImage) {
+                      handleContextMenu(e);
+                    }
                   }}
                   className="cursor-pointer"
                 >
