@@ -188,13 +188,13 @@ export const RepositoryTree: React.FC<{
               </div>
             )}
             <div
-              onClick={deletingHandler}
+              // onClick={deletingHandler}
               className="group flex gap-[0.4rem] items-center cursor-pointer w-fit"
             >
               <div className="min-w-[2rem] min-h-[2rem]">
                 <ThrashIcon />
               </div>
-              <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite">
+              <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-darkGray">
                 Delete file
               </p>
             </div>
