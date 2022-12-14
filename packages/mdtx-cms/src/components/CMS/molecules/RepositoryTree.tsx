@@ -176,13 +176,13 @@ export const RepositoryTree: React.FC<{
             {isImage && (
               <div
                 onClick={() => {
-                  if (executable) {
-                    executable.click();
-                  }
+                  // if (executable) {
+                  //   executable.click();
+                  // }
                 }}
                 className="mb-[1.6rem] group flex gap-[0.4rem] items-center cursor-pointer w-fit"
               >
-                <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite">
+                <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-darkGray">
                   Insert photo
                 </p>
               </div>
@@ -283,12 +283,12 @@ export const RepositoryTree: React.FC<{
                     </div>
                     <div
                       onClick={() => {
-                        setCreatingModal(false);
-                        handleUploadModal(true);
+                        // setCreatingModal(false);
+                        // handleUploadModal(true);
                       }}
                       className="flex cursor-pointer group gap-[0.8rem]"
                     >
-                      <p className="group-hover:underline cursor-pointer w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite group-hover:text-mdtxOrange0">
+                      <p className="group-hover:underline cursor-pointer w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-darkGray group-hover:text-mdtxOrange0">
                         Add new image file
                       </p>
                     </div>

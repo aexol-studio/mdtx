@@ -195,7 +195,7 @@ const editor = () => {
     const hasCode = url.includes('?code=');
     const hasError = url.includes('?error=');
     if (hasError) router.push('/');
-    if (!isLoggedIn && hasCode) {
+    if (hasCode) {
       const newUrl = url.split('?code=');
       const splittedUrl = newUrl[1].split('&');
       const requestCode = splittedUrl[0];
@@ -250,11 +250,13 @@ const editor = () => {
       setIsLoggedIn(true);
     }
   };
+
   useEffect(() => {
     if (isLoggedIn) {
       afterLoginInfo();
     }
   }, [isLoggedIn]);
+
   const controllerZIP = new AbortController();
 
   const confirmBranchClick = async (branchName?: string) => {
