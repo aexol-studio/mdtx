@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
+import { useGitHub } from '../utils';
 
 export type FileType = {
   content: string;
@@ -17,7 +18,7 @@ const FileStateContainer = createContainer(() => {
   const [pickedFilePath, setPickedFilePath] = useState<string>();
   const [isFilesDirty, setIsFilesDirty] = useState(false);
   const [creatingFilePath, setCreatingFilePath] = useState<string>();
-
+  const { getContents } = useGitHub();
   const resetState = () => {
     setOrginalFiles(undefined);
     setModifiedFiles([]);

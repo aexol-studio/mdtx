@@ -52,12 +52,12 @@ export const Editor: React.FC<{
     loaderCommands();
   }, []);
   const handleDownload = (text: string) => {
-    const name = getSelectedFileByPath()?.name;
+    // const name = getSelectedFileByPath()?.name;
     if (!text) return;
     const file = new Blob([text], { type: 'text/plain' });
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
-    element.download = name + `-` + Date.now() + '.md';
+    element.download = 'mdtx' + `-` + Date.now() + '.md';
     document.body.appendChild(element);
     element.click();
     if (element) {

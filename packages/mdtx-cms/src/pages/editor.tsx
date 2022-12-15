@@ -187,11 +187,14 @@ const editor = () => {
     getGitHubRepositoryPullRequests,
     getGitHubRepositoryForks,
     doGitHubFork,
+    getGitHubRepositoryBranch,
     getContents,
+    getTree,
   } = useGitHub();
+
+  const error = router.query.error;
+  const code = router.query.code;
   useEffect(() => {
-    const error = router.query.error;
-    const code = router.query.code;
     if (error) logOut();
     if (code) {
       getGitHubToken(code as string)
@@ -229,7 +232,6 @@ const editor = () => {
         );
       setUserForks(tempArr);
       setLoggedData(user);
-      setIsLoggedIn(true);
     }
   };
 
@@ -253,21 +255,85 @@ const editor = () => {
 
   const confirmBranchClick = async (branchName?: string) => {
     if (isLoggedIn && selectedRepository && selectedBranch) {
-      setDownloadZIP(true);
-      const response = await getGitHubRepositoryAsZIP({
-        owner: selectedRepository?.full_name.split('/')[0],
-        repo: selectedRepository?.full_name.split('/')[1],
-        ref: branchName ? branchName : selectedBranch.name,
+      const input = {
+        owner: selectedRepository.full_name.split('/')[0],
+        repo: selectedRepository.full_name.split('/')[1],
+      };
+      const getBranchInfo = await getGitHubRepositoryBranch({
+        ...input,
+        branch: selectedBranch.name,
       });
+      console.log(getBranchInfo);
+      setDownloadZIP(true);
+      // const response = await getGitHubRepositoryAsZIP({
+      //   owner: selectedRepository?.full_name.split('/')[0],
+      //   repo: selectedRepository?.full_name.split('/')[1],
+      //   ref: branchName ? branchName : selectedBranch.name,
+      // });
 
-      if (response !== undefined) {
-        const wantedFiles = /(.*)\.(png|jpg|jpeg|gif|webp|md)$/;
+      if (getBranchInfo !== undefined) {
+        const input = {
+          owner: selectedRepository.full_name.split('/')[0],
+          repo: selectedRepository.full_name.split('/')[1],
+          tree_sha: getBranchInfo.commit.sha,
+        };
+        const items = await getTree(input);
+        const wantedFiles = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
         const isWanted = (p: string) => !!p.match(wantedFiles);
-        const paths = response.filter((z) => isWanted(z.name));
-        const tree = treeBuilder(paths);
+        const onlyMDReg = /(.*)\.md$/;
+        const onlyMD = (p: string) => !!p.match(onlyMDReg);
+        const images = items.tree
+          .filter((x) => {
+            const z = x.path?.split('/');
+            const wanted = z?.at(z.length - 1);
+            if (wanted) {
+              return isWanted(wanted);
+            }
+          })
+          .map((z) => ({
+            content: z.url || '',
+            dir: z.type === 'tree' ? true : false,
+            name: `${selectedRepository.name}/${z.path}`,
+          }))
+          .filter((x) => x.name !== '');
+        const onlyMDs = items.tree.filter((x) => {
+          const z = x.path?.split('/');
+          const wanted = z?.at(z.length - 1);
+          if (wanted) {
+            return onlyMD(wanted);
+          }
+        });
+        const withContent = await Promise.all(
+          onlyMDs.map(async (x) => {
+            const response = await getContents({
+              owner: selectedRepository.full_name.split('/')[0],
+              repo: selectedRepository.full_name.split('/')[1],
+              path: x.path || '',
+              ref: selectedBranch.name,
+            });
+            return {
+              content:
+                'content' in response
+                  ? Buffer.from(response.content, 'base64').toString('utf-8')
+                  : '',
+              dir: false,
+              name: `${selectedRepository.name}/${x.path}`,
+            };
+          }),
+        );
+        // const paths = items.tree.filter((z) => isWanted(z.name));
+        const temp = [...withContent, ...images].map((x) => {
+          return {
+            content: x.content,
+            dir: x.dir,
+            name: x.name,
+          };
+        });
+        console.log(temp);
+        const tree = treeBuilder(temp);
         setRepositoryTree(tree);
-        setFiles(paths);
-        setOrginalFiles(paths);
+        setFiles(temp);
+        setOrginalFiles(temp);
         setAutoCompleteValue('');
         setRepositoriesFromSearch(undefined);
         setDownloadZIP(false);
