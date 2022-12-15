@@ -54,42 +54,33 @@ export const NavigationBar = () => {
   return (
     <nav
       className={`
-        z-[99] top-0 w-full py-[2.2rem] bg-mdtxBlack fixed transition-all duration-300'
+        z-[99] top-0 max-w-[1024px] w-full left-[50%] translate-x-[-50%] flex justify-center items-center h-[6.4rem] bg-landing-background fixed transition-all duration-300'
         ${hideNavbar ? 'opacity-0' : 'opacity-1'}
       `}
     >
-      <div className="max-w-[90%] mx-auto w-full xl:max-w-[1068px] flex justify-between items-center relative">
+      <div className="mx-auto w-full xl:max-w-[976px] flex justify-between items-center relative">
         <div className="w-full h-full absolute right-[0]">
           <MobileNavbar />
         </div>
-        <div className="z-[99] min-w-[12rem] min-h-[4.8rem] flex items-center justify-center">
+        <div className="z-[99] min-w-[8.4rem] min-h-[3.4rem] flex items-center justify-center">
           <Link aria-label="MDtx" href={'/'}>
             <MDtxLogo />
           </Link>
         </div>
         <div className="z-[99] mr-[4.8rem] md:mr-0 flex items-center justify-center">
           <Link
-            className="z-[99]"
+            className="z-[99] hover:no-underline"
             href={'https://github.com/aexol-studio/mdtx/stargazers'}
           >
             <GithubStars stars={stars} />
           </Link>
           <div className="hidden md:flex items-center">
-            {NavigationData.links.map((data) => (
-              <Link
-                key={data.link}
-                className="w-fit select-none ml-[1.6rem] lg:ml-[3.2rem] font-[400] text-[1.4rem] leading-[2.4rem] text-mdtxWhite"
-                href={data.href}
-              >
-                {data.link}
-              </Link>
-            ))}
             <Link
-              className="w-fit flex items-center gap-[0.8rem] select-none ml-[1.6rem] lg:ml-[3.2rem] font-[400] text-[1.4rem] leading-[2.4rem] text-mdtxWhite"
+              className="w-fit flex items-center gap-[0.4rem] select-none ml-[1.2rem] [font-[400] text-[1.6rem] leading-[2.4rem] text-landing-gray0"
               href={LoginLink}
             >
-              Sign in with GitHub
-              <div className="mb-[0.6rem]">
+              Login with GitHub
+              <div>
                 <GithubIcon />
               </div>
             </Link>

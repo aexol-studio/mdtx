@@ -2,12 +2,22 @@ import '../styles/globals.css';
 import '../styles/markdown-editor-preview.css';
 import '../styles/markdown-editor.css';
 import type { AppProps } from 'next/app';
-import { Fira_Sans } from '@next/font/google';
+import { Lato } from '@next/font/google';
 import { AuthProvider, FileStateProvider, ToastsProvider } from '../containers';
 
-const FiraSans = Fira_Sans({
-  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
-  subsets: ['latin'],
+const LatoFont = Lato({
+  weight: ['100', '300', '400', '700', '900'],
+  subsets: ['latin-ext'],
+});
+
+const JostFont = Lato({
+  weight: ['100', '300', '400', '700', '900'],
+  subsets: ['latin-ext'],
+});
+
+const IvyModeFont = Lato({
+  weight: ['100', '300', '400', '700', '900'],
+  subsets: ['latin-ext'],
 });
 
 function MyApp({ Component, pageProps }: AppProps) {
@@ -17,7 +27,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <ToastsProvider>
           <style jsx global>{`
             html {
-              font-family: ${FiraSans.style.fontFamily};
+              font-family: ${LatoFont.style.fontFamily};
             }
           `}</style>
           <Component {...pageProps} />

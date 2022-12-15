@@ -27,7 +27,7 @@ const FileStateContainer = createContainer(() => {
     setPickedFilePath(undefined);
     setIsFilesDirty(false);
   };
-
+  const [block, setBlock] = useState(false);
   useEffect(() => {
     if (
       JSON.stringify(files.filter((z) => z.name.includes('.md'))) ===
@@ -39,8 +39,43 @@ const FileStateContainer = createContainer(() => {
       setIsFilesDirty(true);
     }
   }, [files]);
+
+  useEffect(() => {
+    const found = files?.find((x) => x.name === pickedFilePath);
+    setBlock(true);
+    if (found?.content === '') {
+      getContents({
+        owner: 'AleksanderBondar',
+        path: found.name.slice(found.name.indexOf('/') + 1),
+        ref: 'develop',
+        repo: 'mdtx-test-mds',
+      }).then((z) =>
+        setFiles((prev) => {
+          setBlock(false);
+          return [
+            ...prev.filter(
+              (x) =>
+                x.name.slice(x.name.indexOf('/') + 1) !==
+                found.name.slice(found.name.indexOf('/') + 1),
+            ),
+            {
+              content:
+                'content' in z
+                  ? Buffer.from(z.content, 'base64').toString('utf-8')
+                  : '',
+              dir: false,
+              name: found.name,
+            },
+          ];
+        }),
+      );
+      setOrginalFiles(files);
+    }
+  }, [pickedFilePath]);
+
   const getSelectedFileByPath = () => {
-    return files?.find((x) => x.name === pickedFilePath);
+    const found = files?.find((x) => x.name === pickedFilePath);
+    return !block ? found : { ...found, content: '' };
   };
   const setSelectedFileContentByPath = (content: string) => {
     setFiles((prev) =>

@@ -10,7 +10,7 @@ export const Layout: React.FC<{
   return (
     <div
       className={`relative overflow-hidden max-w-screen min-h-screen flex ${
-        !isEditor ? 'flex-col' : 'flex-row'
+        !isEditor ? 'flex-col bg-landing-background' : 'flex-row'
       }`}
     >
       <CustomHelmet isMainPage={!isEditor} pageTitle={pageTitle} />

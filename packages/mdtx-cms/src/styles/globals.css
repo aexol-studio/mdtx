@@ -27,6 +27,7 @@
 body,
 button {
   box-sizing: border-box;
+  overflow: auto !important;
 }
 
 a:hover {

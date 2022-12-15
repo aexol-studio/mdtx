@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useFileState } from '@/src/containers';
 import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
@@ -12,7 +12,6 @@ import {
 } from '../editor-functions';
 import { Bold } from '../editor-functions/Bold';
 import { ColorPicker } from '../atoms';
-import { EditorContext } from '@uiw/react-md-editor/lib/Context';
 import { useGitHub } from '@/src/utils';
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
@@ -124,6 +123,7 @@ export const Editor: React.FC<{
       height: 20px;
     }
   `;
+
   const [privateImageUrl, setPrivateImageUrl] = useState('');
   return commands && utils ? (
     <>

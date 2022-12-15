@@ -191,7 +191,6 @@ const editor = () => {
     getContents,
     getTree,
   } = useGitHub();
-
   const error = router.query.error;
   const code = router.query.code;
   useEffect(() => {
@@ -263,14 +262,7 @@ const editor = () => {
         ...input,
         branch: selectedBranch.name,
       });
-      console.log(getBranchInfo);
       setDownloadZIP(true);
-      // const response = await getGitHubRepositoryAsZIP({
-      //   owner: selectedRepository?.full_name.split('/')[0],
-      //   repo: selectedRepository?.full_name.split('/')[1],
-      //   ref: branchName ? branchName : selectedBranch.name,
-      // });
-
       if (getBranchInfo !== undefined) {
         const input = {
           owner: selectedRepository.full_name.split('/')[0],
@@ -278,24 +270,10 @@ const editor = () => {
           tree_sha: getBranchInfo.commit.sha,
         };
         const items = await getTree(input);
-        const wantedFiles = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
-        const isWanted = (p: string) => !!p.match(wantedFiles);
+        // const wantedFiles = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
+        // const isWanted = (p: string) => !!p.match(wantedFiles);
         const onlyMDReg = /(.*)\.md$/;
         const onlyMD = (p: string) => !!p.match(onlyMDReg);
-        const images = items.tree
-          .filter((x) => {
-            const z = x.path?.split('/');
-            const wanted = z?.at(z.length - 1);
-            if (wanted) {
-              return isWanted(wanted);
-            }
-          })
-          .map((z) => ({
-            content: z.url || '',
-            dir: z.type === 'tree' ? true : false,
-            name: `${selectedRepository.name}/${z.path}`,
-          }))
-          .filter((x) => x.name !== '');
         const onlyMDs = items.tree.filter((x) => {
           const z = x.path?.split('/');
           const wanted = z?.at(z.length - 1);
@@ -303,37 +281,15 @@ const editor = () => {
             return onlyMD(wanted);
           }
         });
-        const withContent = await Promise.all(
-          onlyMDs.map(async (x) => {
-            const response = await getContents({
-              owner: selectedRepository.full_name.split('/')[0],
-              repo: selectedRepository.full_name.split('/')[1],
-              path: x.path || '',
-              ref: selectedBranch.name,
-            });
-            return {
-              content:
-                'content' in response
-                  ? Buffer.from(response.content, 'base64').toString('utf-8')
-                  : '',
-              dir: false,
-              name: `${selectedRepository.name}/${x.path}`,
-            };
-          }),
-        );
-        // const paths = items.tree.filter((z) => isWanted(z.name));
-        const temp = [...withContent, ...images].map((x) => {
-          return {
-            content: x.content,
-            dir: x.dir,
-            name: x.name,
-          };
-        });
-        console.log(temp);
-        const tree = treeBuilder(temp);
+        const fake = onlyMDs.map((x) => ({
+          content: '',
+          dir: x.type === 'tree',
+          name: `${selectedRepository.name}/${x.path}`,
+        }));
+        const tree = treeBuilder(fake);
         setRepositoryTree(tree);
-        setFiles(temp);
-        setOrginalFiles(temp);
+        setFiles(fake);
+        setOrginalFiles(fake);
         setAutoCompleteValue('');
         setRepositoriesFromSearch(undefined);
         setDownloadZIP(false);
