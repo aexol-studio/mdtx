@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useFileState } from '@/src/containers';
-import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
+import { useFileState, useRepositoryState } from '@/src/containers';
 import {
   Code,
   CodeBlock,
@@ -9,8 +8,8 @@ import {
   Quotes,
   Through,
   Headings,
+  Bold,
 } from '../editor-functions';
-import { Bold } from '../editor-functions/Bold';
 import { ColorPicker } from '../atoms';
 import { useGitHub } from '@/src/utils';
 
@@ -20,13 +19,10 @@ type commandsType = typeof import('@uiw/react-md-editor/lib/commands/index');
 export type utilsType =
   typeof import('@uiw/react-md-editor/lib/utils/markdownUtils');
 
-export const Editor: React.FC<{
-  selectedRepository: RepositoryFromSearch | undefined;
-  selectedBranch: availableBranchType | undefined;
-  menuFnc: () => void;
-}> = ({ selectedRepository, selectedBranch, menuFnc }) => {
+export const Editor: React.FC = () => {
   const { getContents } = useGitHub();
   const [color, setColor] = useState('#ffffff');
+  const { selectedRepository, selectedBranch } = useRepositoryState();
   const {
     getSelectedFileByPath,
     setSelectedFileContentByPath,

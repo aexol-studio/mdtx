@@ -2,37 +2,53 @@ import '../styles/globals.css';
 import '../styles/markdown-editor-preview.css';
 import '../styles/markdown-editor.css';
 import type { AppProps } from 'next/app';
-import { Lato } from '@next/font/google';
-import { AuthProvider, FileStateProvider, ToastsProvider } from '../containers';
-
+import { Lato, Jost } from '@next/font/google';
+import {
+  AuthProvider,
+  FileStateProvider,
+  RepositoryStateProvider,
+  ToastsProvider,
+} from '../containers';
+import localFont from '@next/font/local';
 const LatoFont = Lato({
   weight: ['100', '300', '400', '700', '900'],
   subsets: ['latin-ext'],
 });
 
-const JostFont = Lato({
+const JostFont = Jost({
   weight: ['100', '300', '400', '700', '900'],
   subsets: ['latin-ext'],
 });
 
-const IvyModeFont = Lato({
-  weight: ['100', '300', '400', '700', '900'],
-  subsets: ['latin-ext'],
+const IvyModeFont = localFont({
+  src: '../../public/fonts/IvyMode-Bold.woff2',
 });
-
+const JostFontLight = localFont({
+  src: '../../public/fonts/Jost-Light.ttf',
+});
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <AuthProvider>
-      <FileStateProvider>
-        <ToastsProvider>
-          <style jsx global>{`
-            html {
-              font-family: ${LatoFont.style.fontFamily};
-            }
-          `}</style>
-          <Component {...pageProps} />
-        </ToastsProvider>
-      </FileStateProvider>
+      <RepositoryStateProvider>
+        <FileStateProvider>
+          <ToastsProvider>
+            <style jsx global>
+              {`
+                :root {
+                  --lato-font: ${LatoFont.style.fontFamily};
+                  --ivymode-font: ${IvyModeFont.style.fontFamily};
+                  --jost-font: ${JostFont.style.fontFamily};
+                  --jost-font-light: ${JostFontLight.style.fontFamily};
+                }
+                html {
+                  font-family: ${JostFont.style.fontFamily};
+                }
+              `}
+            </style>
+            <Component {...pageProps} />
+          </ToastsProvider>
+        </FileStateProvider>
+      </RepositoryStateProvider>
     </AuthProvider>
   );
 }

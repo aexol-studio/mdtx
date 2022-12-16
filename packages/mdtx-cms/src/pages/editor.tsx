@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import {
   Menu,
-  BackButton,
   Modal,
   BranchSelector,
   ChangesModal,
@@ -22,6 +21,9 @@ import {
   useAuthState,
   useToasts,
   ToastType,
+  RepositoryFromSearch,
+  availableBranchType,
+  useRepositoryState,
 } from '../containers';
 import { Layout } from '../layouts';
 import { useGitHub } from '../utils';
@@ -32,34 +34,6 @@ export type Organization = {
   login: string;
 };
 
-export type RepositoryFromSearch = {
-  name: string;
-  full_name: string;
-  default_branch: string;
-  id: number;
-  node_id: string;
-  fork: boolean;
-  private: boolean;
-  owner: {
-    avatar_url: string;
-    login: string;
-  } | null;
-  permissions?: {
-    admin: boolean;
-    maintain?: boolean;
-    push?: boolean;
-    triage?: boolean;
-    pull?: boolean;
-  };
-};
-export type availableBranchType = {
-  commit: {
-    sha: string;
-    url: string;
-  };
-  name: string;
-  protected?: boolean;
-};
 export type PullRequestsType = {
   base: {
     ref: string;
@@ -75,6 +49,12 @@ export type PullRequestsType = {
   body: string | null;
   updated_at: string;
 };
+
+type RepositoriesCollection = {
+  full_name: string;
+  source?: { full_name: string; owner: { login: string } };
+}[];
+
 export enum CommitingModes {
   COMMIT = 'COMMIT',
   PULL_REQUEST = 'PULL_REQUEST',
@@ -87,6 +67,44 @@ export enum WatchingModeOnRepository {
 
 const editor = () => {
   const router = useRouter();
+  const { createToast } = useToasts();
+
+  const {
+    getGitHubToken,
+    getGitHubAfterLoginInfo,
+    getGitHubRepositoryInfo,
+    getGitHubSearchRepositories,
+    getGitHubRepositoryBranches,
+    getGitHubRepositoryPullRequests,
+    getGitHubRepositoryForks,
+    doGitHubFork,
+    getGitHubRepositoryBranch,
+    getTree,
+  } = useGitHub();
+  const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
+    useGithubActions();
+  const {
+    setFiles,
+    setOrginalFiles,
+    isFilesDirty,
+    modifiedFiles,
+    deletions,
+    resetState,
+    creatingFilePath,
+  } = useFileState();
+
+  const {
+    isLoggedIn,
+    setLoggedData,
+    loggedData,
+    setTokenWithLocal,
+    setIsLoggedIn,
+    logOut,
+  } = useAuthState();
+
+  const { selectedRepository, handleRepository, selectedBranch, handleBranch } =
+    useRepositoryState();
+
   const {
     control: controlCommit,
     handleSubmit: handleSubmitCommit,
@@ -104,42 +122,12 @@ const editor = () => {
     formState: { errors: errorsPullRequest },
   } = useForm<PullRequestInput>();
 
-  const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
-    useGithubActions();
-  const {
-    setFiles,
-    setOrginalFiles,
-    isFilesDirty,
-    modifiedFiles,
-    resetState,
-    creatingFilePath,
-  } = useFileState();
-
-  const {
-    isLoggedIn,
-    setLoggedData,
-    loggedData,
-    setTokenWithLocal,
-    setIsLoggedIn,
-    logOut,
-  } = useAuthState();
-
   const [includeForks, setIncludeForks] = useState(true);
-  const [forksOnRepo, setForksOnRepo] = useState<{ full_name: string }[]>();
-
-  const [userRepos, setUserRepos] = useState<
-    {
-      full_name: string;
-    }[]
-  >();
-  const [userForks, setUserForks] = useState<
-    {
-      full_name: string;
-      source?: { full_name: string; owner: { login: string } };
-    }[]
-  >();
-
   const [foundedFork, setFoundedFork] = useState(false);
+  const [forksOnRepo, setForksOnRepo] = useState<RepositoriesCollection>();
+  const [userRepos, setUserRepos] = useState<RepositoriesCollection>();
+  const [userForks, setUserForks] = useState<RepositoriesCollection>();
+
   const [file, setFile] = useState<File>();
   const handleFile = (p: File) => setFile(p);
   const [searchingMode, setSearchingMode] = useState<SearchingType>(
@@ -158,9 +146,7 @@ const editor = () => {
     useState<availableBranchType[]>();
   const [availablePullRequests, setAvailablePullRequests] =
     useState<PullRequestsType[]>();
-  const [selectedRepository, setSelectedRepository] =
-    useState<RepositoryFromSearch>();
-  const [selectedBranch, setSelectedBranch] = useState<availableBranchType>();
+
   const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
   const [openMenu, setOpenMenu] = useState(true);
   const handleMenu = () => setOpenMenu((prev) => !prev);
@@ -175,27 +161,11 @@ const editor = () => {
   const [downloadZIP, setDownloadZIP] = useState(false);
   const [doingFork, setDoingFork] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
-  const { createToast } = useToasts();
 
-  const {
-    getGitHubToken,
-    getGitHubAfterLoginInfo,
-    getGitHubRepositoryAsZIP,
-    getGitHubRepositoryInfo,
-    getGitHubSearchRepositories,
-    getGitHubRepositoryBranches,
-    getGitHubRepositoryPullRequests,
-    getGitHubRepositoryForks,
-    doGitHubFork,
-    getGitHubRepositoryBranch,
-    getContents,
-    getTree,
-  } = useGitHub();
-  const error = router.query.error;
-  const code = router.query.code;
   useEffect(() => {
-    if (error) logOut();
-    if (code) {
+    const { error, code } = router.query;
+    if (typeof error === 'string') logOut();
+    if (typeof code === 'string') {
       getGitHubToken(code as string)
         .then((data) => {
           setTokenWithLocal(data.token);
@@ -253,14 +223,14 @@ const editor = () => {
   const controllerZIP = new AbortController();
 
   const confirmBranchClick = async (branchName?: string) => {
-    if (isLoggedIn && selectedRepository && selectedBranch) {
+    if (isLoggedIn && selectedRepository) {
       const input = {
         owner: selectedRepository.full_name.split('/')[0],
         repo: selectedRepository.full_name.split('/')[1],
       };
       const getBranchInfo = await getGitHubRepositoryBranch({
         ...input,
-        branch: selectedBranch.name,
+        branch: selectedBranch ? selectedBranch.name : branchName!,
       });
       setDownloadZIP(true);
       if (getBranchInfo !== undefined) {
@@ -281,15 +251,15 @@ const editor = () => {
             return onlyMD(wanted);
           }
         });
-        const fake = onlyMDs.map((x) => ({
-          content: '',
+        const paths = onlyMDs.map((x) => ({
+          content: undefined,
           dir: x.type === 'tree',
           name: `${selectedRepository.name}/${x.path}`,
         }));
-        const tree = treeBuilder(fake);
+        const tree = treeBuilder(paths);
         setRepositoryTree(tree);
-        setFiles(fake);
-        setOrginalFiles(fake);
+        setFiles(paths);
+        setOrginalFiles(paths);
         setAutoCompleteValue('');
         setRepositoriesFromSearch(undefined);
         setDownloadZIP(false);
@@ -303,7 +273,7 @@ const editor = () => {
     }
   };
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
-    setSelectedRepository(item);
+    handleRepository(item);
     if (isLoggedIn) {
       const input = {
         owner: item.full_name.split('/')[0],
@@ -342,7 +312,7 @@ const editor = () => {
       if (branches.length) {
         setDownloadModal(true);
         setAvailableBranches(branches);
-        setSelectedBranch(branches[0]);
+        handleBranch(branches[0]);
         setValuePullRequestForm('selectedTargetBranch', branches[0].name);
       } else {
         createToast(ToastType.ERROR, 'We cannot download this repository');
@@ -355,18 +325,21 @@ const editor = () => {
     setSubmittingCommit(true);
     const filesToSend: { path: string; contents: string }[] = [];
     modifiedFiles.map((x) => {
-      const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
-      filesToSend.push({
+      if (x.content) {
+        const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+        filesToSend.push({
+          path: x.name.slice(x.name.indexOf('/') + 1),
+          contents: doBuffer,
+        });
+      }
+    });
+    const filesToDelete: { path: string }[] = [];
+    deletions.map((x) => {
+      filesToDelete.push({
         path: x.name.slice(x.name.indexOf('/') + 1),
-        contents: doBuffer,
       });
     });
-    if (
-      filesToSend &&
-      selectedRepository?.owner &&
-      modifiedFiles &&
-      selectedBranch
-    ) {
+    if (selectedRepository?.owner && selectedBranch) {
       const oidArray = await getOid({
         branchName: selectedBranch.name,
         repositoryName: selectedRepository.name,
@@ -384,6 +357,7 @@ const editor = () => {
         },
         fileChanges: {
           additions: filesToSend,
+          deletions: filesToDelete,
         },
       });
       if (oidArray && createdCommit.commit?.oid) {
@@ -399,18 +373,25 @@ const editor = () => {
     setPullRequest(true);
     const filesToSend: { path: string; contents: string }[] = [];
     modifiedFiles.map((x) => {
-      const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
-      filesToSend.push({
-        path: x.name.slice(x.name.indexOf('/') + 1),
-        contents: doBuffer,
-      });
+      if (x.content) {
+        const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+        filesToSend.push({
+          path: x.name.slice(x.name.indexOf('/') + 1),
+          contents: doBuffer,
+        });
+      }
     });
-    if (
-      filesToSend &&
-      selectedRepository?.owner &&
-      modifiedFiles &&
-      selectedBranch
-    ) {
+    const filesToDelete: { path: string; contents: string }[] = [];
+    deletions.map((x) => {
+      if (x.content) {
+        const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+        filesToDelete.push({
+          path: x.name.slice(x.name.indexOf('/') + 1),
+          contents: doBuffer,
+        });
+      }
+    });
+    if (selectedRepository?.owner && selectedBranch) {
       const oidArray = await getOid({
         branchName: selectedBranch.name,
         repositoryName: selectedRepository.name,
@@ -435,6 +416,7 @@ const editor = () => {
           },
           fileChanges: {
             additions: filesToSend,
+            deletions: filesToDelete,
           },
         });
         if (createdCommit) {
@@ -464,7 +446,7 @@ const editor = () => {
       if (autoCompleteValue !== '' && autoCompleteValue !== undefined) {
         setLoadingFullTree(true);
         setRepositoriesFromSearch(undefined);
-        setSelectedRepository(undefined);
+        handleRepository(undefined);
         setRepositoryTree(undefined);
         resetState();
         const organizationsString = organizations
@@ -501,7 +483,7 @@ const editor = () => {
 
   const backToSearch = () => {
     setRepositoryTree(undefined);
-    setSelectedBranch(undefined);
+    handleRepository(undefined);
     setAvailableBranches(undefined);
     setAvailablePullRequests(undefined);
     setRepositoryTree(undefined);
@@ -596,12 +578,9 @@ const editor = () => {
             foundedFork={foundedFork}
             doingFork={doingFork}
             downloadZIP={downloadZIP}
-            selectedRepository={selectedRepository}
             availableBranches={availableBranches}
             availablePullRequests={availablePullRequests}
             confirmBranchClick={confirmBranchClick}
-            selectedBranch={selectedBranch}
-            setSelectedBranch={setSelectedBranch}
           />
         </Modal>
       )}
@@ -625,7 +604,6 @@ const editor = () => {
           closeFnc={() => setMenuModal(undefined)}
         >
           <CommitModal
-            selectedBranch={selectedBranch}
             controlCommit={controlCommit}
             submittingCommit={submittingCommit}
             handleSubmitCommit={handleSubmitCommit}
@@ -649,13 +627,9 @@ const editor = () => {
         </Modal>
       )}
       {isFilesDirty && repositoryTree && selectedRepository && (
-        <ButtonMenu
-          forksOnRepo={forksOnRepo}
-          selectedRepository={selectedRepository}
-          setMenuModal={setMenuModal}
-        />
+        <ButtonMenu forksOnRepo={forksOnRepo} setMenuModal={setMenuModal} />
       )}
-      <div className="fixed z-[100]">
+      <div className="z-[100]">
         <Menu
           handleUploadModal={handleUploadModal}
           setRepositoryTree={setRepositoryTree}
@@ -664,7 +638,6 @@ const editor = () => {
           forksOnRepo={forksOnRepo}
           includeForks={includeForks}
           setIncludeForks={setIncludeForks}
-          selectedRepository={selectedRepository}
           backToSearch={backToSearch}
           autoCompleteValue={autoCompleteValue}
           setAutoCompleteValue={setAutoCompleteValue}
@@ -673,16 +646,11 @@ const editor = () => {
           loadingFullTree={loadingFullTree}
           repositoryTree={repositoryTree}
           repositoriesFromSearch={repositoriesFromSearch}
-          selectedBranch={selectedBranch}
           handleRepositoryPick={handleRepositoryPick}
         />
       </div>
-      <div className="pl-[4.2rem] w-full">
-        <Editor
-          menuFnc={() => setMenuModal(MenuModalType.CHANGES)}
-          selectedRepository={selectedRepository}
-          selectedBranch={selectedBranch}
-        />
+      <div className="w-full">
+        <Editor />
       </div>
     </Layout>
   );

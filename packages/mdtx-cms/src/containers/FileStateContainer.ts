@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
 import { useGitHub } from '../utils';
+import { useRepositoryState } from './RepositoryStateContainer';
 
 export type FileType = {
-  content: string;
   dir: boolean;
   name: string;
+  content?: string;
   image?: ArrayBuffer;
 };
 
@@ -18,6 +19,7 @@ const FileStateContainer = createContainer(() => {
   const [pickedFilePath, setPickedFilePath] = useState<string>();
   const [isFilesDirty, setIsFilesDirty] = useState(false);
   const [creatingFilePath, setCreatingFilePath] = useState<string>();
+  const { selectedBranch, selectedRepository } = useRepositoryState();
   const { getContents } = useGitHub();
   const resetState = () => {
     setOrginalFiles(undefined);
@@ -42,13 +44,16 @@ const FileStateContainer = createContainer(() => {
 
   useEffect(() => {
     const found = files?.find((x) => x.name === pickedFilePath);
-    setBlock(true);
-    if (found?.content === '') {
+    const owner = selectedRepository?.full_name.split('/');
+    const ref = selectedBranch?.name;
+
+    if (ref && owner && found && found?.content === undefined) {
+      setBlock(true);
       getContents({
-        owner: 'AleksanderBondar',
+        owner: owner[0],
+        repo: owner[1],
+        ref: selectedBranch?.name,
         path: found.name.slice(found.name.indexOf('/') + 1),
-        ref: 'develop',
-        repo: 'mdtx-test-mds',
       }).then((z) =>
         setFiles((prev) => {
           setBlock(false);

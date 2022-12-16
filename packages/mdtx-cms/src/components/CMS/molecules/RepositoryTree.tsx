@@ -25,10 +25,8 @@ export const RepositoryTree: React.FC<{
   setRepositoryTree,
   handleUploadModal,
 }) => {
-  const [creatingModal, setCreatingModal] = useState(false);
-  const [creatingFile, setCreatingFile] = useState(false);
-  const [fileName, setFileName] = useState<string>();
-  const [fileWithOpenContext, setFileWithOpenContext] = useState<TreeObject>();
+  const { createToast } = useToasts();
+
   const {
     files,
     orginalFiles,
@@ -43,6 +41,11 @@ export const RepositoryTree: React.FC<{
     creatingFilePath,
     setCreatingFilePath,
   } = useFileState();
+  console.log(deletions);
+  const [creatingModal, setCreatingModal] = useState(false);
+  const [creatingFile, setCreatingFile] = useState(false);
+  const [fileName, setFileName] = useState<string>();
+  const [fileWithOpenContext, setFileWithOpenContext] = useState<TreeObject>();
 
   const hasChildren = !!tree?.children;
   const isFolder = hasChildren && !root;
@@ -77,7 +80,6 @@ export const RepositoryTree: React.FC<{
     }
   };
   useOutsideClick(ref, () => setTimeout(() => setCreatingModal(false), 150));
-  const { createToast } = useToasts();
 
   const deletingHandler = () => {
     const found = orginalFiles?.find(
@@ -95,9 +97,14 @@ export const RepositoryTree: React.FC<{
   const addingHandler = () => {
     const cleanFileName = fileName?.replaceAll('.md', '');
     if (creatingFilePath && fileName) {
-      const found = files.find(
-        (x) => x.name === creatingFilePath + fileName + '.md',
-      );
+      const creatingPath = creatingFilePath + fileName + '.md';
+      const found = files.find((x) => x.name === creatingPath);
+      const foundInDeletions = deletions.find((x) => x.name === creatingPath);
+      if (foundInDeletions) {
+        setDeletions((prev) => [
+          ...prev.filter((x) => x.name !== creatingPath),
+        ]);
+      }
       if (!found) {
         const x = creatingFilePath.slice(0, creatingFilePath.lastIndexOf('/'));
         setPath(x.slice(x.lastIndexOf('/') + 1));
@@ -105,7 +112,7 @@ export const RepositoryTree: React.FC<{
           return [
             ...prev,
             {
-              content: '',
+              content: undefined,
               dir: false,
               name: creatingFilePath + cleanFileName + '.md',
             },
@@ -114,7 +121,7 @@ export const RepositoryTree: React.FC<{
         const treex = treeBuilder([
           ...files,
           {
-            content: '',
+            content: undefined,
             dir: false,
             name: creatingFilePath + cleanFileName + '.md',
           },
@@ -164,7 +171,6 @@ export const RepositoryTree: React.FC<{
       yPos: '0px',
     }),
   );
-  const executable = document.getElementById('insert-menu-image');
   return (
     <>
       <div className={`pl-[0.8rem] w-full relative`}>
@@ -173,7 +179,7 @@ export const RepositoryTree: React.FC<{
             ref={refContextMenu}
             className="z-[102] w-[12rem] py-[1.2rem] items-center top-[2.4rem] bg-mdtxBlack border-mdtxOrange1 border-[1px] absolute flex flex-col"
           >
-            {isImage && (
+            {/* {isImage && (
               <div
                 onClick={() => {
                   // if (executable) {
@@ -186,15 +192,15 @@ export const RepositoryTree: React.FC<{
                   Insert photo
                 </p>
               </div>
-            )}
+            )} */}
             <div
-              // onClick={deletingHandler}
+              onClick={deletingHandler}
               className="group flex gap-[0.4rem] items-center cursor-pointer w-fit"
             >
               <div className="min-w-[2rem] min-h-[2rem]">
                 <ThrashIcon />
               </div>
-              <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-darkGray">
+              <p className="group-hover:underline w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-mdtxWhite">
                 Delete file
               </p>
             </div>
@@ -281,7 +287,7 @@ export const RepositoryTree: React.FC<{
                         <FilePlusIcon />
                       </div>
                     </div>
-                    <div
+                    {/* <div
                       onClick={() => {
                         // setCreatingModal(false);
                         // handleUploadModal(true);
@@ -291,7 +297,7 @@ export const RepositoryTree: React.FC<{
                       <p className="group-hover:underline cursor-pointer w-fit uppercase text-[1rem] leading-[1.8rem] font-[700] select-none tracking-wider text-darkGray group-hover:text-mdtxOrange0">
                         Add new image file
                       </p>
-                    </div>
+                    </div> */}
                   </div>
                 )}
               </div>

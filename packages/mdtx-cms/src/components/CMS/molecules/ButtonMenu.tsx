@@ -1,7 +1,10 @@
 import { Hamburger, CloseIconSvg } from '@/src/assets';
-import { useAuthState, useFileState } from '@/src/containers';
+import {
+  useAuthState,
+  useFileState,
+  useRepositoryState,
+} from '@/src/containers';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
-import { RepositoryFromSearch } from '@/src/pages/editor';
 import { useRef, useState } from 'react';
 
 export enum MenuModalType {
@@ -12,18 +15,18 @@ export enum MenuModalType {
   UPLOAD = 'UPLOAD',
 }
 export const ButtonMenu: React.FC<{
-  selectedRepository: RepositoryFromSearch;
   forksOnRepo?: {
     full_name: string;
   }[];
   setMenuModal: React.Dispatch<React.SetStateAction<MenuModalType | undefined>>;
-}> = ({ selectedRepository, setMenuModal, forksOnRepo }) => {
+}> = ({ setMenuModal, forksOnRepo }) => {
+  const { selectedRepository } = useRepositoryState();
   const { loggedData } = useAuthState();
   const { modifiedFiles } = useFileState();
   const [optionsMenu, setOptionsMenu] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useOutsideClick(ref, () => setOptionsMenu(false));
-  const { permissions } = selectedRepository;
+  const { permissions } = selectedRepository!;
   const onlyView =
     permissions?.triage &&
     !permissions.admin &&

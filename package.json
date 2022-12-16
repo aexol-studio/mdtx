@@ -47,5 +47,9 @@
     "./packages/mdtx-cms",
     "./sandbox/mdtx-example",
     "./sandbox/mdtx-nextjs-example"
-  ]
+  ],
+  "dependencies": {
+    "@next/font": "^13.0.7",
+    "next": "^13.0.7"
+  }
 }

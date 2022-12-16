@@ -1,7 +1,12 @@
 import { ArrowLeft, MDtxLogo } from '@/src/assets';
 import FilterIcon from '@/src/assets/svgs/FilterIcon';
-import { useAuthState, useFileState } from '@/src/containers';
-import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
+import {
+  availableBranchType,
+  RepositoryFromSearch,
+  useAuthState,
+  useFileState,
+  useRepositoryState,
+} from '@/src/containers';
 import { TreeMenu } from '@/src/utils/treeBuilder';
 import { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
@@ -23,9 +28,7 @@ export interface MenuInteface {
   setOpenMenu: () => void;
   loadingFullTree: boolean;
   repositoriesFromSearch?: RepositoryFromSearch[];
-  selectedRepository?: RepositoryFromSearch;
   backToSearch: () => void;
-  selectedBranch?: availableBranchType;
   repositoryTree?: TreeMenu;
   handleRepositoryPick: (item: RepositoryFromSearch) => Promise<void>;
   includeForks: boolean;
@@ -42,7 +45,6 @@ export interface MenuInteface {
 export const Menu: React.FC<MenuInteface> = ({
   autoCompleteValue,
   setAutoCompleteValue,
-  selectedRepository,
   openMenu,
   setOpenMenu,
   loadingFullTree,
@@ -56,14 +58,14 @@ export const Menu: React.FC<MenuInteface> = ({
   searchingMode,
   setSearchingMode,
   setRepositoryTree,
-  selectedBranch,
   handleUploadModal,
 }) => {
+  const { selectedRepository, selectedBranch } = useRepositoryState();
   const { loggedData, logOut } = useAuthState();
   return (
     <div
       className={`${
-        openMenu ? 'w-[32rem]' : 'w-[4.2rem]'
+        openMenu ? 'w-[32rem]' : 'w-[5.2rem]'
       } overflow-hidden relative transition-all duration-500 ease-in-out select-none h-screen bg-mdtxBlack border-r-[2px] border-r-solid border-r-mdtxBlack flex flex-col items-center`}
     >
       <BackButton state={openMenu} onClick={setOpenMenu} />

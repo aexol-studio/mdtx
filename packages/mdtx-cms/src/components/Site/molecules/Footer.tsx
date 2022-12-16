@@ -7,7 +7,7 @@ export const Footer = () => (
     <div className="left-[50%] translate-x-[-50%] absolute h-full w-[1200px] mx-auto bg-landing-blue z-[4] mix-blend-color-burn opacity-[0.1]"></div>
     <div className="left-[50%] translate-x-[-50%] absolute h-full w-[1112px] mx-auto bg-landing-blue z-[4] mix-blend-color-burn opacity-[0.1]"></div>
     <div className="left-[50%] translate-x-[-50%] absolute h-full max-w-[1024px] w-full mx-auto bg-landing-blue z-[5]">
-      <div className="h-full max-w-[90%] mx-auto w-full xl:max-w-[976px] flex items-center">
+      <div className="font-lato h-full max-w-[90%] mx-auto w-full xl:max-w-[976px] flex items-center">
         <p className="select-none font-[400] text-[1.4rem] leading-[2rem] text-landing-gray-text">
           Supported by
         </p>
