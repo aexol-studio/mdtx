@@ -26,8 +26,8 @@ export const HeroSection = () => (
             y2="337.362"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#0A6AFD" />
-            <stop offset="1" stop-color="#0A6AFD" stop-opacity="0" />
+            <stop stopColor="#0A6AFD" />
+            <stop offset="1" stopColor="#0A6AFD" stopOpacity="0" />
           </linearGradient>
         </defs>
       </svg>
@@ -55,8 +55,8 @@ export const HeroSection = () => (
             y2="154.597"
             gradientUnits="userSpaceOnUse"
           >
-            <stop stop-color="#0A6AFD" />
-            <stop offset="1" stop-color="#0A6AFD" stop-opacity="0" />
+            <stop stopColor="#0A6AFD" />
+            <stop offset="1" stopColor="#0A6AFD" stopOpacity="0" />
           </linearGradient>
         </defs>
       </svg>
@@ -204,30 +204,30 @@ export const HeroSection = () => (
                   <path
                     d="M22 9H2M2 7.8L2 16.2C2 17.8802 2 18.7202 2.32698 19.362C2.6146 19.9265 3.07354 20.3854 3.63803 20.673C4.27976 21 5.11984 21 6.8 21H17.2C18.8802 21 19.7202 21 20.362 20.673C20.9265 20.3854 21.3854 19.9265 21.673 19.362C22 18.7202 22 17.8802 22 16.2V7.8C22 6.11984 22 5.27977 21.673 4.63803C21.3854 4.07354 20.9265 3.6146 20.362 3.32698C19.7202 3 18.8802 3 17.2 3L6.8 3C5.11984 3 4.27976 3 3.63803 3.32698C3.07354 3.6146 2.6146 4.07354 2.32698 4.63803C2 5.27976 2 6.11984 2 7.8Z"
                     stroke="#D5DAE6"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M92 9H72M72 7.8L72 16.2C72 17.8802 72 18.7202 72.327 19.362C72.6146 19.9265 73.0735 20.3854 73.638 20.673C74.2798 21 75.1198 21 76.8 21H87.2C88.8802 21 89.7202 21 90.362 20.673C90.9265 20.3854 91.3854 19.9265 91.673 19.362C92 18.7202 92 17.8802 92 16.2V7.8C92 6.11984 92 5.27977 91.673 4.63803C91.3854 4.07354 90.9265 3.6146 90.362 3.32698C89.7202 3 88.8802 3 87.2 3L76.8 3C75.1198 3 74.2798 3 73.638 3.32698C73.0735 3.6146 72.6146 4.07354 72.327 4.63803C72 5.27976 72 6.11984 72 7.8Z"
                     stroke="#D5DAE6"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M57 12C57 16.4183 53.4183 20 49 20M57 12C57 7.58172 53.4183 4 49 4M57 12H41M49 20C44.5817 20 41 16.4183 41 12M49 20C51.001 17.8093 52.1388 14.9664 52.2006 12C52.1388 9.03363 51.001 6.19068 49 4M49 20C46.999 17.8093 45.8623 14.9664 45.8006 12C45.8623 9.03363 46.999 6.19068 49 4M41 12C41 7.58172 44.5817 4 49 4M43 20C43 21.1046 42.1046 22 41 22C39.8954 22 39 21.1046 39 20C39 18.8954 39.8954 18 41 18C42.1046 18 43 18.8954 43 20ZM59 20C59 21.1046 58.1046 22 57 22C55.8954 22 55 21.1046 55 20C55 18.8954 55.8954 18 57 18C58.1046 18 59 18.8954 59 20ZM43 4C43 5.10457 42.1046 6 41 6C39.8954 6 39 5.10457 39 4C39 2.89543 39.8954 2 41 2C42.1046 2 43 2.89543 43 4ZM59 4C59 5.10457 58.1046 6 57 6C55.8954 6 55 5.10457 55 4C55 2.89543 55.8954 2 57 2C58.1046 2 59 2.89543 59 4Z"
                     stroke="#D5DAE6"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                   <path
                     d="M115 17.5H115.01M111.2 22H118.8C119.92 22 120.48 22 120.908 21.782C121.284 21.5903 121.59 21.2843 121.782 20.908C122 20.4802 122 19.9201 122 18.8V5.2C122 4.07989 122 3.51984 121.782 3.09202C121.59 2.71569 121.284 2.40973 120.908 2.21799C120.48 2 119.92 2 118.8 2H111.2C110.08 2 109.52 2 109.092 2.21799C108.716 2.40973 108.41 2.71569 108.218 3.09202C108 3.51984 108 4.0799 108 5.2V18.8C108 19.9201 108 20.4802 108.218 20.908C108.41 21.2843 108.716 21.5903 109.092 21.782C109.52 22 110.08 22 111.2 22ZM115.5 17.5C115.5 17.7761 115.276 18 115 18C114.724 18 114.5 17.7761 114.5 17.5C114.5 17.2239 114.724 17 115 17C115.276 17 115.5 17.2239 115.5 17.5Z"
                     stroke="#D5DAE6"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   />
                 </svg>
               </div>
@@ -246,7 +246,7 @@ export const HeroSection = () => (
               <path
                 d="M379.971 1C331.187 44.8658 513 55.4847 513 103.405C513 151.325 156.669 179.26 142.465 213.031C128.261 246.801 278.703 239.981 273.548 282.613C268.392 325.246 62.6477 290.491 1 322"
                 stroke="#8F8F8F"
-                stroke-linecap="round"
+                strokeLinecap="round"
               />
             </svg>
           </div>
@@ -273,7 +273,7 @@ const ThirdBox = () => {
             height="118"
             rx="16"
             fill="white"
-            fill-opacity="0.6"
+            fillOpacity="0.6"
           />
           <rect
             x="10.5"
@@ -472,9 +472,9 @@ const ThirdBox = () => {
           width="246"
           height="158.441"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feColorMatrix
             in="SourceAlpha"
             type="matrix"
@@ -507,9 +507,9 @@ const ThirdBox = () => {
           width="214"
           height="126"
           filterUnits="userSpaceOnUse"
-          color-interpolation-filters="sRGB"
+          colorInterpolationFilters="sRGB"
         >
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
           <feGaussianBlur in="BackgroundImageFix" stdDeviation="2" />
           <feComposite
             in2="SourceAlpha"

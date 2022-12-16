@@ -223,6 +223,7 @@ const editor = () => {
   const controllerZIP = new AbortController();
 
   const confirmBranchClick = async (branchName?: string) => {
+    setDownloadZIP(true);
     if (isLoggedIn && selectedRepository) {
       const input = {
         owner: selectedRepository.full_name.split('/')[0],
@@ -232,7 +233,6 @@ const editor = () => {
         ...input,
         branch: selectedBranch ? selectedBranch.name : branchName!,
       });
-      setDownloadZIP(true);
       if (getBranchInfo !== undefined) {
         const input = {
           owner: selectedRepository.full_name.split('/')[0],

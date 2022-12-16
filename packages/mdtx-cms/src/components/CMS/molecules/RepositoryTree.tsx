@@ -41,7 +41,6 @@ export const RepositoryTree: React.FC<{
     creatingFilePath,
     setCreatingFilePath,
   } = useFileState();
-  console.log(deletions);
   const [creatingModal, setCreatingModal] = useState(false);
   const [creatingFile, setCreatingFile] = useState(false);
   const [fileName, setFileName] = useState<string>();

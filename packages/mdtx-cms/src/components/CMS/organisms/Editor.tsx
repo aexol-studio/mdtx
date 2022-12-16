@@ -47,7 +47,7 @@ export const Editor: React.FC = () => {
     loaderCommands();
   }, []);
   const handleDownload = (text: string) => {
-    // const name = getSelectedFileByPath()?.name;
+    console.log(pickedFilePath);
     if (!text) return;
     const file = new Blob([text], { type: 'text/plain' });
     const element = document.createElement('a');
