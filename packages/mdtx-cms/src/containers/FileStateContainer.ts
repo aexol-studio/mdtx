@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
+import { useGitHub } from '../utils';
+import { useRepositoryState } from './RepositoryStateContainer';
 
 export type FileType = {
-  content: string;
   dir: boolean;
   name: string;
+  content?: string;
   image?: ArrayBuffer;
 };
 
@@ -17,7 +19,8 @@ const FileStateContainer = createContainer(() => {
   const [pickedFilePath, setPickedFilePath] = useState<string>();
   const [isFilesDirty, setIsFilesDirty] = useState(false);
   const [creatingFilePath, setCreatingFilePath] = useState<string>();
-
+  const { selectedBranch, selectedRepository } = useRepositoryState();
+  const { getContents } = useGitHub();
   const resetState = () => {
     setOrginalFiles(undefined);
     setModifiedFiles([]);
@@ -26,7 +29,7 @@ const FileStateContainer = createContainer(() => {
     setPickedFilePath(undefined);
     setIsFilesDirty(false);
   };
-
+  const [block, setBlock] = useState(false);
   useEffect(() => {
     if (
       JSON.stringify(files.filter((z) => z.name.includes('.md'))) ===
@@ -38,8 +41,46 @@ const FileStateContainer = createContainer(() => {
       setIsFilesDirty(true);
     }
   }, [files]);
+
+  useEffect(() => {
+    const found = files?.find((x) => x.name === pickedFilePath);
+    const owner = selectedRepository?.full_name.split('/');
+    const ref = selectedBranch?.name;
+
+    if (ref && owner && found && found?.content === undefined) {
+      setBlock(true);
+      getContents({
+        owner: owner[0],
+        repo: owner[1],
+        ref: selectedBranch?.name,
+        path: found.name.slice(found.name.indexOf('/') + 1),
+      }).then((z) =>
+        setFiles((prev) => {
+          setBlock(false);
+          return [
+            ...prev.filter(
+              (x) =>
+                x.name.slice(x.name.indexOf('/') + 1) !==
+                found.name.slice(found.name.indexOf('/') + 1),
+            ),
+            {
+              content:
+                'content' in z
+                  ? Buffer.from(z.content, 'base64').toString('utf-8')
+                  : '',
+              dir: false,
+              name: found.name,
+            },
+          ];
+        }),
+      );
+      setOrginalFiles(files);
+    }
+  }, [pickedFilePath]);
+
   const getSelectedFileByPath = () => {
-    return files?.find((x) => x.name === pickedFilePath);
+    const found = files?.find((x) => x.name === pickedFilePath);
+    return !block ? found : { ...found, content: '' };
   };
   const setSelectedFileContentByPath = (content: string) => {
     setFiles((prev) =>

@@ -100,6 +100,17 @@ export const useGitHub = () => {
       throw new Error('Bad response from getGitHubRepositoryBranches()');
     return data;
   };
+  //USE: FOR GET ALL REPOSITORY BRANCH
+  const getGitHubRepositoryBranch = async (input: {
+    owner: string;
+    repo: string;
+    branch: string;
+  }) => {
+    const { data } = await octokit.rest.repos.getBranch(input);
+    if (!data)
+      throw new Error('Bad response from getGitHubRepositoryBranches()');
+    return data;
+  };
   //USE: FOR GET ALL REPOSITORY PULL REQUESTS
   const getGitHubRepositoryPullRequests = async (input: {
     owner: string;
@@ -133,9 +144,23 @@ export const useGitHub = () => {
     ref: string;
   }) => {
     const { data } = await octokit.rest.repos.getContent(input);
-    if (!data) throw new Error('Bad response from doGitHubFork()');
+    if (!data) throw new Error('Bad response from getContents()');
     return data;
   };
+
+  const getTree = async (input: {
+    owner: string;
+    repo: string;
+    tree_sha: string;
+  }) => {
+    const { data } = await octokit.rest.git.getTree({
+      ...input,
+      recursive: 'true',
+    });
+    if (!data) throw new Error('Bad response from getTree()');
+    return data;
+  };
+
   const getGitHubAfterLoginInfo = async () => {
     const promiseUserInfo = getGitHubUser();
     const promiseOrganisations = getGitHubUserOrganisationsInfo();
@@ -166,5 +191,7 @@ export const useGitHub = () => {
     getGitHubRepositoryForks,
     doGitHubFork,
     getContents,
+    getTree,
+    getGitHubRepositoryBranch,
   };
 };

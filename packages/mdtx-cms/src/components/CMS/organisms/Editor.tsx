@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useFileState } from '@/src/containers';
-import { availableBranchType, RepositoryFromSearch } from '@/src/pages/editor';
+import { useFileState, useRepositoryState } from '@/src/containers';
 import {
   Code,
   CodeBlock,
@@ -9,10 +8,9 @@ import {
   Quotes,
   Through,
   Headings,
+  Bold,
 } from '../editor-functions';
-import { Bold } from '../editor-functions/Bold';
 import { ColorPicker } from '../atoms';
-import { EditorContext } from '@uiw/react-md-editor/lib/Context';
 import { useGitHub } from '@/src/utils';
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
@@ -21,13 +19,10 @@ type commandsType = typeof import('@uiw/react-md-editor/lib/commands/index');
 export type utilsType =
   typeof import('@uiw/react-md-editor/lib/utils/markdownUtils');
 
-export const Editor: React.FC<{
-  selectedRepository: RepositoryFromSearch | undefined;
-  selectedBranch: availableBranchType | undefined;
-  menuFnc: () => void;
-}> = ({ selectedRepository, selectedBranch, menuFnc }) => {
+export const Editor: React.FC = () => {
   const { getContents } = useGitHub();
   const [color, setColor] = useState('#ffffff');
+  const { selectedRepository, selectedBranch } = useRepositoryState();
   const {
     getSelectedFileByPath,
     setSelectedFileContentByPath,
@@ -52,12 +47,12 @@ export const Editor: React.FC<{
     loaderCommands();
   }, []);
   const handleDownload = (text: string) => {
-    const name = getSelectedFileByPath()?.name;
+    // const name = getSelectedFileByPath()?.name;
     if (!text) return;
     const file = new Blob([text], { type: 'text/plain' });
     const element = document.createElement('a');
     element.href = URL.createObjectURL(file);
-    element.download = name + `-` + Date.now() + '.md';
+    element.download = 'mdtx' + `-` + Date.now() + '.md';
     document.body.appendChild(element);
     element.click();
     if (element) {
@@ -65,6 +60,10 @@ export const Editor: React.FC<{
     }
   };
   const hardStyles = `
+    .headingsButton {
+      background-color: #11111D !important;
+      border-radius: 0.8rem;
+    }
     .headingsButton:hover {
       background-color: transparent !important;
       color: inherit !important;
@@ -74,10 +73,11 @@ export const Editor: React.FC<{
       color: inherit !important;
     }
     .w-md-editor-toolbar {
-      background-color: #232331 !important;
+      background-color: #272839 !important;
       display: flex;
       align-items: center;
-      padding: 1.6rem 0;
+      padding: 0.7rem 0;
+      border-bottom: 2px solid #11111D;
     }
     .w-md-editor-toolbar ul {
       display: flex;
@@ -100,7 +100,7 @@ export const Editor: React.FC<{
       width: 1px;
       margin: 0 2.4rem 0 2.4rem !important;
       vertical-align: middle;
-      background-color: #8786A65C;
+      background-color: rgba(132, 132, 161, 0.5);;
     }
     .w-md-editor-content {
       background-color: #1E1E2C !important;
@@ -124,6 +124,7 @@ export const Editor: React.FC<{
       height: 20px;
     }
   `;
+
   const [privateImageUrl, setPrivateImageUrl] = useState('');
   return commands && utils ? (
     <>
@@ -180,10 +181,27 @@ export const Editor: React.FC<{
             children: ({ close, getState, textApi }) =>
               Headings(close, getState, textApi),
             icon: (
-              <div className="hover:bg-[#FFFFFF20] transition-all duration-300 ease-in-out flex relative w-[20rem] items-center">
-                <p className="pl-[0.8rem] text-[1.8rem] leading-[4rem] font-[700] text-mdtxWhite">
-                  Headings
+              <div className="hover:bg-[#FFFFFF20] py-[0.8rem] transition-all duration-300 ease-in-out flex relative w-[16rem] items-center justify-between">
+                <p className="pl-[0.8rem] text-[1.8rem] leading-[1.8rem] font-[700] text-mdtxWhite">
+                  H1
                 </p>
+                <div className="mr-[0.8rem]">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M5 7.5L10 12.5L15 7.5"
+                      stroke="#FAFAFE"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
               </div>
             ),
           }),

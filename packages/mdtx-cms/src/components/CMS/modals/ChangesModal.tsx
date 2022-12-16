@@ -21,14 +21,14 @@ const newStyles: ReactDiffViewerStylesOverride = {
 
 interface IChangesModal {
   previewChanges?: {
-    orginalFile: string;
-    changedFile: string;
+    orginalFile?: string;
+    changedFile?: string;
   };
   setPreviewChanges: React.Dispatch<
     React.SetStateAction<
       | {
-          orginalFile: string;
-          changedFile: string;
+          orginalFile?: string;
+          changedFile?: string;
         }
       | undefined
     >

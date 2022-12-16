@@ -1,9 +1,6 @@
 import { MDtxLogo, PullRequestIcon } from '@/src/assets';
-import {
-  availableBranchType,
-  PullRequestsType,
-  RepositoryFromSearch,
-} from '@/src/pages/editor';
+import { availableBranchType, useRepositoryState } from '@/src/containers';
+import { PullRequestsType } from '@/src/pages/editor';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
@@ -12,14 +9,10 @@ import { Button, PermissionsTable, SelectBranch } from '../atoms';
 interface IBranchSelector {
   foundedFork: boolean;
   downloadZIP: boolean;
-  selectedRepository?: RepositoryFromSearch;
   confirmBranchClick: () => Promise<void>;
   availableBranches: availableBranchType[];
   availablePullRequests?: PullRequestsType[];
-  selectedBranch?: availableBranchType;
-  setSelectedBranch: React.Dispatch<
-    React.SetStateAction<availableBranchType | undefined>
-  >;
+
   doForkFunction: (fullName: string) => void;
   doingFork: boolean;
 }
@@ -27,16 +20,15 @@ interface IBranchSelector {
 export const BranchSelector: React.FC<IBranchSelector> = ({
   foundedFork,
   downloadZIP,
-  selectedRepository,
   confirmBranchClick,
   availablePullRequests,
   availableBranches,
-  selectedBranch,
-  setSelectedBranch,
   doForkFunction,
   doingFork,
 }) => {
   const [pullRequestView, setPullRequestView] = useState(false);
+  const { selectedRepository, selectedBranch, handleBranch } =
+    useRepositoryState();
   return (
     <div className="flex flex-col w-[80%] mx-auto h-full overflow-hidden">
       {downloadZIP || doingFork ? (
@@ -163,8 +155,10 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                         const found = availableBranches.find(
                           (x) => x.name === pr.head.ref,
                         );
-                        setSelectedBranch(found);
-                        confirmBranchClick();
+                        if (found) {
+                          handleBranch(found);
+                          confirmBranchClick();
+                        }
                       }}
                       color="orange"
                       text="Select"
@@ -208,7 +202,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
             <div className="mt-[2.4rem] flex justify-between gap-[4.2rem]">
               <div className="flex-1">
                 <SelectBranch
-                  onChange={(e) => setSelectedBranch(e)}
+                  onChange={(e) => handleBranch(e)}
                   options={availableBranches}
                   placeholder={availableBranches[0].name}
                   value={selectedBranch}
