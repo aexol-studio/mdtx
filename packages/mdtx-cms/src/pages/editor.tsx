@@ -362,7 +362,7 @@ const editor = () => {
       });
       if (oidArray && createdCommit.commit?.oid) {
         resetState();
-        await confirmBranchClick().then(() => {
+        confirmBranchClick().then(() => {
           setSubmittingCommit(false);
           setMenuModal(undefined);
         });
@@ -429,7 +429,7 @@ const editor = () => {
           });
           if (createdPullReq.pullRequest) {
             resetState();
-            await confirmBranchClick(ref.name).then(() => {
+            confirmBranchClick(ref.name).then(() => {
               setPullRequest(false);
               setMenuModal(undefined);
             });
@@ -540,7 +540,7 @@ const editor = () => {
       });
       if (oidArray && createdCommit.commit?.oid) {
         // resetState();
-        await confirmBranchClick().then(() => {
+        confirmBranchClick().then(() => {
           handleUploadModal(false);
         });
       }
