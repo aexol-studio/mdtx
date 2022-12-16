@@ -76,7 +76,7 @@ export const Editor: React.FC = () => {
       background-color: #272839 !important;
       display: flex;
       align-items: center;
-      padding: 0.7rem 0;
+      padding: 0.9rem 0;
       border-bottom: 2px solid #11111D;
     }
     .w-md-editor-toolbar ul {
@@ -98,7 +98,7 @@ export const Editor: React.FC = () => {
     .w-md-editor-toolbar-divider {
       height: 2.8rem;
       width: 1px;
-      margin: 0 2rem 0 2rem !important;
+      margin: 0 1.6rem 0 1.6rem !important;
       vertical-align: middle;
       background-color: rgba(132, 132, 161, 0.5);;
     }
@@ -166,6 +166,44 @@ export const Editor: React.FC = () => {
               : src;
           },
         }}
+        extraCommands={[
+          commands.group([], {
+            name: 'UserHolder',
+            groupName: 'UserHolder',
+            buttonProps: {
+              'aria-label': 'Insert title',
+              style: { padding: 0 },
+            },
+            children: ({ close, getState, textApi }) => <div></div>,
+            icon: (
+              <div className="py-[0.8rem] flex gap-[0.8rem] bg-transparent items-center mr-[1.6rem]">
+                <svg
+                  width="26"
+                  height="26"
+                  viewBox="0 0 26 26"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <circle
+                    cx="13"
+                    cy="13"
+                    r="12"
+                    fill="#11111D"
+                    stroke="#E1E5EE"
+                    strokeWidth="2"
+                  />
+                  <path
+                    d="M13.0007 5.66699C13.8847 5.66699 14.7326 6.01818 15.3577 6.6433C15.9829 7.26842 16.334 8.11627 16.334 9.00033C16.334 9.88438 15.9829 10.7322 15.3577 11.3573C14.7326 11.9825 13.8847 12.3337 13.0007 12.3337C12.1166 12.3337 11.2688 11.9825 10.6437 11.3573C10.0185 10.7322 9.66734 9.88438 9.66734 9.00033C9.66734 8.11627 10.0185 7.26842 10.6437 6.6433C11.2688 6.01818 12.1166 5.66699 13.0007 5.66699ZM13.0007 14.0003C16.684 14.0003 19.6674 15.492 19.6674 17.3337V19.0003H6.33398V17.3337C6.33398 15.492 9.31733 14.0003 13.0007 14.0003Z"
+                    fill="#E1E5EE"
+                  />
+                </svg>
+                <p className="text-[1.6rem] leading-[1.8rem] font-[400] text-editor-light1">
+                  User name
+                </p>
+              </div>
+            ),
+          }),
+        ]}
         onChange={(e) => {
           setSelectedFileContentByPath(e ? e : '');
         }}
