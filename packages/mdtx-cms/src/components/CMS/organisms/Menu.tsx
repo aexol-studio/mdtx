@@ -112,7 +112,7 @@ export const Menu: React.FC<MenuInteface> = ({
                 !(selectedRepository && repositoryTree)
                   ? 'translate-x-[200%] invisible'
                   : 'left-[50%] translate-x-[-50%]'
-              } top-[5.4rem] w-[90%] transition-all duration-300 ease-in-out absolute py-[0.2rem] px-[0.8rem]`}
+              } mt-[0.8rem] w-[90%] transition-all duration-300 ease-in-out absolute py-[0.2rem] px-[0.8rem]`}
             >
               <div
                 className="w-fit group cursor-pointer flex gap-[0.8rem] items-center"
