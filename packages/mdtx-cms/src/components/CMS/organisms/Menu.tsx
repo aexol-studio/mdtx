@@ -66,8 +66,8 @@ export const Menu: React.FC<MenuInteface> = ({
     <div className="flex">
       <div
         className={`${
-          openMenu ? 'w-[32rem]' : 'w-[5.2rem]'
-        } relative transition-all duration-500 ease-in-out select-none h-screen bg-editor-black1 flex flex-col  border-r-[2px] border-editor-black3`}
+          openMenu ? 'w-[41rem]' : 'w-[5.2rem]'
+        } overflow-hidden relative transition-all duration-500 ease-in-out select-none h-screen bg-editor-black1 flex flex-col border-r-[2px] border-editor-black3`}
       >
         <div
           className={`mt-[1rem] flex w-full pl-[0.8rem] pb-[1rem] border-b-[2px] border-editor-black3`}
@@ -78,7 +78,10 @@ export const Menu: React.FC<MenuInteface> = ({
           <div
             className={`min-w-[5.2rem] max-w-[5.2rem] h-full w-full flex flex-col items-center border-r-[2px] border-editor-black3 pt-[1.6rem] z-[10] bg-editor-black1`}
           >
-            <div className="min-w-[2rem] min-h-[2rem]">
+            <div
+              onClick={setOpenMenu}
+              className="cursor-pointer min-w-[2rem] min-h-[2rem]"
+            >
               <svg
                 width="20"
                 height="20"
@@ -177,7 +180,7 @@ export const Menu: React.FC<MenuInteface> = ({
                 selectedRepository && repositoryTree
                   ? 'translate-x-[-200%]'
                   : ''
-              } transition-all duration-300 ease-in-out relative w-full`}
+              } max-w-[26.6rem] pl-[1.6rem] transition-all duration-300 ease-in-out relative w-full`}
             >
               <MenuSearchSection
                 searchingMode={searchingMode}
@@ -192,11 +195,11 @@ export const Menu: React.FC<MenuInteface> = ({
               onContextMenu={(e) => {
                 e.preventDefault();
               }}
-              className="mt-[1.6rem] pb-[1.6rem] border-t-[1px] border-mdtxOrange0 w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar"
+              className="mt-[1.6rem] pb-[1.6rem] border-t-[1px] border-editor-black3 w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar"
             >
               {loadingFullTree ? (
                 <div className="mt-[4.2rem] flex justify-center w-full">
-                  <PulseLoader size={'16px'} color="#FF7200" />
+                  <PulseLoader size={'16px'} color="#9A99AD" />
                 </div>
               ) : (
                 <div className="pl-[1.6rem] pt-[1.6rem] flex flex-col gap-[0.4rem] justify-start w-full">

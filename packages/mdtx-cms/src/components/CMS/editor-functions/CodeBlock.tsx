@@ -8,14 +8,14 @@ export const CodeBlock = (utils: utilsType) => {
     buttonProps: { 'aria-label': 'Insert CodeBlock' },
     icon: (
       <svg
-        width="24"
-        height="25"
-        viewBox="0 0 24 25"
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M17 17.5L22 12.5L17 7.5M7 7.5L2 12.5L7 17.5M14 3.5L10 21.5"
+          d="M14 14.1667L18 10L14 5.83333M6 5.83333L2 10L6 14.1667M11.6 2L8 18"
           stroke="#E1E5EE"
           strokeWidth="2"
           strokeLinecap="round"

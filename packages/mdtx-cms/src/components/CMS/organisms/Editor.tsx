@@ -98,7 +98,7 @@ export const Editor: React.FC = () => {
     .w-md-editor-toolbar-divider {
       height: 2.8rem;
       width: 1px;
-      margin: 0 2.4rem 0 2.4rem !important;
+      margin: 0 2rem 0 2rem !important;
       vertical-align: middle;
       background-color: rgba(132, 132, 161, 0.5);;
     }
@@ -241,11 +241,42 @@ export const Editor: React.FC = () => {
               );
             },
             icon: (
-              <div className="hover:bg-[#FFFFFF20] transition-all duration-300 ease-in-out flex relative items-center">
-                <p className="text-[1.8rem] leading-[4rem] font-[700] text-mdtxWhite">
-                  Color
-                </p>
-              </div>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2 10C2 14.4183 5.58172 18 10 18C11.3255 18 12.4 16.9255 12.4 15.6V15.2C12.4 14.8285 12.4 14.6427 12.4205 14.4867C12.5623 13.4098 13.4098 12.5623 14.4867 12.4205C14.6427 12.4 14.8285 12.4 15.2 12.4H15.6C16.9255 12.4 18 11.3255 18 10C18 5.58172 14.4183 2 10 2C5.58172 2 2 5.58172 2 10Z"
+                  stroke="#E1E5EE"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M6 10.8C6.44183 10.8 6.8 10.4418 6.8 10C6.8 9.55817 6.44183 9.2 6 9.2C5.55817 9.2 5.2 9.55817 5.2 10C5.2 10.4418 5.55817 10.8 6 10.8Z"
+                  stroke="#E1E5EE"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M13.2 7.6C13.6418 7.6 14 7.24183 14 6.8C14 6.35817 13.6418 6 13.2 6C12.7582 6 12.4 6.35817 12.4 6.8C12.4 7.24183 12.7582 7.6 13.2 7.6Z"
+                  stroke="#E1E5EE"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8.4 6.8C8.84183 6.8 9.2 6.44183 9.2 6C9.2 5.55817 8.84183 5.2 8.4 5.2C7.95817 5.2 7.6 5.55817 7.6 6C7.6 6.44183 7.95817 6.8 8.4 6.8Z"
+                  stroke="#E1E5EE"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             ),
           }),
           commands.divider,
@@ -255,30 +286,18 @@ export const Editor: React.FC = () => {
             buttonProps: { 'aria-label': 'Download file' },
             icon: (
               <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  d="M9 9L12 12L15 9"
-                  stroke="white"
+                  d="M16.1765 10.4V5.84C16.1765 4.49587 16.1765 3.82381 15.9072 3.31042C15.6703 2.85883 15.2924 2.49168 14.8275 2.26158C14.299 2 13.6072 2 12.2235 2H6.95294C5.56928 2 4.87745 2 4.34896 2.26158C3.88409 2.49168 3.50614 2.85883 3.26928 3.31042C3 3.82381 3 4.49587 3 5.84V14.16C3 15.5041 3 16.1762 3.26928 16.6896C3.50614 17.1412 3.88409 17.5083 4.34896 17.7384C4.87745 18 5.56924 18 6.95282 18H10M12.0588 15.6L14.5294 18M14.5294 18L17 15.6M14.5294 18V13.2"
+                  stroke="#E1E5EE"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                />
-                <path
-                  d="M12 10V4"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M20 17V18C20 19.1046 19.1046 20 18 20H6C4.89543 20 4 19.1046 4 18V17"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
                 />
               </svg>
             ),
