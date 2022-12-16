@@ -107,9 +107,6 @@ export const Menu: React.FC<MenuInteface> = ({
                 : 'translate-x-[-600px] duration-[300ms]'
             } w-full h-full transition-transform ease-in-out relative flex flex-col z-[1]`}
           >
-            <div className="w-full p-8 flex items-center justify-between">
-              <UserInfo logOut={logOut} loggedData={loggedData} />
-            </div>
             <div
               className={`${
                 !(selectedRepository && repositoryTree)
@@ -180,7 +177,7 @@ export const Menu: React.FC<MenuInteface> = ({
                 selectedRepository && repositoryTree
                   ? 'translate-x-[-200%]'
                   : ''
-              } max-w-[26.6rem] pl-[1.6rem] transition-all duration-300 ease-in-out relative w-full`}
+              } mt-[2.4rem] max-w-[26.6rem] pl-[1.6rem] transition-all duration-300 ease-in-out relative w-full`}
             >
               <MenuSearchSection
                 searchingMode={searchingMode}

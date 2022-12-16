@@ -19,7 +19,9 @@ export const Select: React.FC<SelectProps<string>> = ({
   const currentValue = options.find((o) => o === value);
   return (
     <div
-      className={`bg-editor-black2 text-editor-purple2 rounded-[0.8rem] select-none w-full h-full text-[1.4rem] cursor-pointer relative z-[1] `}
+      className={`${
+        open ? 'rounded-t-[0.8rem]' : 'rounded-[0.8rem]'
+      } bg-editor-black2 text-editor-purple2 select-none w-full h-full text-[1.4rem] cursor-pointer relative z-[1] `}
       onMouseLeave={() => {
         setTimeout(() => {
           setOpen(false);
