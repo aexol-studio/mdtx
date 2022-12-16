@@ -1,4 +1,4 @@
-import { RepositoryFromSearch } from '@/src/pages/editor';
+import { RepositoryFromSearch } from '@/src/containers';
 import Image from 'next/image';
 
 export const RepositoriesList: React.FC<{

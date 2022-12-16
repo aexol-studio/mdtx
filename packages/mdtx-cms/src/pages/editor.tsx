@@ -152,8 +152,8 @@ const editor = () => {
   const handleMenu = () => setOpenMenu((prev) => !prev);
   const [menuModal, setMenuModal] = useState<MenuModalType | undefined>();
   const [previewChanges, setPreviewChanges] = useState<{
-    orginalFile: string;
-    changedFile: string;
+    orginalFile?: string;
+    changedFile?: string;
   }>();
 
   const [submittingCommit, setSubmittingCommit] = useState(false);

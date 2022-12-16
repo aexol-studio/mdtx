@@ -37,6 +37,18 @@ module.exports = {
         'landing-text-black': '#060606',
         'landing-white': '#E4E9EF',
         'landing-blue': '#005EEE',
+        'editor-blue1': '#005EEE',
+        'editor-blue2': '#477FD3',
+        'editor-orange': '#E4B068',
+        'editor-yellow1': '#F4FD3A',
+        'editor-yellow2': '#C8CD55',
+        'editor-purple1': '#8484A1',
+        'editor-purple2': '#9A99AD',
+        'editor-light1': '#FAFAFE',
+        'editor-light2': '#E1E5EE',
+        'editor-black1': '#272839',
+        'editor-black2': '#1E1E2C',
+        'editor-black3': '#11111D',
       },
       keyframes: {
         mdtxPulse: {

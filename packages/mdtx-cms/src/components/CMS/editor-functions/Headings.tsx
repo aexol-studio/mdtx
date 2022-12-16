@@ -3,32 +3,32 @@ import { TextAreaTextApi, TextState } from '@uiw/react-md-editor/lib/commands';
 const headings = [
   {
     value: '# ',
-    label: 'Heading 1',
+    label: 'H1',
     size: 22,
   },
   {
     value: '## ',
-    label: 'Heading 2',
+    label: 'H2',
     size: 20,
   },
   {
     value: '### ',
-    label: 'Heading 3',
+    label: 'H3',
     size: 20,
   },
   {
     value: '#### ',
-    label: 'Heading 4',
+    label: 'H4',
     size: 18,
   },
   {
     value: '##### ',
-    label: 'Heading 5',
+    label: 'H5',
     size: 16,
   },
   {
     value: '###### ',
-    label: 'Heading 6',
+    label: 'H6',
     size: 14,
   },
 ];
@@ -53,7 +53,7 @@ export const Headings = (
     }
   };
   return (
-    <div className="relative w-[20rem]">
+    <div className="relative w-[16rem]">
       <div
         className={`bg-editorBlack border-editorGray1 border-[1px] absolute top-[0.8rem] w-full flex flex-col items-center`}
       >

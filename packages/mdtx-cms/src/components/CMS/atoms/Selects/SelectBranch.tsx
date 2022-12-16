@@ -1,6 +1,6 @@
 import { Chevron } from '@/src/assets';
+import { availableBranchType } from '@/src/containers';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
-import { availableBranchType } from '@/src/pages/editor';
 import React, { useRef, useState } from 'react';
 
 interface SelectProps<T> {

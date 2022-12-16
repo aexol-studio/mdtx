@@ -10,7 +10,7 @@ import {
 import { TreeMenu } from '@/src/utils/treeBuilder';
 import { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
-import { BackButton, UserInfo } from '../atoms';
+import { LogoInEditor, UserInfo } from '../atoms';
 import {
   MenuSearchSection,
   RepositoriesList,
@@ -66,18 +66,21 @@ export const Menu: React.FC<MenuInteface> = ({
     <div
       className={`${
         openMenu ? 'w-[32rem]' : 'w-[5.2rem]'
-      } overflow-hidden relative transition-all duration-500 ease-in-out select-none h-screen bg-mdtxBlack border-r-[2px] border-r-solid border-r-mdtxBlack flex flex-col items-center`}
+      } overflow-hidden relative transition-all duration-500 ease-in-out select-none h-screen bg-editor-black1 border-r-[2px] border-r-solid border-r-mdtxBlack flex flex-col`}
     >
-      <BackButton state={openMenu} onClick={setOpenMenu} />
+      <div
+        className={`mt-[1rem] flex w-full pl-[0.8rem] pb-[1rem] border-b-[2px] border-editor-black3`}
+      >
+        <LogoInEditor state={openMenu} onClick={setOpenMenu} />
+      </div>
       <div
         className={`${
           openMenu
             ? 'translate-x-[0%] duration-[900ms]'
             : 'translate-x-[-600px] duration-[300ms]'
-        } w-full h-full transition-transform ease-in-out relative flex flex-col`}
+        }  w-full h-full transition-transform ease-in-out relative flex flex-col`}
       >
         <div className="w-full p-8 flex items-center justify-between">
-          <MDtxLogo small />
           <UserInfo logOut={logOut} loggedData={loggedData} />
         </div>
         <div

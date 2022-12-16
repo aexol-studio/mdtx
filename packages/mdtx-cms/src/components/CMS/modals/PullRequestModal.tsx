@@ -1,10 +1,9 @@
-import { availableBranchType } from '@/src/pages/editor';
+import { availableBranchType } from '@/src/containers';
 import {
   Control,
   Controller,
   SubmitHandler,
   UseFormHandleSubmit,
-  UseFormRegister,
 } from 'react-hook-form';
 import { PulseLoader } from 'react-spinners';
 import { Button, Input, Select } from '../atoms';
