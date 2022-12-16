@@ -27,22 +27,11 @@ export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
 }) => {
   return (
     <>
-      <div className={`w-[80%] mx-auto`}>
-        <p className="w-fit mt-[1.2rem] mb-[0.8rem] text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wide">
-          Search by
-        </p>
-        <Select
-          customClassName="bg-transparent text-mdtxWhite mb-[0.8rem]"
-          placeholder={searchingMode}
-          options={Object.values(SearchingType)}
-          onChange={(e) => setSearchingMode(e as SearchingType)}
-        />
-      </div>
       <div
-        className={`relative duration-300 delay-75 transition-all ease-in-out w-[80%] mx-auto mb-[0.8rem]`}
+        className={`relative duration-300 delay-75 transition-all ease-in-out w-full mb-[0.8rem]`}
       >
-        <p className="w-fit mt-[1.2rem] mb-[0.8rem] text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wide">
-          Find repository
+        <p className="w-fit text-[1.4rem] leading-[1.8rem] font-[500] text-[#FFF] mb-[0.8rem]">
+          Find a repository
         </p>
         <Input
           className="text-[1.4rem] w-full"
@@ -52,17 +41,28 @@ export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
         />
       </div>
 
-      <div className="mx-auto w-[80%]">
+      <div className={`w-full mx-auto mb-[1.2rem]`}>
+        <p className="w-fit text-[1.4rem] leading-[1.8rem] font-[500] text-[#FFF] mb-[0.8rem]">
+          Search by
+        </p>
+        <Select
+          placeholder={searchingMode}
+          options={Object.values(SearchingType)}
+          onChange={(e) => setSearchingMode(e as SearchingType)}
+        />
+      </div>
+      <div className="mx-auto w-full">
         <div className="w-fit flex items-center gap-[0.8rem]">
           <input
             checked={includeForks}
             onChange={() => {
               setIncludeForks((prev) => !prev);
             }}
-            className="accent-mdtxOrange1 cursor-pointer min-w-[1.2rem] min-h-[1.2rem] max-w-[1.2rem] max-h-[1.2rem]"
+            className="relative rounded-full appearance-none bg-editor-black2 cursor-pointer min-w-[2rem] min-h-[2rem] max-w-[2rem] max-h-[2rem]
+            after:checked:bg-editor-blue1 after:content-[''] after:w-[0.8rem] after:h-[0.8rem] after:rounded-full flex justify-center items-center"
             type={'checkbox'}
           />
-          <p className="w-fit text-mdtxWhite text-[1.2rem] font-[500] select-none">
+          <p className="w-fit text-mdtxWhite font-[500] text-[1.4rem] leading-[1.8rem] select-none">
             Include forks
           </p>
         </div>

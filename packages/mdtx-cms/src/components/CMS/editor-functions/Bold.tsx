@@ -8,14 +8,14 @@ export const Bold = (utils: utilsType) => {
     buttonProps: { 'aria-label': 'Insert bold' },
     icon: (
       <svg
-        width="24"
-        height="25"
-        viewBox="0 0 24 25"
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M6 12.5H14C16.2091 12.5 18 10.7091 18 8.5C18 6.29086 16.2091 4.5 14 4.5H6V12.5ZM6 12.5H15C17.2091 12.5 19 14.2909 19 16.5C19 18.7091 17.2091 20.5 15 20.5H6V12.5Z"
+          d="M5 10H11.1538C12.8532 10 14.2308 8.433 14.2308 6.5C14.2308 4.567 12.8532 3 11.1538 3H5V10ZM5 10H11.9231C13.6224 10 15 11.567 15 13.5C15 15.433 13.6224 17 11.9231 17H5V10Z"
           stroke="#E1E5EE"
           strokeWidth="2"
           strokeLinecap="round"

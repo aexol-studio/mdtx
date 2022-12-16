@@ -8,14 +8,14 @@ export const Italic = (utils: utilsType) => {
     buttonProps: { 'aria-label': 'Insert italic' },
     icon: (
       <svg
-        width="24"
-        height="25"
-        viewBox="0 0 24 25"
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M19 4.5H10M14 20.5H5M15 4.5L9 20.5"
+          d="M16 3H8M12 17H4M12.4998 3L7.49984 17"
           stroke="#E1E5EE"
           strokeWidth="2"
           strokeLinecap="round"

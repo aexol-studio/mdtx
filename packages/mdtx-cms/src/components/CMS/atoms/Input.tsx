@@ -15,7 +15,7 @@ export const Input = forwardRef(
         value={value}
         className={`${
           className ? className : ''
-        } outline-none border-mdtxOrange1 border-[1px] bg-mdtxBlack py-[0.4rem] pl-[0.8rem] text-mdtxWhite`}
+        } outline-none bg-editor-black2 rounded-[0.8rem] py-[0.4rem] pl-[0.8rem] text-editor-purple2`}
       />
     );
   },

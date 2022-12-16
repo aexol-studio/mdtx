@@ -1,5 +1,3 @@
-import { ArrowLeft } from '@/src/assets';
-
 export const LogoInEditor: React.FC<{
   state: boolean;
   onClick: () => void;
@@ -34,11 +32,14 @@ export const LogoInEditor: React.FC<{
         <path d="M29 17L25 13H22L26 17L22 21H25L29 17Z" fill="#F4FD3A" />
         <path d="M34 17L30 13H27L31 17L27 21H30L34 17Z" fill="#F4FD3A" />
       </svg>
-      {state && (
-        <p className="font-ivymode font-[700] text-[1.4rem] leading-[1.8rem] text-editor-light1">
-          MDTX
-        </p>
-      )}
+
+      <p
+        className={`${
+          state ? 'opacity-1' : 'opacity-0'
+        } transition-opacity duration-300 delay-75 ease-in-out font-ivymode font-[700] text-[1.4rem] leading-[1.8rem] text-editor-light1`}
+      >
+        MDTX
+      </p>
     </div>
   );
 };

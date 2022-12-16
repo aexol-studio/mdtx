@@ -8,14 +8,14 @@ export const Code = (utils: utilsType) => {
     buttonProps: { 'aria-label': 'Insert code' },
     icon: (
       <svg
-        width="24"
-        height="25"
-        viewBox="0 0 24 25"
+        width="20"
+        height="20"
+        viewBox="0 0 20 20"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M16 18.5L22 12.5L16 6.5M8 6.5L2 12.5L8 18.5"
+          d="M13.2 15L18 10L13.2 5M6.8 5L2 10L6.8 15"
           stroke="#E1E5EE"
           strokeWidth="2"
           strokeLinecap="round"
