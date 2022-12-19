@@ -16,7 +16,7 @@ import {
 } from '../molecules';
 import Image from 'next/image';
 import { CommitableIcon, SearchMenuIcon } from '@/src/assets/menu-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export interface MenuInteface {
   commitableMenu: boolean;
@@ -30,6 +30,7 @@ export interface MenuInteface {
   repositoriesFromSearch?: RepositoryFromSearch[];
   backToSearch: () => void;
   repositoryTree?: TreeMenu;
+  setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
   handleRepositoryPick: (item: RepositoryFromSearch) => Promise<void>;
   includeForks: boolean;
   setIncludeForks: React.Dispatch<React.SetStateAction<boolean>>;
@@ -38,7 +39,6 @@ export interface MenuInteface {
   }[];
   searchingMode: SearchingType;
   setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
-  setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
   handleUploadModal: (p: boolean) => void;
 }
 
@@ -55,15 +55,15 @@ export const Menu: React.FC<MenuInteface> = ({
   setOpenMenu,
   loadingFullTree,
   repositoriesFromSearch,
-  repositoryTree,
   backToSearch,
+  repositoryTree,
+  setRepositoryTree,
   handleRepositoryPick,
   includeForks,
   setIncludeForks,
   forksOnRepo,
   searchingMode,
   setSearchingMode,
-  setRepositoryTree,
   handleUploadModal,
 }) => {
   const { selectedRepository, selectedBranch } = useRepositoryState();
@@ -72,6 +72,12 @@ export const Menu: React.FC<MenuInteface> = ({
   const [menuType, setMenuType] = useState<MenuType | undefined>(
     MenuType.SEARCH,
   );
+  useEffect(() => {
+    if (!commitableMenu && modifiedFiles.length === 0) {
+      setMenuType(MenuType.SEARCH);
+    }
+  }, [commitableMenu, modifiedFiles]);
+
   return (
     <div className="flex">
       <div
@@ -123,9 +129,9 @@ export const Menu: React.FC<MenuInteface> = ({
               />
               <SearchMenuIcon />
             </div>
-            {commitableMenu && (
-              <div
-                onClick={() => {
+            <div
+              onClick={() => {
+                if (commitableMenu) {
                   if (!openMenu) {
                     setOpenMenu(true);
                     setMenuType(MenuType.COMMITABLE);
@@ -137,22 +143,26 @@ export const Menu: React.FC<MenuInteface> = ({
                   if (openMenu && menuType === MenuType.SEARCH) {
                     setMenuType(MenuType.COMMITABLE);
                   }
-                }}
-                className="relative mt-[2.4rem] cursor-pointer min-w-[2rem] min-h-[2rem]"
-              >
-                <div
-                  className={`${
-                    menuType === MenuType.COMMITABLE ? 'h-full' : 'h-0'
-                  } transition-all duration-500 ease-in-out left-[-0.8rem] absolute h-full rounded-[0.8rem] w-[0.4rem] bg-landing-blue`}
-                />
-                <CommitableIcon />
-                <div className="absolute bottom-[-0.8rem] left-[1.2rem] bg-editor-blue1 w-[1.6rem] h-[1.6rem] rounded-full flex justify-center items-center">
-                  <p className="text-editor-light1 text-[0.9rem]">
-                    {modifiedFiles.length}
-                  </p>
-                </div>
+                }
+              }}
+              className={`${
+                commitableMenu
+                  ? 'cursor-pointer'
+                  : 'cursor-not-allowed opacity-[0.4]'
+              } relative mt-[2.4rem] min-w-[2rem] min-h-[2rem] transition-all duration-200 ease-in-out`}
+            >
+              <div
+                className={`${
+                  menuType === MenuType.COMMITABLE ? 'h-full' : 'h-0'
+                } transition-all duration-500 ease-in-out left-[-0.8rem] absolute h-full rounded-[0.8rem] w-[0.4rem] bg-landing-blue`}
+              />
+              <CommitableIcon />
+              <div className="absolute bottom-[-0.8rem] left-[1.2rem] bg-editor-blue1 w-[1.6rem] h-[1.6rem] rounded-full flex justify-center items-center">
+                <p className="text-editor-light1 text-[0.9rem]">
+                  {modifiedFiles.length}
+                </p>
               </div>
-            )}
+            </div>
           </div>
           <div
             className={`${

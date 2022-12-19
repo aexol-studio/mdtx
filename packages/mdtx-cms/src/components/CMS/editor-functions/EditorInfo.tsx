@@ -16,17 +16,29 @@ export const EditorInfo = (commands: commandsType): ICommand => {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <g clipPath="url(#clip0_153_426)">
-          <path
-            d="M10 18.0033V10M6.99024 17.4145C4.06358 16.2253 2 13.3536 2 10C2 5.58172 5.58172 2 10 2C14.4183 2 18 5.58172 18 10C18 13.3536 15.9364 16.2253 13.0098 17.4145M10 7.02344V7"
-            stroke="#E1E5EE"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+        <g clipPath="url(#clip0_174_636)">
+          <g clipPath="url(#clip1_174_636)">
+            <path
+              d="M10 19C14.9706 19 19 14.9706 19 10C19 5.02944 14.9706 1 10 1C5.02944 1 1 5.02944 1 10C1 14.9706 5.02944 19 10 19Z"
+              stroke="#E1E5EE"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10.0002 13.375V10M10 6.625H10.0068"
+              stroke="#E1E5EE"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
         </g>
         <defs>
-          <clipPath id="clip0_153_426">
+          <clipPath id="clip0_174_636">
+            <rect width="20" height="20" fill="white" />
+          </clipPath>
+          <clipPath id="clip1_174_636">
             <rect width="20" height="20" fill="white" />
           </clipPath>
         </defs>
