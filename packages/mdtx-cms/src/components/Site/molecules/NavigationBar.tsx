@@ -54,36 +54,36 @@ export const NavigationBar = () => {
   return (
     <nav
       className={`
-        z-[99] top-0 max-w-[1024px] w-full left-[50%] translate-x-[-50%] flex justify-center items-center h-[6.4rem] bg-landing-background fixed transition-all duration-300'
+        z-[99] top-0 w-[90%] lg:max-w-[1024px] lg:w-full left-[50%] translate-x-[-50%] flex justify-center items-center h-[6.4rem] bg-landing-background fixed transition-all duration-300'
         ${hideNavbar ? 'opacity-0' : 'opacity-1'}
       `}
     >
-      <div className="mx-auto w-full xl:max-w-[976px] flex justify-between items-center relative">
-        <div className="w-full h-full absolute right-[0]">
+      <div className="mx-auto w-full lg:max-w-[976px] flex justify-between items-center relative">
+        {/* <div className="w-full h-full absolute right-[0]">
           <MobileNavbar />
-        </div>
+        </div> */}
         <div className="z-[99] min-w-[8.4rem] min-h-[3.4rem] flex items-center justify-center">
           <Link aria-label="MDtx" href={'/'}>
             <MDtxLogo />
           </Link>
         </div>
-        <div className="z-[99] mr-[4.8rem] md:mr-0 flex items-center justify-center">
+        <div className="z-[99] gap-[0.8rem] flex items-center justify-center">
           <Link
             className="z-[99] hover:no-underline"
             href={'https://github.com/aexol-studio/mdtx/stargazers'}
           >
             <GithubStars stars={stars} />
           </Link>
-          <div className="hidden md:flex items-center">
+          <div className="flex items-center gap-[0.4rem]">
             <Link
-              className="w-fit flex items-center gap-[0.4rem] select-none ml-[1.2rem] [font-[400] text-[1.6rem] leading-[2.4rem] text-landing-gray0"
+              className="hidden sm:flex w-fit select-none [font-[400] text-[1.6rem] leading-[2.4rem] text-landing-gray0"
               href={LoginLink}
             >
               Login with GitHub
-              <div>
-                <GithubIcon />
-              </div>
             </Link>
+            <div>
+              <GithubIcon />
+            </div>
           </div>
         </div>
       </div>

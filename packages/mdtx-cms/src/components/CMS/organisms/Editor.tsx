@@ -105,7 +105,6 @@ export const Editor: React.FC = () => {
     .w-md-editor-toolbar li > button {
       height: 100%;
     }
-    
     .w-md-editor-toolbar li > button:hover, .w-md-editor-toolbar li > button:focus {
       background-color: transparent !important;
     }
@@ -176,9 +175,14 @@ export const Editor: React.FC = () => {
       margin-top: 0.6rem;
       padding: 0.8rem 0;
     }
+    .w-md-editor-text-pre > code,
+    .w-md-editor-text-input {
+      font-size: 16px !important;
+      line-height: 24px !important;
+      color: #9A99AD !important;
+    }
   `;
   const [privateImageUrl, setPrivateImageUrl] = useState('');
-
   return commands && utils ? (
     <>
       <style>{hardStyles}</style>

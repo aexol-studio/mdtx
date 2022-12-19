@@ -3,7 +3,7 @@ import { useAuthState, useToasts } from '../containers';
 import { unzipFunction } from './unzipFunction';
 
 export const useGitHub = () => {
-  const { token } = useAuthState();
+  const { token, logOut } = useAuthState();
   const octokit = new Octokit({
     auth: token,
   });
@@ -40,27 +40,41 @@ export const useGitHub = () => {
     });
     const fileArray = await unzipFunction(data);
     if (!data)
-      throw new Error('Bad response from getGitHubToken(), while downloading');
+      throw new Error(
+        'Bad response from getGitHubRepositoryAsZIP(), while downloading',
+      );
     if (!fileArray)
-      throw new Error('Bad response from getGitHubToken(), while unzipping');
+      throw new Error(
+        'Bad response from getGitHubRepositoryAsZIP(), while unzipping',
+      );
     return fileArray;
   };
   //USE: FOR AUTHENTICATE
   const getGitHubToken = async (code: string) => {
-    const response = await fetch(`${connectURL}/authenticate/${code}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }).catch(() => {});
-    if (!response) throw new Error('Bad response from getGitHubToken()');
-    return await response.json();
+    try {
+      const response = await fetch(`${connectURL}/authenticate/${code}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response) throw new Error('Bad response from getGitHubToken()');
+      return await response.json();
+    } catch {
+      logOut();
+      throw new Error('Something went wrong');
+    }
   };
   //USE: FOR GET USER INFO
   const getGitHubUser = async () => {
-    const { data } = await octokit.rest.users.getAuthenticated();
-    if (!data) throw new Error('Bad response from getGitHubUser()');
-    return data;
+    try {
+      const { data } = await octokit.rest.users.getAuthenticated();
+      if (!data) throw new Error('Bad response from getGitHubUser()');
+      return data;
+    } catch {
+      logOut();
+      throw new Error('Something went wrong');
+    }
   };
   //USE: FOR GET USER REPOSITORIES INFO
   const getGitHubUserRepositoriesInfo = async () => {
@@ -107,8 +121,7 @@ export const useGitHub = () => {
     branch: string;
   }) => {
     const { data } = await octokit.rest.repos.getBranch(input);
-    if (!data)
-      throw new Error('Bad response from getGitHubRepositoryBranches()');
+    if (!data) throw new Error('Bad response from getGitHubRepositoryBranch()');
     return data;
   };
   //USE: FOR GET ALL REPOSITORY PULL REQUESTS
@@ -162,19 +175,23 @@ export const useGitHub = () => {
   };
 
   const getGitHubAfterLoginInfo = async () => {
-    const promiseUserInfo = getGitHubUser();
-    const promiseOrganisations = getGitHubUserOrganisationsInfo();
-    const promiseUserRepos = getGitHubUserRepositoriesInfo();
-    const [user, orgs, repos] = await Promise.all([
-      promiseUserInfo,
-      promiseOrganisations,
-      promiseUserRepos,
-    ]);
-    return {
-      user,
-      orgs,
-      repos,
-    };
+    try {
+      const promiseUserInfo = getGitHubUser();
+      const promiseOrganisations = getGitHubUserOrganisationsInfo();
+      const promiseUserRepos = getGitHubUserRepositoriesInfo();
+      const [user, orgs, repos] = await Promise.all([
+        promiseUserInfo,
+        promiseOrganisations,
+        promiseUserRepos,
+      ]);
+      return {
+        user,
+        orgs,
+        repos,
+      };
+    } catch {
+      throw new Error('Bad response from getGitHubAfterLoginInfo()');
+    }
   };
 
   return {

@@ -12,7 +12,6 @@ interface IBranchSelector {
   confirmBranchClick: (branchName?: string) => Promise<boolean | undefined>;
   availableBranches: availableBranchType[];
   availablePullRequests?: PullRequestsType[];
-
   doForkFunction: (fullName: string) => void;
   doingFork: boolean;
 }

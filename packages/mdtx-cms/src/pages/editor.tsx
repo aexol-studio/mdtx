@@ -234,8 +234,8 @@ const editor = () => {
     }
   };
 
-  const controllerZIP = new AbortController();
-
+  const zipController = new AbortController();
+  const { signal: zipSignal } = zipController;
   const confirmBranchClick = async (branchName?: string) => {
     // if (isLoggedIn) {
     if (isLoggedIn && selectedRepository) {
@@ -283,6 +283,7 @@ const editor = () => {
           // name: `aexol-studio/${x.path}`,
         }));
         const tree = treeBuilder(paths);
+        console.log(paths);
         setRepositoryTree(tree);
         setFiles(paths);
         setOrginalFiles(paths);
@@ -391,8 +392,8 @@ const editor = () => {
       if (oidArray && createdCommit.commit?.oid) {
         setRepositoryTree(undefined);
         resetState();
-        const newRedirect = await confirmBranchClick();
-        if (newRedirect) {
+        const newResponse = await confirmBranchClick();
+        if (newResponse) {
           setSubmittingCommit(false);
           setMenuModal(undefined);
         }
@@ -460,8 +461,8 @@ const editor = () => {
           if (createdPullReq.pullRequest) {
             setRepositoryTree(undefined);
             resetState();
-            const newRedirect = await confirmBranchClick(ref.name);
-            if (newRedirect) {
+            const newResponse = await confirmBranchClick();
+            if (newResponse) {
               setSubmittingCommit(false);
               setMenuModal(undefined);
             }
@@ -471,8 +472,8 @@ const editor = () => {
     }
   };
 
-  const controller = new AbortController();
-  const { signal } = controller;
+  const searchController = new AbortController();
+  const { signal: searchSignal } = searchController;
   useEffect(() => {
     const timer = setTimeout(() => {
       if (autoCompleteValue !== '' && autoCompleteValue !== undefined) {
@@ -495,7 +496,7 @@ const editor = () => {
             ? organizationsString
             : ''
         }${includeForks ? ` fork:true` : ``}`;
-        getGitHubSearchRepositories(queryString, signal)
+        getGitHubSearchRepositories(queryString, searchSignal)
           .then((res) => {
             setRepositoriesFromSearch(res.items);
             setLoadingFullTree(false);
@@ -508,7 +509,7 @@ const editor = () => {
     return () => {
       setRepositoriesFromSearch(undefined);
       setLoadingFullTree(false);
-      controller.abort();
+      searchController.abort();
       clearTimeout(timer);
     };
   }, [autoCompleteValue, includeForks, searchingMode]);
@@ -569,14 +570,14 @@ const editor = () => {
           ],
         },
       });
-      if (oidArray && createdCommit.commit?.oid) {
-        // resetState();
-        const newRedirect = await confirmBranchClick();
-        if (newRedirect) {
-          setSubmittingCommit(false);
-          setMenuModal(undefined);
-        }
-      }
+      // if (oidArray && createdCommit.commit?.oid) {
+      //   // resetState();
+      //   const newRedirect = await confirmBranchClick();
+      //   if (newRedirect) {
+      //     setSubmittingCommit(false);
+      //     setMenuModal(undefined);
+      //   }
+      // }
     }
   };
 
@@ -604,7 +605,7 @@ const editor = () => {
             backToSearch();
             setDownloadZIP(false);
             setDoingFork(false);
-            controllerZIP.abort();
+            zipController.abort();
           }}
         >
           <BranchSelector
