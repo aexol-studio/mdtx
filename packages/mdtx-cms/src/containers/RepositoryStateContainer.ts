@@ -12,6 +12,7 @@ export type RepositoryFromSearch = {
   owner: {
     avatar_url: string;
     login: string;
+    type: string;
   } | null;
   permissions?: {
     admin: boolean;

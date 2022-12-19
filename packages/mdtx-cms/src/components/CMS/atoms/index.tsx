@@ -1,6 +1,5 @@
 export * from './Select';
 export * from './Button';
-export * from './UserInfo';
 export * from './Switcher';
 export * from './LogoInEditor';
 export * from './Selects';
@@ -8,3 +7,9 @@ export * from './Input';
 export * from './PermissionsTable';
 export * from './PullRequestView';
 export * from './ColorPicker';
+export * from './FileInTree';
+export * from './FolderInTree';
+export * from './AddNewFileTree';
+export * from './TitleInTree';
+export * from './DeleteFileTree';
+export * from './FolderOptionsTree';

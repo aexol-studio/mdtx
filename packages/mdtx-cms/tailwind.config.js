@@ -9,6 +9,7 @@ module.exports = {
       fontFamily: {
         jost: ['var(--jost-font)', ...fontFamily.serif],
         jostlight: ['var(--jost-font-light)', ...fontFamily.serif],
+        fira: ['var(--fira-font)', ...fontFamily.serif],
         ivymode: ['var(--ivymode-font)', ...fontFamily.serif],
         lato: ['var(--lato-font)', ...fontFamily.serif],
       },
@@ -49,6 +50,8 @@ module.exports = {
         'editor-black1': '#272839',
         'editor-black2': '#1E1E2C',
         'editor-black3': '#11111D',
+        'editor-hover0': '#8484a140',
+        'editor-selection': '#8484a120',
       },
       keyframes: {
         mdtxPulse: {

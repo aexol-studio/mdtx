@@ -1,16 +1,13 @@
-import { ArrowLeft, MDtxLogo } from '@/src/assets';
-import FilterIcon from '@/src/assets/svgs/FilterIcon';
+import { Chevron } from '@/src/assets';
 import {
-  availableBranchType,
   RepositoryFromSearch,
   useAuthState,
   useFileState,
   useRepositoryState,
 } from '@/src/containers';
 import { TreeMenu } from '@/src/utils/treeBuilder';
-import { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
-import { LogoInEditor, UserInfo } from '../atoms';
+import { LogoInEditor } from '../atoms';
 import {
   MenuSearchSection,
   RepositoriesList,
@@ -18,14 +15,17 @@ import {
   SearchingType,
 } from '../molecules';
 import Image from 'next/image';
+import { CommitableIcon, SearchMenuIcon } from '@/src/assets/menu-icons';
+import { useState } from 'react';
 
 export interface MenuInteface {
+  commitableMenu: boolean;
   autoCompleteValue?: string;
   setAutoCompleteValue: React.Dispatch<
     React.SetStateAction<string | undefined>
   >;
   openMenu: boolean;
-  setOpenMenu: () => void;
+  setOpenMenu: (p: boolean) => void;
   loadingFullTree: boolean;
   repositoriesFromSearch?: RepositoryFromSearch[];
   backToSearch: () => void;
@@ -42,7 +42,13 @@ export interface MenuInteface {
   handleUploadModal: (p: boolean) => void;
 }
 
+enum MenuType {
+  SEARCH = 'SEARCH',
+  COMMITABLE = 'COMMITABLE',
+}
+
 export const Menu: React.FC<MenuInteface> = ({
+  commitableMenu,
   autoCompleteValue,
   setAutoCompleteValue,
   openMenu,
@@ -61,7 +67,11 @@ export const Menu: React.FC<MenuInteface> = ({
   handleUploadModal,
 }) => {
   const { selectedRepository, selectedBranch } = useRepositoryState();
-  const { loggedData, logOut } = useAuthState();
+  const { modifiedFiles } = useFileState();
+  const { loggedData } = useAuthState();
+  const [menuType, setMenuType] = useState<MenuType | undefined>(
+    MenuType.SEARCH,
+  );
   return (
     <div className="flex">
       <div
@@ -72,37 +82,114 @@ export const Menu: React.FC<MenuInteface> = ({
         <div
           className={`mt-[1rem] flex w-full pl-[0.8rem] pb-[1rem] border-b-[2px] border-editor-black3`}
         >
-          <LogoInEditor state={openMenu} onClick={setOpenMenu} />
+          <LogoInEditor
+            state={openMenu}
+            onClick={() => {
+              if (!openMenu) {
+                setOpenMenu(true);
+                setMenuType(MenuType.SEARCH);
+              }
+              if (openMenu) {
+                setOpenMenu(false);
+                setMenuType(undefined);
+              }
+            }}
+          />
         </div>
         <div className="flex w-full h-full">
           <div
-            className={`min-w-[5.2rem] max-w-[5.2rem] h-full w-full flex flex-col items-center border-r-[2px] border-editor-black3 pt-[1.6rem] z-[10] bg-editor-black1`}
+            className={`relative min-w-[5.2rem] max-w-[5.2rem] h-full w-full flex flex-col items-center border-r-[2px] border-editor-black3 pt-[1.6rem] z-[10] bg-editor-black1`}
           >
             <div
-              onClick={setOpenMenu}
-              className="cursor-pointer min-w-[2rem] min-h-[2rem]"
+              onClick={() => {
+                if (!openMenu) {
+                  setOpenMenu(true);
+                  setMenuType(MenuType.SEARCH);
+                }
+                if (openMenu && menuType === MenuType.SEARCH) {
+                  setOpenMenu(false);
+                  setMenuType(undefined);
+                }
+                if (openMenu && menuType === MenuType.COMMITABLE) {
+                  setMenuType(MenuType.SEARCH);
+                }
+              }}
+              className="cursor-pointer min-w-[2rem] min-h-[2rem] relative"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M15.0023 8.8V5.84C15.0023 4.49587 15.0023 3.82381 14.7479 3.31042C14.5242 2.85883 14.1673 2.49168 13.7282 2.26158C13.2291 2 12.5757 2 11.2689 2H6.73333C5.42654 2 4.77315 2 4.27402 2.26158C3.83498 2.49168 3.47802 2.85883 3.25432 3.31042C3 3.82381 3 4.49587 3 5.84V14.16C3 15.5041 3 16.1762 3.25432 16.6896C3.47802 17.1412 3.83498 17.5083 4.27402 17.7384C4.77315 18 5.42654 18 6.73333 18H8.83333M17 18L15.8333 16.8M16.6111 14.8C16.6111 16.3464 15.3923 17.6 13.8889 17.6C12.3854 17.6 11.1667 16.3464 11.1667 14.8C11.1667 13.2536 12.3854 12 13.8889 12C15.3923 12 16.6111 13.2536 16.6111 14.8Z"
-                  stroke="#E1E5EE"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <div
+                className={`${
+                  menuType === MenuType.SEARCH ? 'h-full' : 'h-0'
+                } transition-all duration-500 ease-in-out left-[-0.8rem] absolute h-full rounded-[0.8rem] w-[0.4rem] bg-landing-blue`}
+              />
+              <SearchMenuIcon />
             </div>
+            {commitableMenu && (
+              <div
+                onClick={() => {
+                  if (!openMenu) {
+                    setOpenMenu(true);
+                    setMenuType(MenuType.COMMITABLE);
+                  }
+                  if (openMenu && menuType === MenuType.COMMITABLE) {
+                    setOpenMenu(false);
+                    setMenuType(undefined);
+                  }
+                  if (openMenu && menuType === MenuType.SEARCH) {
+                    setMenuType(MenuType.COMMITABLE);
+                  }
+                }}
+                className="relative mt-[2.4rem] cursor-pointer min-w-[2rem] min-h-[2rem]"
+              >
+                <div
+                  className={`${
+                    menuType === MenuType.COMMITABLE ? 'h-full' : 'h-0'
+                  } transition-all duration-500 ease-in-out left-[-0.8rem] absolute h-full rounded-[0.8rem] w-[0.4rem] bg-landing-blue`}
+                />
+                <CommitableIcon />
+                <div className="absolute bottom-[-0.8rem] left-[1.2rem] bg-editor-blue1 w-[1.6rem] h-[1.6rem] rounded-full flex justify-center items-center">
+                  <p className="text-editor-light1 text-[0.9rem]">
+                    {modifiedFiles.length}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-
           <div
             className={`${
-              openMenu
+              openMenu && menuType === MenuType.COMMITABLE
+                ? 'translate-x-[0%] duration-[900ms]'
+                : 'translate-x-[-600px] duration-[300ms]'
+            } w-full h-full transition-transform ease-in-out left-[5.2rem] absolute flex flex-col z-[1]`}
+          >
+            <div className="relative mt-[0.8rem] mx-[0.8rem]">
+              <p className="select-none text-[1.6rem] leading-[2.4rem] font-[500] text-editor-light2">
+                What you want to do ?
+              </p>
+              <div className="ml-[0.4rem] mt-[1.6rem] flex flex-col gap-[0.2rem]">
+                <div className="cursor-pointer group flex gap-[0.8rem] items-center">
+                  <span className="group-hover:bg-editor-blue1 w-[0.4rem] h-[0.4rem] bg-editor-purple2 rounded-full" />
+                  <p className="group-hover:underline select-none text-[1.4rem] leading-[2.4rem] font-[500] text-editor-light2">
+                    See changes
+                  </p>
+                </div>
+                <div className="cursor-pointer group flex gap-[0.8rem] items-center">
+                  <span className="group-hover:bg-editor-blue1 w-[0.4rem] h-[0.4rem] bg-editor-purple2 rounded-full" />
+                  <p className="group-hover:underline select-none text-[1.4rem] leading-[2.4rem] font-[500] text-editor-light2">
+                    Commit
+                  </p>
+                </div>
+                <div className="cursor-pointer group flex gap-[0.8rem] items-center">
+                  <span className="group-hover:bg-editor-blue1 w-[0.4rem] h-[0.4rem] bg-editor-purple2 rounded-full" />
+                  <p className="group-hover:underline select-none text-[1.4rem] leading-[2.4rem] font-[500] text-editor-light2">
+                    Pull request
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className={`${
+              openMenu && menuType === MenuType.SEARCH
                 ? 'translate-x-[0%] duration-[900ms]'
                 : 'translate-x-[-600px] duration-[300ms]'
             } w-full h-full transition-transform ease-in-out relative flex flex-col z-[1]`}
@@ -115,69 +202,92 @@ export const Menu: React.FC<MenuInteface> = ({
               } mt-[0.8rem] w-[90%] transition-all duration-300 ease-in-out absolute py-[0.2rem] px-[0.8rem]`}
             >
               <div
-                className="w-fit group cursor-pointer flex gap-[0.8rem] items-center"
+                className="text-editor-light2 w-fit group cursor-pointer flex gap-[0.4rem] items-center"
                 onClick={backToSearch}
               >
-                <div className="min-w-[2rem] min-h-[2rem]">
-                  <ArrowLeft small />
+                <div className="rotate-[-180deg] min-w-[2rem] min-h-[2rem]">
+                  <Chevron />
                 </div>
-                <p className="text-white select-none text-[1.2rem] group-hover:underline w-fit">
-                  Back to search
+                <p className="select-none text-[1.4rem] leading-[1.8rem] font-[500] w-fit">
+                  New search
                 </p>
               </div>
               <div className="mt-[1.6rem] relative w-full flex items-center justify-between">
-                <div className="flex justify-center items-center gap-[0.8rem]">
+                <div className="flex justify-center items-start gap-[0.8rem]">
                   {selectedRepository && (
                     <Image
                       loader={({ src }) => src}
                       priority
-                      width={24}
-                      height={24}
+                      width={20}
+                      height={20}
                       className="rounded-full"
                       alt="User Logo"
                       src={selectedRepository?.owner?.avatar_url || ''}
                     />
                   )}
-                  <p className="text-white select-none text-center text-[1.2rem]">
-                    {selectedRepository?.owner?.login}
-                  </p>
+                  <div className="flex flex-col">
+                    <p className="select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
+                      Selected repository:{' '}
+                      <span className="text-editor-light1">
+                        {selectedRepository?.name}
+                      </span>
+                    </p>
+
+                    <div className="mt-[0.4rem]" />
+                    {selectedRepository?.full_name.includes(
+                      loggedData ? loggedData.login : '',
+                    ) ? (
+                      <p className="select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
+                        Owner: <span className="text-editor-light1">You</span>
+                      </p>
+                    ) : (
+                      <p className="select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
+                        Owner:{' '}
+                        <span className="text-editor-light1">
+                          {selectedRepository?.owner?.login}
+                        </span>
+                      </p>
+                    )}
+
+                    <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
+                      Orginal respository:{' '}
+                      <span className="text-editor-light1">
+                        {!selectedRepository?.fork ? 'yes' : 'no'}
+                      </span>
+                    </p>
+                    {forksOnRepo?.find((x) =>
+                      x.full_name.includes(loggedData ? loggedData.login : ''),
+                    ) && (
+                      <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
+                        Already forked by logged user:{' '}
+                        <span className="text-editor-light1">yes</span>
+                      </p>
+                    )}
+                    {!selectedRepository?.full_name.includes(
+                      loggedData ? loggedData.login : '',
+                    ) && (
+                      <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
+                        Is your repository:{' '}
+                        <span className="text-editor-light1">no</span>
+                      </p>
+                    )}
+
+                    <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
+                      Current branch:{' '}
+                      <span className="text-editor-light1">
+                        {selectedBranch?.name}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
-              <p className="mt-[0.8rem] text-white select-none text-[1.2rem]">
-                Repository name: <strong>{selectedRepository?.name}</strong>
-              </p>
-              <p className="text-white select-none text-[1.2rem]">
-                Is orginal respository:{' '}
-                <strong>{!selectedRepository?.fork ? 'yes' : 'no'}</strong>
-              </p>
-              {forksOnRepo?.find((x) =>
-                x.full_name.includes(loggedData ? loggedData.login : ''),
-              ) && (
-                <p className="text-white select-none text-[1.2rem]">
-                  Already forked by logged user: <strong>yes</strong>
-                </p>
-              )}
-
-              <p className="text-white select-none text-[1.2rem]">
-                Is your repository:{' '}
-                <strong>
-                  {selectedRepository?.full_name.includes(
-                    loggedData ? loggedData.login : '',
-                  )
-                    ? 'yes'
-                    : 'no'}
-                </strong>
-              </p>
-              <p className="text-white select-none text-[1.2rem]">
-                Current branch: <strong>{selectedBranch?.name}</strong>
-              </p>
             </div>
             <div
               className={`${
                 selectedRepository && repositoryTree
                   ? 'translate-x-[-200%]'
                   : ''
-              } mt-[2.4rem] max-w-[26.6rem] pl-[1.6rem] transition-all duration-300 ease-in-out relative w-full`}
+              } mt-[2.8rem] max-w-[26.6rem] pl-[1.6rem] transition-all duration-300 ease-in-out relative w-full`}
             >
               <MenuSearchSection
                 searchingMode={searchingMode}
@@ -192,14 +302,14 @@ export const Menu: React.FC<MenuInteface> = ({
               onContextMenu={(e) => {
                 e.preventDefault();
               }}
-              className="mt-[1.6rem] pb-[1.6rem] border-t-[1px] border-editor-black3 w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar"
+              className="relative mt-[1.6rem] pb-[1.6rem] border-t-[1px] border-editor-black3 w-full flex-1 overflow-y-scroll overflow-x-hidden scrollbar"
             >
               {loadingFullTree ? (
                 <div className="mt-[4.2rem] flex justify-center w-full">
                   <PulseLoader size={'16px'} color="#9A99AD" />
                 </div>
               ) : (
-                <div className="pl-[1.6rem] pt-[1.6rem] flex flex-col gap-[0.4rem] justify-start w-full">
+                <div className="flex flex-col gap-[0.4rem] justify-start w-full">
                   {repositoriesFromSearch &&
                     repositoriesFromSearch.length > 0 && (
                       <RepositoriesList
@@ -221,7 +331,7 @@ export const Menu: React.FC<MenuInteface> = ({
                   />
                 ))}
               {!loadingFullTree && !repositoryTree && !repositoriesFromSearch && (
-                <div className="px-[1.6rem] mt-[2.4rem]">
+                <div className="mt-[1.6rem] px-[1.6rem]">
                   <p className="text-mdtxWhite text-[1.4rem]">
                     Type something to start explore GitHub repositories
                   </p>
@@ -230,7 +340,7 @@ export const Menu: React.FC<MenuInteface> = ({
               {!loadingFullTree &&
                 repositoryTree?.length === 0 &&
                 !repositoriesFromSearch && (
-                  <div className="px-[1.6rem] mt-[2.4rem]">
+                  <div className="mt-[1.6rem] px-[1.6rem]">
                     <p className="text-mdtxWhite text-[1.4rem]">
                       {`No markdown files in ${selectedRepository?.name}`}
                     </p>

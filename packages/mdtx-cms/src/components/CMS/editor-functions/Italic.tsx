@@ -1,11 +1,9 @@
-import { TextAreaTextApi, TextState } from '@uiw/react-md-editor/lib/commands';
-import { utilsType } from '../organisms';
+import { ICommand } from '@uiw/react-md-editor';
+import { commandsType } from '../organisms/Editor';
 
-export const Italic = (utils: utilsType) => {
+export const Italic = (commands: commandsType): ICommand => {
   return {
-    name: 'Italic',
-    keyCommand: 'Italic',
-    buttonProps: { 'aria-label': 'Insert italic' },
+    ...commands.italic,
     icon: (
       <svg
         width="20"
@@ -23,19 +21,5 @@ export const Italic = (utils: utilsType) => {
         />
       </svg>
     ),
-    execute: (state: TextState, api: TextAreaTextApi) => {
-      if (utils) {
-        const newSelectionRange = utils.selectWord({
-          text: state.text,
-          selection: state.selection,
-        });
-        const state1 = api.setSelectionRange(newSelectionRange);
-        const state2 = api.replaceSelection(`*${state1.selectedText}*`);
-        api.setSelectionRange({
-          start: state2.selection.end - 1 - state1.selectedText.length,
-          end: state2.selection.end - 1,
-        });
-      }
-    },
   };
 };

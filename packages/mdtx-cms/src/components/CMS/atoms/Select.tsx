@@ -21,7 +21,7 @@ export const Select: React.FC<SelectProps<string>> = ({
     <div
       className={`${
         open ? 'rounded-t-[0.8rem]' : 'rounded-[0.8rem]'
-      } bg-editor-black2 text-editor-purple2 select-none w-full h-full text-[1.4rem] cursor-pointer relative z-[1] `}
+      } bg-editor-black2 text-editor-purple2 select-none w-full h-full text-[1.4rem] cursor-pointer relative z-[99]`}
       onMouseLeave={() => {
         setTimeout(() => {
           setOpen(false);
@@ -31,10 +31,12 @@ export const Select: React.FC<SelectProps<string>> = ({
     >
       <div
         className={`${
-          open ? 'translate-y-[-50%] scale-y-[-1]' : 'translate-y-[-50%]'
+          open
+            ? 'translate-y-[-50%] rotate-[90deg]'
+            : 'translate-y-[-50%] rotate-[180deg]'
         } absolute right-[0.8rem] top-[50%] transition-all duration-300 ease-in-out`}
       >
-        <Chevron colorFill="#9A99AD" />
+        <Chevron color="#9A99AD" />
       </div>
       {currentValue ? (
         <div
