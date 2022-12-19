@@ -4,7 +4,7 @@
 
 @layer utilities {
   .scrollbar {
-    scrollbar-color: #ff9800 transparent;
+    scrollbar-color: #005eee transparent;
   }
   .scrollbar::-webkit-scrollbar {
     width: 0.4rem;
@@ -16,11 +16,11 @@
 
   .scrollbar::-webkit-scrollbar-thumb {
     background: transparent;
-    background: #ff9800;
+    background: #005eee;
   }
 
   .scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #ffffff;
+    background: #477fd3;
   }
 }
 

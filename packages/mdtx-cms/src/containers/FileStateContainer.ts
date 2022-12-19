@@ -17,7 +17,7 @@ const FileStateContainer = createContainer(() => {
   const [deletions, setDeletions] = useState<FileType[]>([]);
   const [imageToAdd, setImageToAdd] = useState<string>();
   const [pickedFilePath, setPickedFilePath] = useState<string>();
-  const [isFilesDirty, setIsFilesDirty] = useState(false);
+  const [isFilesTouched, setIsFilesTouched] = useState(false);
   const [creatingFilePath, setCreatingFilePath] = useState<string>();
   const { selectedBranch, selectedRepository } = useRepositoryState();
   const { getContents } = useGitHub();
@@ -27,7 +27,7 @@ const FileStateContainer = createContainer(() => {
     setFiles([]);
     setDeletions([]);
     setPickedFilePath(undefined);
-    setIsFilesDirty(false);
+    setIsFilesTouched(false);
   };
   const [block, setBlock] = useState(false);
   useEffect(() => {
@@ -35,46 +35,75 @@ const FileStateContainer = createContainer(() => {
       JSON.stringify(files.filter((z) => z.name.includes('.md'))) ===
       JSON.stringify(orginalFiles?.filter((z) => z.name.includes('.md')))
     ) {
-      setIsFilesDirty(false);
+      setIsFilesTouched(false);
       setModifiedFiles([]);
     } else {
-      setIsFilesDirty(true);
+      setIsFilesTouched(true);
     }
   }, [files]);
 
   useEffect(() => {
     const found = files?.find((x) => x.name === pickedFilePath);
+    const foundInOrginal = orginalFiles?.find((x) => x.name === found?.name);
     const owner = selectedRepository?.full_name.split('/');
     const ref = selectedBranch?.name;
-
-    if (ref && owner && found && found?.content === undefined) {
+    if (ref && owner && found && found.content === undefined) {
       setBlock(true);
-      getContents({
-        owner: owner[0],
-        repo: owner[1],
-        ref: selectedBranch?.name,
-        path: found.name.slice(found.name.indexOf('/') + 1),
-      }).then((z) =>
-        setFiles((prev) => {
-          setBlock(false);
-          return [
-            ...prev.filter(
-              (x) =>
-                x.name.slice(x.name.indexOf('/') + 1) !==
-                found.name.slice(found.name.indexOf('/') + 1),
-            ),
-            {
-              content:
-                'content' in z
-                  ? Buffer.from(z.content, 'base64').toString('utf-8')
-                  : '',
-              dir: false,
-              name: found.name,
-            },
-          ];
-        }),
-      );
-      setOrginalFiles(files);
+      if (foundInOrginal) {
+        getContents({
+          owner: owner[0],
+          repo: owner[1],
+          ref: selectedBranch?.name,
+          path: found.name.slice(found.name.indexOf('/') + 1),
+        }).then((z) => {
+          setFiles((prev) => {
+            const toSet = [
+              ...prev.filter(
+                (x) =>
+                  x.name.slice(x.name.indexOf('/') + 1) !==
+                  found.name.slice(found.name.indexOf('/') + 1),
+              ),
+              {
+                content:
+                  'content' in z
+                    ? Buffer.from(z.content, 'base64').toString('utf-8')
+                    : '',
+                dir: false,
+                name: found.name,
+              },
+            ];
+            setBlock(false);
+            return toSet;
+          });
+          setOrginalFiles((prev) => {
+            if (prev) {
+              const toSet = [
+                ...prev.filter(
+                  (x) =>
+                    x.name.slice(x.name.indexOf('/') + 1) !==
+                    found.name.slice(found.name.indexOf('/') + 1),
+                ),
+                {
+                  content:
+                    'content' in z
+                      ? Buffer.from(z.content, 'base64').toString('utf-8')
+                      : '',
+                  dir: false,
+                  name: found.name,
+                },
+              ];
+              setBlock(false);
+              return toSet;
+            } else {
+              setBlock(false);
+              return prev;
+            }
+          });
+        });
+      } else {
+        setOrginalFiles(files);
+        setBlock(false);
+      }
     }
   }, [pickedFilePath]);
 
@@ -142,7 +171,8 @@ const FileStateContainer = createContainer(() => {
     modifiedFiles,
     getSelectedFileByPath,
     setSelectedFileContentByPath,
-    isFilesDirty,
+    isFilesTouched,
+    setIsFilesTouched,
     resetState,
     setModifiedFiles,
     deletions,

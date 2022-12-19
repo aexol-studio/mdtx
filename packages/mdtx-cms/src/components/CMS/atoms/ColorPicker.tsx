@@ -6,7 +6,7 @@ import { Button } from './Button';
 
 export const ColorPicker: React.FC<{
   color: string;
-  onChange: React.Dispatch<React.SetStateAction<string>>;
+  onChange: (p: string) => void;
   getState: (() => false | TextState) | undefined;
   textApi?: TextAreaTextApi;
   utils: utilsType;
@@ -21,8 +21,13 @@ export const ColorPicker: React.FC<{
   }, [value]);
   return (
     <>
-      <HexColorPicker color={value} onChange={setValue} />
+      <HexColorPicker
+        style={{ width: '14rem', height: '14rem' }}
+        color={value}
+        onChange={setValue}
+      />
       <HexColorInput
+        style={{ height: '2.4rem' }}
         color={value}
         onChange={setValue}
         placeholder="Type a color"
@@ -40,25 +45,13 @@ export const ColorPicker: React.FC<{
                   selection: state.selection,
                 });
                 const state1 = textApi.setSelectionRange(newSelectionRange);
-                if (state1.selectedText[0] === '#') {
-                  const state2 = textApi.replaceSelection(
-                    `${state1.selectedText}\n<!--rehype:style=color: ${value};-->`,
-                  );
-                  textApi.setSelectionRange({
-                    start:
-                      state2.selection.end - 36 - state1.selectedText.length,
-                    end: state2.selection.end - 36,
-                  });
-                } else {
-                  const state2 = textApi.replaceSelection(
-                    `${state1.selectedText}<!--rehype:style=color: ${value};-->`,
-                  );
-                  textApi.setSelectionRange({
-                    start:
-                      state2.selection.end - 35 - state1.selectedText.length,
-                    end: state2.selection.end - 35,
-                  });
-                }
+                const state2 = textApi.replaceSelection(
+                  `${state1.selectedText}\n<!--rehype:style=color: ${value};-->`,
+                );
+                textApi.setSelectionRange({
+                  start: state2.selection.end - 36 - state1.selectedText.length,
+                  end: state2.selection.end - 36,
+                });
               }
               close();
             }

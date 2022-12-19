@@ -2,7 +2,7 @@ import '../styles/globals.css';
 import '../styles/markdown-editor-preview.css';
 import '../styles/markdown-editor.css';
 import type { AppProps } from 'next/app';
-import { Lato, Jost } from '@next/font/google';
+import { Lato, Jost, Fira_Sans } from '@next/font/google';
 import {
   AuthProvider,
   FileStateProvider,
@@ -17,6 +17,11 @@ const LatoFont = Lato({
 
 const JostFont = Jost({
   weight: ['100', '300', '400', '700', '900'],
+  subsets: ['latin-ext'],
+});
+
+const FiraSans = Fira_Sans({
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
   subsets: ['latin-ext'],
 });
 
@@ -39,6 +44,7 @@ function MyApp({ Component, pageProps }: AppProps) {
                   --ivymode-font: ${IvyModeFont.style.fontFamily};
                   --jost-font: ${JostFont.style.fontFamily};
                   --jost-font-light: ${JostFontLight.style.fontFamily};
+                  --fira-font: ${FiraSans.style.fontFamily};
                 }
                 html {
                   font-family: ${JostFont.style.fontFamily};

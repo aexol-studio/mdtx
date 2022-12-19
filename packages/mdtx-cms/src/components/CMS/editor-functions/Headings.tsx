@@ -1,84 +1,67 @@
-import { TextAreaTextApi, TextState } from '@uiw/react-md-editor/lib/commands';
+import { ICommand } from '@uiw/react-md-editor';
+import { commandsType } from '../organisms/Editor';
 
-const headings = [
+const headings = (
+  commands: commandsType,
+): {
+  command: ICommand;
+}[] => [
   {
-    value: '# ',
-    label: 'H1',
-    size: 22,
+    command: { ...commands.title1 },
   },
   {
-    value: '## ',
-    label: 'H2',
-    size: 20,
+    command: { ...commands.title2 },
   },
   {
-    value: '### ',
-    label: 'H3',
-    size: 20,
+    command: { ...commands.title3 },
   },
   {
-    value: '#### ',
-    label: 'H4',
-    size: 18,
+    command: { ...commands.title4 },
   },
   {
-    value: '##### ',
-    label: 'H5',
-    size: 16,
+    command: { ...commands.title5 },
   },
   {
-    value: '###### ',
-    label: 'H6',
-    size: 14,
+    command: { ...commands.title6 },
   },
 ];
 
-export const Headings = (
-  close: () => void,
-  getState?: (() => false | TextState) | undefined,
-  textApi?: TextAreaTextApi | undefined,
-) => {
-  const headingHandler = (
-    heading: { value: string; label: string },
-    getState: () => false | TextState,
-    textApi: TextAreaTextApi,
-  ) => {
-    const state = getState();
-    if (state !== false) {
-      let modifyText = `${heading.value}${state.selectedText}\n`;
-      if (!state.selectedText) {
-        modifyText = `${heading.value}`;
-      }
-      textApi.replaceSelection(modifyText);
-    }
-  };
-  return (
-    <div className="relative w-[16rem]">
-      <div
-        className={`bg-editorBlack border-editorGray1 border-[1px] absolute top-[0.8rem] w-full flex flex-col items-center`}
-      >
-        {headings.map((heading, index) => (
-          <div
-            key={index}
-            onClick={() => {
-              if (getState && textApi) {
-                headingHandler(heading, getState, textApi);
-                close();
-              }
-            }}
-            className={`${
-              index !== 0 ? 'border-editorGray1 border-t-[1px]' : ''
-            } cursor-pointer hover:bg-editorGray0 w-full flex py-[0.4rem]`}
-          >
-            <p
-              style={{ fontSize: heading.size }}
-              className={`pl-[1.6rem] leading-[4rem] font-[700] text-mdtxWhitez`}
+export const Headings = (commands: commandsType): ICommand => {
+  return commands.group(
+    headings(commands).map((heading) => heading.command),
+    {
+      name: 'headings',
+      groupName: 'headings',
+      liProps: { id: 'headings' },
+      buttonProps: {
+        className: 'headingsButton',
+        'aria-label': 'Open headings',
+        title: 'Open headings',
+      },
+      icon: (
+        <div className="hover:bg-[#FFFFFF20] py-[0.2rem] transition-all duration-300 ease-in-out flex relative w-[16rem] items-center justify-between">
+          <p className="pl-[0.8rem] text-[1.8rem] leading-[1.8rem] font-[700] text-mdtxWhite">
+            Headings
+          </p>
+          <div className="mr-[0.8rem]">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              {heading.label}
-            </p>
+              <path
+                d="M5 7.5L10 12.5L15 7.5"
+                stroke="#FAFAFE"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      ),
+    },
   );
 };

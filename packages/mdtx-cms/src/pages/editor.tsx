@@ -15,6 +15,7 @@ import {
   SearchingType,
   Editor,
   UploadModal,
+  LoadingModal,
 } from '../components';
 import {
   useFileState,
@@ -86,7 +87,7 @@ const editor = () => {
   const {
     setFiles,
     setOrginalFiles,
-    isFilesDirty,
+    isFilesTouched,
     modifiedFiles,
     deletions,
     resetState,
@@ -149,7 +150,7 @@ const editor = () => {
 
   const [repositoryTree, setRepositoryTree] = useState<TreeMenu>();
   const [openMenu, setOpenMenu] = useState(true);
-  const handleMenu = () => setOpenMenu((prev) => !prev);
+  const handleMenu = (p: boolean) => setOpenMenu(p);
   const [menuModal, setMenuModal] = useState<MenuModalType | undefined>();
   const [previewChanges, setPreviewChanges] = useState<{
     orginalFile?: string;
@@ -162,27 +163,55 @@ const editor = () => {
   const [doingFork, setDoingFork] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
 
-  useEffect(() => {
-    const { error, code } = router.query;
-    if (typeof error === 'string') logOut();
-    if (typeof code === 'string') {
-      getGitHubToken(code as string)
-        .then((data) => {
-          setTokenWithLocal(data.token);
-          setIsLoggedIn(true);
-          router.replace('/editor');
-        })
-        .catch(() => {
-          logOut();
-        });
-    }
-  }, [router.isReady]);
+  const [logging, setLogging] = useState(false);
+  const { error, code } = router.query;
 
+  useEffect(() => {
+    if (!isLoggedIn) {
+      if (typeof error === 'string') logOut();
+      if (typeof code === 'string' && code.length) {
+        setLogging(true);
+        getGitHubToken(code)
+          .then((data) => {
+            setTokenWithLocal(data.token);
+            setIsLoggedIn(true);
+            afterLoginInfo();
+            router.replace('/editor');
+          })
+          .catch(() => {
+            // setLogging(false);
+            createToast(ToastType.ERROR, 'Something went wrong. Refresh page.');
+            setTimeout(() => {
+              logOut();
+            }, 500);
+          });
+      }
+    } else {
+      setLogging(true);
+      afterLoginInfo();
+    }
+  }, [router.isReady, error, code, isLoggedIn]);
+
+  // useEffect(() => {
+  //   if (isLoggedIn) {
+  //     // const unloadCallback = (event: {
+  //     //   preventDefault: () => void;
+  //     //   returnValue: string;
+  //     // }) => {
+  //     //   event.preventDefault();
+  //     //   event.returnValue = '';
+  //     //   return '';
+  //     // };
+  //     // window.addEventListener('beforeunload', unloadCallback);
+  //     // return () => window.removeEventListener('beforeunload', unloadCallback);
+  //   }
+  // }, [isLoggedIn]);
   const afterLoginInfo = async () => {
-    const { orgs, repos, user } = await getGitHubAfterLoginInfo();
-    setOrganizations(orgs);
-    setUserRepos(repos);
-    if (repos.length) {
+    if (isLoggedIn) {
+      const { orgs, repos, user } = await getGitHubAfterLoginInfo();
+      setOrganizations(orgs);
+      setUserRepos(repos);
+      confirmBranchClick('develop');
       const tempArr: {
         full_name: string;
         source?: { full_name: string; owner: { login: string } };
@@ -201,44 +230,40 @@ const editor = () => {
         );
       setUserForks(tempArr);
       setLoggedData(user);
+      setLogging(false);
     }
   };
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      afterLoginInfo();
-      const unloadCallback = (event: {
-        preventDefault: () => void;
-        returnValue: string;
-      }) => {
-        event.preventDefault();
-        event.returnValue = '';
-        return '';
-      };
-      window.addEventListener('beforeunload', unloadCallback);
-      return () => window.removeEventListener('beforeunload', unloadCallback);
-    }
-  }, [isLoggedIn]);
 
   const controllerZIP = new AbortController();
 
   const confirmBranchClick = async (branchName?: string) => {
-    setDownloadZIP(true);
+    // if (isLoggedIn) {
     if (isLoggedIn && selectedRepository) {
       const input = {
         owner: selectedRepository.full_name.split('/')[0],
         repo: selectedRepository.full_name.split('/')[1],
       };
+      // const input = {
+      //   owner: 'aexol-studio',
+      //   repo: 'mdtx',
+      // };
       const getBranchInfo = await getGitHubRepositoryBranch({
         ...input,
         branch: selectedBranch ? selectedBranch.name : branchName!,
       });
       if (getBranchInfo !== undefined) {
+        setDownloadZIP(true);
+        branchName && handleBranch(getBranchInfo);
         const input = {
           owner: selectedRepository.full_name.split('/')[0],
           repo: selectedRepository.full_name.split('/')[1],
           tree_sha: getBranchInfo.commit.sha,
         };
+        // const input = {
+        //   owner: 'aexol-studio',
+        //   repo: 'mdtx',
+        //   tree_sha: getBranchInfo.commit.sha,
+        // };
         const items = await getTree(input);
         // const wantedFiles = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
         // const isWanted = (p: string) => !!p.match(wantedFiles);
@@ -255,6 +280,7 @@ const editor = () => {
           content: undefined,
           dir: x.type === 'tree',
           name: `${selectedRepository.name}/${x.path}`,
+          // name: `aexol-studio/${x.path}`,
         }));
         const tree = treeBuilder(paths);
         setRepositoryTree(tree);
@@ -265,10 +291,12 @@ const editor = () => {
         setDownloadZIP(false);
         setDownloadModal(false);
         createToast(ToastType.SUCCESS, 'Done.');
+        return true;
       } else {
         setDownloadZIP(false);
         setDownloadModal(false);
         createToast(ToastType.SUCCESS, 'Error while downloading repository.');
+        return false;
       }
     }
   };
@@ -361,11 +389,13 @@ const editor = () => {
         },
       });
       if (oidArray && createdCommit.commit?.oid) {
+        setRepositoryTree(undefined);
         resetState();
-        confirmBranchClick().then(() => {
+        const newRedirect = await confirmBranchClick();
+        if (newRedirect) {
           setSubmittingCommit(false);
           setMenuModal(undefined);
-        });
+        }
       }
     }
   };
@@ -428,11 +458,13 @@ const editor = () => {
             body: data.pullRequestMessage,
           });
           if (createdPullReq.pullRequest) {
+            setRepositoryTree(undefined);
             resetState();
-            confirmBranchClick(ref.name).then(() => {
-              setPullRequest(false);
+            const newRedirect = await confirmBranchClick(ref.name);
+            if (newRedirect) {
+              setSubmittingCommit(false);
               setMenuModal(undefined);
-            });
+            }
           }
         }
       }
@@ -482,7 +514,6 @@ const editor = () => {
   }, [autoCompleteValue, includeForks, searchingMode]);
 
   const backToSearch = () => {
-    setRepositoryTree(undefined);
     handleRepository(undefined);
     setAvailableBranches(undefined);
     setAvailablePullRequests(undefined);
@@ -540,15 +571,18 @@ const editor = () => {
       });
       if (oidArray && createdCommit.commit?.oid) {
         // resetState();
-        confirmBranchClick().then(() => {
-          handleUploadModal(false);
-        });
+        const newRedirect = await confirmBranchClick();
+        if (newRedirect) {
+          setSubmittingCommit(false);
+          setMenuModal(undefined);
+        }
       }
     }
   };
 
   return (
     <Layout isEditor pageTitle="MDtx Editor">
+      {logging && !loggedData && <LoadingModal />}
       {uploadModal && (
         <Modal
           closeFnc={() => {
@@ -626,11 +660,14 @@ const editor = () => {
           />
         </Modal>
       )}
-      {isFilesDirty && repositoryTree && selectedRepository && (
+      {isFilesTouched && repositoryTree && selectedRepository && (
         <ButtonMenu forksOnRepo={forksOnRepo} setMenuModal={setMenuModal} />
       )}
       <div className="z-[100]">
         <Menu
+          commitableMenu={
+            isFilesTouched && !!selectedRepository && !!repositoryTree
+          }
           handleUploadModal={handleUploadModal}
           setRepositoryTree={setRepositoryTree}
           searchingMode={searchingMode}

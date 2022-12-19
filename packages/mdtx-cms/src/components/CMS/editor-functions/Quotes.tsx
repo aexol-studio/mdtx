@@ -1,11 +1,9 @@
-import { TextAreaTextApi, TextState } from '@uiw/react-md-editor/lib/commands';
-import { utilsType } from '../organisms';
+import { ICommand } from '@uiw/react-md-editor';
+import { commandsType } from '../organisms/Editor';
 
-export const Quotes = (utils: utilsType) => {
+export const Quotes = (commands: commandsType): ICommand => {
   return {
-    name: 'Quotes',
-    keyCommand: 'Quotes',
-    buttonProps: { 'aria-label': 'Insert quotes' },
+    ...commands.quote,
     icon: (
       <svg
         width="20"
@@ -20,33 +18,5 @@ export const Quotes = (utils: utilsType) => {
         />
       </svg>
     ),
-    execute: (state: TextState, api: TextAreaTextApi) => {
-      if (utils) {
-        const newSelectionRange = utils.selectWord({
-          text: state.text,
-          selection: state.selection,
-        });
-        const state1 = api.setSelectionRange(newSelectionRange);
-        const breaksBeforeCount = utils.getBreaksNeededForEmptyLineBefore(
-          state1.text,
-          state1.selection.start,
-        );
-        const breaksBefore = Array(breaksBeforeCount + 1).join('\n');
-        const breaksAfterCount = utils.getBreaksNeededForEmptyLineAfter(
-          state1.text,
-          state1.selection.end,
-        );
-        const breaksAfter = Array(breaksAfterCount + 1).join('\n');
-        api.replaceSelection(
-          `${breaksBefore}> ${state1.selectedText}${breaksAfter}`,
-        );
-        const selectionStart = state1.selection.start + breaksBeforeCount + 2;
-        const selectionEnd = selectionStart + state1.selectedText.length;
-        api.setSelectionRange({
-          start: selectionStart,
-          end: selectionEnd,
-        });
-      }
-    },
   };
 };

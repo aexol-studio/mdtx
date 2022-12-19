@@ -1,11 +1,9 @@
-import { TextAreaTextApi, TextState } from '@uiw/react-md-editor/lib/commands';
-import { utilsType } from '../organisms';
+import { ICommand } from '@uiw/react-md-editor';
+import { commandsType } from '../organisms/Editor';
 
-export const Code = (utils: utilsType) => {
+export const Code = (commands: commandsType): ICommand => {
   return {
-    name: 'Code',
-    keyCommand: 'Code',
-    buttonProps: { 'aria-label': 'Insert code' },
+    ...commands.code,
     icon: (
       <svg
         width="20"
@@ -23,43 +21,5 @@ export const Code = (utils: utilsType) => {
         />
       </svg>
     ),
-    execute: (tate: TextState, api: TextAreaTextApi) => {
-      if (utils) {
-        const newSelectionRange = utils.selectWord({
-          text: tate.text,
-          selection: tate.selection,
-        });
-        const state1 = api.setSelectionRange(newSelectionRange);
-        if (state1.selectedText.indexOf('\n') === -1) {
-          api.replaceSelection(`\`${state1.selectedText}\``);
-          const selectionStart = state1.selection.start + 1;
-          const selectionEnd = selectionStart + state1.selectedText.length;
-          api.setSelectionRange({
-            start: selectionStart,
-            end: selectionEnd,
-          });
-          return;
-        }
-        const breaksBeforeCount = utils.getBreaksNeededForEmptyLineBefore(
-          state1.text,
-          state1.selection.start,
-        );
-        const breaksBefore = Array(breaksBeforeCount + 1).join('\n');
-        const breaksAfterCount = utils.getBreaksNeededForEmptyLineAfter(
-          state1.text,
-          state1.selection.end,
-        );
-        const breaksAfter = Array(breaksAfterCount + 1).join('\n');
-        api.replaceSelection(
-          `${breaksBefore}\`\`\`\n${state1.selectedText}\n\`\`\`${breaksAfter}`,
-        );
-        const selectionStart = state1.selection.start + breaksBeforeCount + 4;
-        const selectionEnd = selectionStart + state1.selectedText.length;
-        api.setSelectionRange({
-          start: selectionStart,
-          end: selectionEnd,
-        });
-      }
-    },
   };
 };

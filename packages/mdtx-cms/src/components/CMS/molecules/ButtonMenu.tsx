@@ -73,7 +73,7 @@ export const ButtonMenu: React.FC<{
             <CloseIconSvg small navVisible={optionsMenu} />
           </div>
           <div className="top-[65%] translate-y-[-50%] absolute right-[3.2rem] flex flex-col gap-[0.8rem] w-[50%]">
-            {/* <div
+            <div
               className="flex justify-end"
               onClick={() => {
                 setMenuModal(MenuModalType.CHANGES);
@@ -86,7 +86,7 @@ export const ButtonMenu: React.FC<{
                   ({modifiedFiles.length})
                 </span>
               </p>
-            </div> */}
+            </div>
             <div
               className="flex justify-end"
               onClick={() => {

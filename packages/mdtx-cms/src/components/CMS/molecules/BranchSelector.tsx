@@ -9,7 +9,7 @@ import { Button, PermissionsTable, SelectBranch } from '../atoms';
 interface IBranchSelector {
   foundedFork: boolean;
   downloadZIP: boolean;
-  confirmBranchClick: () => Promise<void>;
+  confirmBranchClick: (branchName?: string) => Promise<boolean | undefined>;
   availableBranches: availableBranchType[];
   availablePullRequests?: PullRequestsType[];
 
