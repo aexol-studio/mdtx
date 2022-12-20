@@ -1,4 +1,4 @@
-import { Chevron } from '@/src/assets';
+import { Chevron, ImageIcon } from '@/src/assets';
 import {
   RepositoryFromSearch,
   useAuthState,
@@ -9,7 +9,6 @@ import { TreeMenu } from '@/src/utils/treeBuilder';
 import { PulseLoader } from 'react-spinners';
 import { LogoInEditor } from '../atoms';
 import {
-  MenuModalType,
   MenuSearchSection,
   RepositoriesList,
   RepositoryTree,
@@ -18,6 +17,7 @@ import {
 import Image from 'next/image';
 import { CommitableIcon, SearchMenuIcon } from '@/src/assets/menu-icons';
 import { useEffect, useState } from 'react';
+import { MenuModalType } from '@/src/pages/editor';
 
 export interface MenuInteface {
   commitableMenu: boolean;
@@ -47,6 +47,7 @@ export interface MenuInteface {
 enum MenuType {
   SEARCH = 'SEARCH',
   COMMITABLE = 'COMMITABLE',
+  IMAGES = 'IMAGES',
 }
 
 export const Menu: React.FC<MenuInteface> = ({
@@ -70,7 +71,7 @@ export const Menu: React.FC<MenuInteface> = ({
   handleMenuModal,
 }) => {
   const { selectedRepository, selectedBranch } = useRepositoryState();
-  const { modifiedFiles } = useFileState();
+  const { modifiedFiles, files } = useFileState();
   const { loggedData } = useAuthState();
   const [menuType, setMenuType] = useState<MenuType | undefined>(
     MenuType.SEARCH,
@@ -80,7 +81,8 @@ export const Menu: React.FC<MenuInteface> = ({
       setMenuType(MenuType.SEARCH);
     }
   }, [commitableMenu, modifiedFiles]);
-
+  const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
+  const onlyIMG = (p: string) => !!p.match(onlyIMGRef);
   return (
     <div className="flex">
       <div
@@ -96,12 +98,12 @@ export const Menu: React.FC<MenuInteface> = ({
             onClick={() => {
               if (!openMenu) {
                 setOpenMenu(true);
-                setMenuType(MenuType.SEARCH);
               }
               if (openMenu) {
                 setOpenMenu(false);
                 setMenuType(undefined);
               }
+              setMenuType(MenuType.SEARCH);
             }}
           />
         </div>
@@ -113,15 +115,12 @@ export const Menu: React.FC<MenuInteface> = ({
               onClick={() => {
                 if (!openMenu) {
                   setOpenMenu(true);
-                  setMenuType(MenuType.SEARCH);
                 }
                 if (openMenu && menuType === MenuType.SEARCH) {
                   setOpenMenu(false);
                   setMenuType(undefined);
                 }
-                if (openMenu && menuType === MenuType.COMMITABLE) {
-                  setMenuType(MenuType.SEARCH);
-                }
+                setMenuType(MenuType.SEARCH);
               }}
               className="cursor-pointer min-w-[2rem] min-h-[2rem] relative"
             >
@@ -132,6 +131,7 @@ export const Menu: React.FC<MenuInteface> = ({
               />
               <SearchMenuIcon />
             </div>
+
             <div
               onClick={() => {
                 if (commitableMenu) {
@@ -142,9 +142,6 @@ export const Menu: React.FC<MenuInteface> = ({
                   if (openMenu && menuType === MenuType.COMMITABLE) {
                     setOpenMenu(false);
                     setMenuType(undefined);
-                  }
-                  if (openMenu && menuType === MenuType.SEARCH) {
-                    setMenuType(MenuType.COMMITABLE);
                   }
                 }
               }}
@@ -165,6 +162,52 @@ export const Menu: React.FC<MenuInteface> = ({
                   {modifiedFiles.length}
                 </p>
               </div>
+            </div>
+            <div
+              onClick={() => {
+                if (selectedRepository && repositoryTree?.length) {
+                  if (!openMenu) {
+                    setOpenMenu(true);
+                  }
+                  if (openMenu && menuType === MenuType.IMAGES) {
+                    setOpenMenu(false);
+                    setMenuType(undefined);
+                  }
+                  setMenuType(MenuType.IMAGES);
+                }
+              }}
+              className={`${
+                selectedRepository && repositoryTree?.length
+                  ? 'cursor-pointer'
+                  : 'cursor-not-allowed opacity-[0.4]'
+              } mt-[2.4rem] cursor-pointer min-w-[2rem] min-h-[2rem] relative`}
+            >
+              <div
+                className={`${
+                  menuType === MenuType.IMAGES ? 'h-full' : 'h-0'
+                } transition-all duration-500 ease-in-out left-[-0.8rem] absolute h-full rounded-[0.8rem] w-[0.4rem] bg-landing-blue`}
+              />
+              <ImageIcon />
+            </div>
+          </div>
+          <div
+            className={`${
+              openMenu && menuType === MenuType.IMAGES
+                ? 'translate-x-[0%] duration-[900ms]'
+                : 'translate-x-[-600px] duration-[300ms]'
+            } w-full h-full transition-transform ease-in-out left-[5.2rem] absolute flex flex-col z-[1]`}
+          >
+            <div className="relative mt-[0.8rem] mx-[0.8rem]">
+              <p className="select-none text-[1.6rem] leading-[2.4rem] font-[500] text-editor-light2">
+                **section in progress**
+              </p>
+              {/* {files
+                .filter((x) => onlyIMG(x.name))
+                .map((o) => (
+                  <div>
+                    <p className="text-editor-light1">{o.name}</p>
+                  </div>
+                ))} */}
             </div>
           </div>
           <div
@@ -326,6 +369,7 @@ export const Menu: React.FC<MenuInteface> = ({
                 setAutoCompleteValue={setAutoCompleteValue}
               />
             </div>
+
             <div
               onContextMenu={(e) => {
                 e.preventDefault();

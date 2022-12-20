@@ -34,6 +34,7 @@ export const Headings = (commands: commandsType): ICommand => {
       groupName: 'headings',
       liProps: { id: 'headings' },
       buttonProps: {
+        style: { marginRight: '1.6rem' },
         className: 'headingsButton',
         'aria-label': 'Open headings',
         title: 'Open headings',

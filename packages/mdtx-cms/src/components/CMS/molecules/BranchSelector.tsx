@@ -190,7 +190,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                   />
                 </div>
               </div>
-              {foundedFork && (
+              {!foundedFork && (
                 <p className="w-fit mt-[1.6rem] text-editor-purple2 text-[1.6rem] font-[400] select-none">
                   Need more access?{' '}
                   <span
@@ -206,7 +206,11 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
               )}
             </div>
             {!pullRequestView && (
-              <div className="mt-[4.2rem] flex items-end justify-between gap-[4.2rem]">
+              <div
+                className={`${
+                  !foundedFork ? 'mt-[4.2rem]' : 'mt-[6.6rem]'
+                } flex items-end justify-between gap-[4.2rem]`}
+              >
                 <div className="flex flex-col flex-1">
                   <p className="text-editor-light1 text-[1.4rem] leading-[1.8rem] font-[500] mb-[0.8rem]">
                     Branch

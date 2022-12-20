@@ -10,6 +10,7 @@ export const Comment = (utils: utilsType): ICommand => {
     buttonProps: {
       'aria-label': 'Insert comment (ctrl + /)',
       title: 'Insert comment (ctrl + /)',
+      style: { padding: 0, margin: '0 1.6rem' },
     },
     execute: (state, api) => {
       const newSelectionRange = utils.selectWord({

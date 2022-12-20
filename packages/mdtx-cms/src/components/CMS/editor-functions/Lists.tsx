@@ -16,9 +16,11 @@ export const Lists = (commands: commandsType): ICommand => {
     {
       name: 'lists',
       groupName: 'lists',
+      liProps: { id: 'lists' },
       buttonProps: {
         'aria-label': 'Open lists types',
         title: 'Open lists types',
+        style: { margin: '0 1.6rem' },
       },
       icon: (
         <svg

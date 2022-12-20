@@ -4,6 +4,10 @@ import { commandsType } from '../organisms/Editor';
 export const CodeBlock = (commands: commandsType): ICommand => {
   return {
     ...commands.codeBlock,
+    buttonProps: {
+      ...commands.codeBlock.buttonProps,
+      style: { padding: 0, margin: '0 1.6rem' },
+    },
     icon: (
       <svg
         width="20"

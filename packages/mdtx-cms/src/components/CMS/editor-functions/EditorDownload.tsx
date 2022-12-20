@@ -10,6 +10,7 @@ export const EditorDownload = (
     buttonProps: {
       'aria-label': 'Download md file (ctrl + shift + d)',
       title: 'Download md file (ctrl + shift + d)',
+      style: { padding: 0, margin: '0 1.6rem' },
     },
     icon: (
       <svg

@@ -7,6 +7,7 @@ export const EditorInfo = (commands: commandsType): ICommand => {
     buttonProps: {
       'aria-label': 'Get info about editor',
       title: 'Get info about editor',
+      style: { padding: 0, margin: '0 1.6rem 0 0' },
     },
     icon: (
       <svg

@@ -25,7 +25,7 @@ export const UserInfo = (commands: commandsType): ICommand => {
           <div
             ref={ref}
             onClick={handleMenu}
-            className="z-[100] relative py-[0.8rem] bg-transparent mr-[1.6rem]"
+            className="z-[100] relative py-[0.8rem] bg-transparent mx-[1.6rem]"
           >
             <div className="cursor-pointer flex gap-[0.8rem] items-center">
               <Image

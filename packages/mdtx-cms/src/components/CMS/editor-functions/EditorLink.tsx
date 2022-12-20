@@ -6,7 +6,7 @@ export const EditorLink = (commands: commandsType): ICommand => {
     ...commands.link,
     buttonProps: {
       ...commands.link.buttonProps,
-      style: { padding: 0, marginRight: '0.8rem' },
+      style: { padding: 0, margin: '0 0 0 1.6rem' },
     },
     icon: (
       <svg

@@ -4,6 +4,10 @@ import { commandsType } from '../organisms/Editor';
 export const Through = (commands: commandsType): ICommand => {
   return {
     ...commands.strikethrough,
+    buttonProps: {
+      ...commands.strikethrough.buttonProps,
+      style: { padding: 0, margin: '0 1.6rem' },
+    },
     icon: (
       <svg
         width="20"
