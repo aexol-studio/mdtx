@@ -30,7 +30,6 @@ import { Layout } from '../layouts';
 import { useGitHub } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
 import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
-
 export type Organization = {
   login: string;
 };
@@ -152,6 +151,7 @@ const editor = () => {
   const [openMenu, setOpenMenu] = useState(true);
   const handleMenu = (p: boolean) => setOpenMenu(p);
   const [menuModal, setMenuModal] = useState<MenuModalType | undefined>();
+  const handleMenuModal = (p?: MenuModalType) => setMenuModal(p);
   const [previewChanges, setPreviewChanges] = useState<{
     orginalFile?: string;
     changedFile?: string;
@@ -176,7 +176,6 @@ const editor = () => {
             setTokenWithLocal(data.token);
             setIsLoggedIn(true);
             afterLoginInfo();
-            router.replace('/editor');
           })
           .catch(() => {
             // setLogging(false);
@@ -208,6 +207,7 @@ const editor = () => {
   // }, [isLoggedIn]);
   const afterLoginInfo = async () => {
     if (isLoggedIn) {
+      router.replace('/editor');
       const { orgs, repos, user } = await getGitHubAfterLoginInfo();
       setOrganizations(orgs);
       setUserRepos(repos);
@@ -395,7 +395,7 @@ const editor = () => {
         const newResponse = await confirmBranchClick();
         if (newResponse) {
           setSubmittingCommit(false);
-          setMenuModal(undefined);
+          handleMenuModal(undefined);
         }
       }
     }
@@ -464,7 +464,7 @@ const editor = () => {
             const newResponse = await confirmBranchClick();
             if (newResponse) {
               setSubmittingCommit(false);
-              setMenuModal(undefined);
+              handleMenuModal(undefined);
             }
           }
         }
@@ -599,7 +599,7 @@ const editor = () => {
       )}
       {downloadModal && availableBranches?.length && (
         <Modal
-          customClassName="flex flex-col w-[60rem] h-[40rem]"
+          customClassName="flex flex-col w-[70rem] h-[40rem]"
           closeFnc={() => {
             setDownloadModal(false);
             backToSearch();
@@ -623,7 +623,7 @@ const editor = () => {
         <Modal
           customClassName="flex flex-col w-[80%] h-[80%]"
           closeFnc={() => {
-            setMenuModal(undefined);
+            handleMenuModal(undefined);
           }}
         >
           <ChangesModal
@@ -636,7 +636,7 @@ const editor = () => {
         <Modal
           customClassName="flex flex-col justify-center items-center w-[40rem] h-[30rem]"
           blockingState={submittingCommit}
-          closeFnc={() => setMenuModal(undefined)}
+          closeFnc={() => handleMenuModal(undefined)}
         >
           <CommitModal
             controlCommit={controlCommit}
@@ -650,7 +650,7 @@ const editor = () => {
         <Modal
           customClassName="flex flex-col justify-center items-center w-[50rem] h-[45rem]"
           blockingState={submittingPullRequest}
-          closeFnc={() => setMenuModal(undefined)}
+          closeFnc={() => handleMenuModal(undefined)}
         >
           <PullRequestModal
             allowedRepositories={availableBranches}
@@ -661,14 +661,12 @@ const editor = () => {
           />
         </Modal>
       )}
-      {isFilesTouched && repositoryTree && selectedRepository && (
-        <ButtonMenu forksOnRepo={forksOnRepo} setMenuModal={setMenuModal} />
-      )}
       <div className="z-[100]">
         <Menu
           commitableMenu={
             isFilesTouched && !!selectedRepository && !!repositoryTree
           }
+          handleMenuModal={handleMenuModal}
           handleUploadModal={handleUploadModal}
           setRepositoryTree={setRepositoryTree}
           searchingMode={searchingMode}

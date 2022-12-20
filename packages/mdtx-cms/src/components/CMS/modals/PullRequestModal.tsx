@@ -165,12 +165,7 @@ export const PullRequestModal: React.FC<IPullRequestModal> = ({
             </div>
           </div>
           <div className="self-end w-fit">
-            <Button
-              customClassName="mt-[1.6rem] px-[3.2rem] py-[0.4rem]"
-              type="form"
-              text="Send"
-              color="orange"
-            />
+            <Button customClassName="mt-[1.6rem]" type="form" text="Send" />
           </div>
         </form>
       )}

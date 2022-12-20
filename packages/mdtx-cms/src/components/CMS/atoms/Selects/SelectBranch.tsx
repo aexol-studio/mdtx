@@ -9,6 +9,8 @@ interface SelectProps<T> {
   empty?: string;
   options: Array<T>;
   onChange: (value: T) => void;
+  open: boolean;
+  handleOpen: (p: boolean) => void;
 }
 
 export const SelectBranch: React.FC<SelectProps<availableBranchType>> = ({
@@ -16,58 +18,70 @@ export const SelectBranch: React.FC<SelectProps<availableBranchType>> = ({
   options,
   onChange,
   placeholder,
+  open,
+  handleOpen,
 }) => {
-  const [open, setOpen] = useState(false);
   const currentValue = options.find((o) => o === value);
   const ref = useRef<HTMLDivElement>(null);
-  useOutsideClick(ref, () => setOpen(false));
+  useOutsideClick(ref, () => handleOpen(false));
   return (
     <div
       ref={ref}
-      className="select-none flex justify-center items-center w-full h-full text-[1.4rem] cursor-pointer relative z-[1] bg-mdtxWhite border-[1px] border-mdtxOrange0"
-      onClick={() => setOpen(!open)}
+      className={`${
+        open
+          ? 'rounded-bl-[0rem] rounded-br-[0rem]'
+          : 'rounded-bl-[0.8rem] rounded-br-[0.8rem]'
+      } select-none flex justify-center items-center w-full h-full text-[1.4rem] cursor-pointer relative z-[1] bg-editor-black2 rounded-[0.8rem]`}
+      onClick={() => handleOpen(!open)}
     >
-      <div className="w-full relative flex items-center justify-between py-[0.4rem]">
+      <div className="w-full relative flex items-center justify-between py-[0.8rem]">
         <div
           className={`${
             open
               ? 'rounded-bl-[0rem] rounded-br-[0rem]'
-              : 'rounded-bl-[0.5rem] rounded-br-[0.5rem]'
-          } ml-[1.2rem] rounded-tl-[0.5rem] rounded-tr-[0.5rem] text-mdtxBlack`}
+              : 'rounded-bl-[0.8rem] rounded-br-[0.8rem]'
+          } pl-[1.2rem] rounded-tl-[0.8rem] rounded-tr-[0.8rem]`}
         >
-          {currentValue?.name ? currentValue.name : placeholder}
+          <p className="text-editor-purple2 text-[1.6rem] font-[400] leading-[1.8rem]">
+            {currentValue?.name ? currentValue.name : placeholder}
+          </p>
         </div>
 
-        <div
+        <span
           className={`${
-            open ? 'scale-y-[-1]' : 'scale-y-[1]'
-          } mr-[0.8rem] transition-all duration-300 ease-in-out`}
+            open ? 'rotate-[-90deg]' : 'rotate-[90deg]'
+          } mr-[0.8rem] text-editor-purple2 transition-all duration-500 ease-in-out`}
         >
           <Chevron />
-        </div>
-
-        <div
-          className={`${
-            open ? 'opacity-1 visible' : 'opacity-0 invisible'
-          } scrollbar max-h-[10rem] transition-all duration-300 delay-75 ease-in-out left-[-1px] top-[calc(100%-1px)] absolute z-[110] w-[calc(100%+2px)] bg-mdtxWhite border-[1px] border-mdtxOrange0 overflow-y-auto rounded-b-[0.8rem]`}
-        >
-          {options.map((o, idx) => (
+        </span>
+        {open && (
+          <div
+            className={`max-h-[12rem] transition-all duration-300 delay-75 ease-in-out absolute left-0 top-[100%] w-full overflow-hidden rounded-b-[0.8rem]`}
+          >
             <div
-              className={`${idx !== 0 && 'border-t-[1px]'} ${
-                o.name === currentValue?.name
-                  ? 'bg-mdtxOrange0'
-                  : 'bg-mdtxWhite'
-              } py-[0.4rem] px-[1.2rem] transition-all duration-[250] hover:bg-mdtxOrange0`}
-              key={o.name}
-              onClick={() => {
-                setOpen(false);
-                onChange(o);
-              }}
+              className={`scrollbar-branch h-full z-[110] w-full bg-editor-black2 overflow-y-auto rounded-b-[0.8rem]`}
             >
-              {o.name}
+              {options.map((o, idx) => (
+                <div
+                  className={`${
+                    o.name === currentValue?.name
+                      ? 'bg-editor-hover1'
+                      : 'bg-editor-black2'
+                  } py-[0.8rem] px-[0.8rem] transition-all duration-300 hover:bg-editor-hover1`}
+                  key={o.name}
+                  onClick={() => {
+                    handleOpen(false);
+                    onChange(o);
+                  }}
+                >
+                  <p className="text-editor-light1 text-[1.6rem] font-[400] leading-[1.8rem]">
+                    {o.name}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

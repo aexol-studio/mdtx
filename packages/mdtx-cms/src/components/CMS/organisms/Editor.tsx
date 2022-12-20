@@ -24,6 +24,7 @@ import {
   EditorImage,
 } from '../editor-functions';
 import { useGitHub } from '@/src/utils';
+import 'highlight.js/styles/atom-one-dark.css';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export type commandsType =
@@ -72,7 +73,7 @@ export const Editor: React.FC = () => {
   };
   const hardStyles = `
     .w-md-editor-toolbar li.active > button {
-      background: #8484a140 !important;
+      background: #8484a180 !important;
       border-radius: 0.8rem;
     }
     .w-md-editor-toolbar li > button {
@@ -115,10 +116,13 @@ export const Editor: React.FC = () => {
       vertical-align: middle;
       background-color: rgba(132, 132, 161, 0.5);
     }
-    .w-md-editor-content {
+    .wmde-markdown {
+      background-color: #11111D !important;
+    }
+    .w-md-editor-aree .w-md-editor-input {
       background-color: #1E1E2C !important;
     }
-    .wmde-markdown-color {
+    .w-md-editor-text {
       background-color: #1E1E2C !important;
     }
     .w-md-editor-preview {
@@ -178,7 +182,9 @@ export const Editor: React.FC = () => {
     .w-md-editor-text-pre > code,
     .w-md-editor-text-input {
       font-size: 16px !important;
-      line-height: 24px !important;
+      line-height: 32px !important;
+      font-weight: 400 !important;
+      font-family: var(--fira-font) !important;
       color: #9A99AD !important;
     }
   `;
@@ -193,6 +199,7 @@ export const Editor: React.FC = () => {
           !!pickedFilePath && setSelectedFileContentByPath(e ? e : '');
         }}
         previewOptions={{
+          // rehypePlugins: [rehypeHighlight],
           transformImageUri: (src) => {
             if (selectedRepository?.private && selectedBranch) {
               const input = {

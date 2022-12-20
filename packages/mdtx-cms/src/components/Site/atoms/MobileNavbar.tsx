@@ -20,7 +20,7 @@ export const MobileNavbar = () => {
         className="select-none z-[99] relative w-fit cursor-pointer"
       >
         <Hamburger navVisible={navVisible} />
-        <CloseIconSvg navVisible={navVisible} />
+        {navVisible && <CloseIconSvg />}
       </div>
 
       <div

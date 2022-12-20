@@ -57,7 +57,6 @@ export const ColorPicker: React.FC<{
             }
           }}
           text="Apply"
-          color="white"
         />
       </div>
     </>
