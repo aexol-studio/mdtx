@@ -16,13 +16,8 @@ export const LeaveConfirmation: React.FC<{
                 resetContentPath();
               }}
               text={'Leave'}
-              color={'orange'}
             />
-            <Button
-              onClick={() => setLeaveWithChanges(false)}
-              text={'Stay'}
-              color={'orange'}
-            />
+            <Button onClick={() => setLeaveWithChanges(false)} text={'Stay'} />
           </div>
         </div>
       </div>

@@ -1,19 +1,17 @@
-export const CloseIconSvg: React.FC<{
-  small?: boolean;
-  navVisible: boolean;
-}> = ({ navVisible, small }) => (
+export const CloseIconSvg: React.FC<{}> = () => (
   <svg
-    className={`${
-      navVisible ? 'opacity-1 visible' : 'opacity-0 invisible'
-    } transition-all ease-in-out duration-300`}
-    viewBox="0 0 24 24"
-    width={small ? '24' : '36'}
-    height={small ? '24' : '36'}
+    width="20"
+    height="20"
+    viewBox="0 0 20 20"
+    fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
-      fill="white"
-      d="M16.192 6.344L11.949 10.586 7.707 6.344 6.293 7.758 10.535 12 6.293 16.242 7.707 17.656 11.949 13.414 16.192 17.656 17.606 16.242 13.364 12 17.606 7.758z"
+      d="M14.9497 5.05033L5.05025 14.9498M5.05037 5.05022L14.9499 14.9497"
+      stroke="#E1E5EE"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
   </svg>
 );

@@ -22,6 +22,25 @@
   .scrollbar::-webkit-scrollbar-thumb:hover {
     background: #477fd3;
   }
+  .scrollbar-branch {
+    scrollbar-color: #005eee transparent;
+  }
+  .scrollbar-branch::-webkit-scrollbar {
+    width: 0.2rem;
+  }
+
+  .scrollbar-branch::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-branch::-webkit-scrollbar-thumb {
+    background: transparent;
+    background: #005eee;
+  }
+
+  .scrollbar-branch::-webkit-scrollbar-thumb:hover {
+    background: #477fd3;
+  }
 }
 
 body,

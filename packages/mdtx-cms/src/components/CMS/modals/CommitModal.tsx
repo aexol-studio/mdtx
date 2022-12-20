@@ -81,12 +81,7 @@ export const CommitModal: React.FC<ICommitModal> = ({
             )}
           />
           <div className="self-end w-fit">
-            <Button
-              customClassName="mt-[0.8rem] px-[3.2rem] py-[0.4rem]"
-              type="form"
-              text="Send"
-              color="orange"
-            />
+            <Button customClassName="mt-[0.8rem]" type="form" text="Send" />
           </div>
         </form>
       )}

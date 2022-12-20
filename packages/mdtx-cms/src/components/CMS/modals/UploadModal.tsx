@@ -31,9 +31,8 @@ export const UploadModal: React.FC<IUploadModal> = ({
         <div className="w-fit">
           <Button
             onClick={() => file && onUploadSubmit()}
-            customClassName="mt-[0.8rem] px-[3.2rem] py-[0.4rem]"
+            customClassName="mt-[0.8rem]"
             text="Send"
-            color="orange"
           />
         </div>
       </div>

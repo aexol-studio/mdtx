@@ -30,7 +30,6 @@ import { Layout } from '../layouts';
 import { useGitHub } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
 import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
-
 export type Organization = {
   login: string;
 };
@@ -176,7 +175,6 @@ const editor = () => {
             setTokenWithLocal(data.token);
             setIsLoggedIn(true);
             afterLoginInfo();
-            router.replace('/editor');
           })
           .catch(() => {
             // setLogging(false);
@@ -208,6 +206,7 @@ const editor = () => {
   // }, [isLoggedIn]);
   const afterLoginInfo = async () => {
     if (isLoggedIn) {
+      router.replace('/editor');
       const { orgs, repos, user } = await getGitHubAfterLoginInfo();
       setOrganizations(orgs);
       setUserRepos(repos);
@@ -599,7 +598,7 @@ const editor = () => {
       )}
       {downloadModal && availableBranches?.length && (
         <Modal
-          customClassName="flex flex-col w-[60rem] h-[40rem]"
+          customClassName="flex flex-col w-[70rem] h-[40rem]"
           closeFnc={() => {
             setDownloadModal(false);
             backToSearch();

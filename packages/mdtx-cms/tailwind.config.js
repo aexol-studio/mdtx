@@ -51,6 +51,7 @@ module.exports = {
         'editor-black2': '#1E1E2C',
         'editor-black3': '#11111D',
         'editor-hover0': '#8484a140',
+        'editor-hover1': '#8484a130',
         'editor-selection': '#8484a120',
       },
       keyframes: {
