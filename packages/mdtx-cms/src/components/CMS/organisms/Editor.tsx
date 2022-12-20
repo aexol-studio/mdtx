@@ -73,7 +73,7 @@ export const Editor: React.FC = () => {
   };
   const hardStyles = `
     .w-md-editor-toolbar li.active > button {
-      background: #8484a140 !important;
+      background: #8484a180 !important;
       border-radius: 0.8rem;
     }
     .w-md-editor-toolbar li > button {

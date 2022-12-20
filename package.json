@@ -5,7 +5,7 @@
   "license": "MIT",
   "description": "Elm inspired markdown parser and stritcly typed files generator. Generate TS files from markdown",
   "homepage": "https://github.com/aexol-studio/mdtx",
-  "readme": "https://github.com/aexol-studio/mdtx#readme",
+  "readme": "https://github.com/aexol-studio/mdtx#README",
   "scripts": {
     "build": "npm run build --ws --if-present",
     "buildCore": "npm run build -w packages/mdtx-core",
