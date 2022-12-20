@@ -9,6 +9,7 @@ import { TreeMenu } from '@/src/utils/treeBuilder';
 import { PulseLoader } from 'react-spinners';
 import { LogoInEditor } from '../atoms';
 import {
+  MenuModalType,
   MenuSearchSection,
   RepositoriesList,
   RepositoryTree,
@@ -40,6 +41,7 @@ export interface MenuInteface {
   searchingMode: SearchingType;
   setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
   handleUploadModal: (p: boolean) => void;
+  handleMenuModal: (p?: MenuModalType) => void;
 }
 
 enum MenuType {
@@ -65,6 +67,7 @@ export const Menu: React.FC<MenuInteface> = ({
   searchingMode,
   setSearchingMode,
   handleUploadModal,
+  handleMenuModal,
 }) => {
   const { selectedRepository, selectedBranch } = useRepositoryState();
   const { modifiedFiles } = useFileState();
@@ -176,19 +179,34 @@ export const Menu: React.FC<MenuInteface> = ({
                 What you want to do ?
               </p>
               <div className="ml-[0.4rem] mt-[1.6rem] flex flex-col gap-[0.2rem]">
-                <div className="cursor-pointer group flex gap-[0.8rem] items-center">
+                <div
+                  onClick={() => {
+                    handleMenuModal(MenuModalType.CHANGES);
+                  }}
+                  className="cursor-pointer group flex gap-[0.8rem] items-center"
+                >
                   <span className="group-hover:bg-editor-blue1 w-[0.4rem] h-[0.4rem] bg-editor-purple2 rounded-full" />
                   <p className="group-hover:underline select-none text-[1.4rem] leading-[2.4rem] font-[500] text-editor-light2">
                     See changes
                   </p>
                 </div>
-                <div className="cursor-pointer group flex gap-[0.8rem] items-center">
+                <div
+                  onClick={() => {
+                    handleMenuModal(MenuModalType.COMMIT);
+                  }}
+                  className="cursor-pointer group flex gap-[0.8rem] items-center"
+                >
                   <span className="group-hover:bg-editor-blue1 w-[0.4rem] h-[0.4rem] bg-editor-purple2 rounded-full" />
                   <p className="group-hover:underline select-none text-[1.4rem] leading-[2.4rem] font-[500] text-editor-light2">
                     Commit
                   </p>
                 </div>
-                <div className="cursor-pointer group flex gap-[0.8rem] items-center">
+                <div
+                  onClick={() => {
+                    handleMenuModal(MenuModalType.PULL_REQUEST);
+                  }}
+                  className="cursor-pointer group flex gap-[0.8rem] items-center"
+                >
                   <span className="group-hover:bg-editor-blue1 w-[0.4rem] h-[0.4rem] bg-editor-purple2 rounded-full" />
                   <p className="group-hover:underline select-none text-[1.4rem] leading-[2.4rem] font-[500] text-editor-light2">
                     Pull request

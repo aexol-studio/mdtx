@@ -35,7 +35,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
     <div
       className={`${
         openSelect ? '' : block ? 'overflow-hidden' : ''
-      } justify-center flex flex-col mx-auto h-full`}
+      } pt-[3.2rem] flex flex-col h-full`}
     >
       {downloadZIP || doingFork ? (
         <div className="flex h-full justify-center items-center flex-col gap-[4.2rem]">
@@ -56,8 +56,8 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                   }}
                   className="absolute bottom-[1.6rem] left-[1.6rem]"
                 >
-                  <p className="hover:underline cursor-pointer w-fit text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wider">
-                    <span className="text-mdtxOrange1 font-[500] text-[1rem]">{`<<`}</span>{' '}
+                  <p className="group cursor-pointer w-fit text-editor-light1 text-[1.2rem] font-[500] select-none">
+                    <span className="group-hover:animate-pulse text-editor-blue2 font-[400] text-[1.2rem]">{`<<`}</span>{' '}
                     See pull requests
                   </p>
                 </div>
@@ -69,20 +69,20 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                   }}
                   className="z-[102] absolute bottom-[1.6rem] right-[1.6rem]"
                 >
-                  <p className="hover:underline cursor-pointer w-fit text-mdtxWhite uppercase text-[1rem] font-[700] select-none tracking-wider">
+                  <p className="group cursor-pointer w-fit text-editor-light1 text-[1.2rem] font-[500] select-none">
                     See branches{' '}
-                    <span className="text-mdtxOrange1 font-[500] text-[1rem]">{`>>`}</span>
+                    <span className="group-hover:animate-pulse text-editor-blue2 font-[400] text-[1.2rem]">{`>>`}</span>
                   </p>
                 </div>
               )}
             </>
           )}
-          <div className="flex">
+          <div className="flex px-[10.8rem]">
             <p className="select-none text-[2.4rem] font-[700] leading-[2.8rem] text-editor-light1">
               {pullRequestView ? 'Select PR to work' : 'Select branch to work'}
             </p>
           </div>
-          <div className="mt-[3.6rem] flex justify-between">
+          <div className="mt-[3.6rem] flex justify-between px-[10.8rem]">
             <div className="flex flex-col justify-end">
               <p className="w-fit text-editor-purple2 text-[1.6rem] font-[400] select-none">
                 Selected repository:{' '}
@@ -98,7 +98,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
               !pullRequestView
                 ? 'translate-x-[200%] invisible h-0'
                 : 'translate-x-0 visible'
-            } max-h-[10rem] transition-transform duration-300 ease-in-out w-full flex-col`}
+            } max-h-[21.4rem] transition-transform duration-300 ease-in-out w-full flex-col`}
           >
             <div className="mt-[1.6rem] h-full overflow-y-scroll scrollbar">
               {availablePullRequests?.map((pr, idx) => (
@@ -106,7 +106,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                   key={idx}
                   className={`${
                     idx !== 0 ? 'border-t-[1px] pt-[1.6rem]' : ''
-                  } mt-[1.6rem] select-none flex flex-col`}
+                  } px-[2.4rem] mt-[1.6rem] select-none flex flex-col`}
                 >
                   <div className="flex items-center gap-[0.8rem]">
                     <PullRequestIcon />
@@ -176,7 +176,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
               pullRequestView
                 ? 'translate-x-[-200%] invisible '
                 : 'translate-x-0 visible'
-            } transition-transform duration-300 ease-in-out`}
+            } px-[10.8rem] transition-transform duration-300 ease-in-out`}
           >
             <div className="">
               <div className="w-full flex items-end">
@@ -206,7 +206,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
               )}
             </div>
             {!pullRequestView && (
-              <div className="mt-[2.4rem] flex items-end justify-between gap-[4.2rem]">
+              <div className="mt-[4.2rem] flex items-end justify-between gap-[4.2rem]">
                 <div className="flex flex-col flex-1">
                   <p className="text-editor-light1 text-[1.4rem] leading-[1.8rem] font-[500] mb-[0.8rem]">
                     Branch

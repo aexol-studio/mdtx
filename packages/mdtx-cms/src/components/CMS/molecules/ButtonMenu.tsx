@@ -70,7 +70,7 @@ export const ButtonMenu: React.FC<{
               optionsMenu && setOptionsMenu(false);
             }}
           >
-            <CloseIconSvg small navVisible={optionsMenu} />
+            {optionsMenu && <CloseIconSvg />}
           </div>
           <div className="top-[65%] translate-y-[-50%] absolute right-[3.2rem] flex flex-col gap-[0.8rem] w-[50%]">
             <div

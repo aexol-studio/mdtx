@@ -151,6 +151,7 @@ const editor = () => {
   const [openMenu, setOpenMenu] = useState(true);
   const handleMenu = (p: boolean) => setOpenMenu(p);
   const [menuModal, setMenuModal] = useState<MenuModalType | undefined>();
+  const handleMenuModal = (p?: MenuModalType) => setMenuModal(p);
   const [previewChanges, setPreviewChanges] = useState<{
     orginalFile?: string;
     changedFile?: string;
@@ -394,7 +395,7 @@ const editor = () => {
         const newResponse = await confirmBranchClick();
         if (newResponse) {
           setSubmittingCommit(false);
-          setMenuModal(undefined);
+          handleMenuModal(undefined);
         }
       }
     }
@@ -463,7 +464,7 @@ const editor = () => {
             const newResponse = await confirmBranchClick();
             if (newResponse) {
               setSubmittingCommit(false);
-              setMenuModal(undefined);
+              handleMenuModal(undefined);
             }
           }
         }
@@ -622,7 +623,7 @@ const editor = () => {
         <Modal
           customClassName="flex flex-col w-[80%] h-[80%]"
           closeFnc={() => {
-            setMenuModal(undefined);
+            handleMenuModal(undefined);
           }}
         >
           <ChangesModal
@@ -635,7 +636,7 @@ const editor = () => {
         <Modal
           customClassName="flex flex-col justify-center items-center w-[40rem] h-[30rem]"
           blockingState={submittingCommit}
-          closeFnc={() => setMenuModal(undefined)}
+          closeFnc={() => handleMenuModal(undefined)}
         >
           <CommitModal
             controlCommit={controlCommit}
@@ -649,7 +650,7 @@ const editor = () => {
         <Modal
           customClassName="flex flex-col justify-center items-center w-[50rem] h-[45rem]"
           blockingState={submittingPullRequest}
-          closeFnc={() => setMenuModal(undefined)}
+          closeFnc={() => handleMenuModal(undefined)}
         >
           <PullRequestModal
             allowedRepositories={availableBranches}
@@ -660,14 +661,12 @@ const editor = () => {
           />
         </Modal>
       )}
-      {isFilesTouched && repositoryTree && selectedRepository && (
-        <ButtonMenu forksOnRepo={forksOnRepo} setMenuModal={setMenuModal} />
-      )}
       <div className="z-[100]">
         <Menu
           commitableMenu={
             isFilesTouched && !!selectedRepository && !!repositoryTree
           }
+          handleMenuModal={handleMenuModal}
           handleUploadModal={handleUploadModal}
           setRepositoryTree={setRepositoryTree}
           searchingMode={searchingMode}

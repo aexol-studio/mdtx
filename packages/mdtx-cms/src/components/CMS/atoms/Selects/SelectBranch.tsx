@@ -56,7 +56,7 @@ export const SelectBranch: React.FC<SelectProps<availableBranchType>> = ({
         </span>
         {open && (
           <div
-            className={`max-h-[10rem] transition-all duration-300 delay-75 ease-in-out absolute left-0 top-[100%] w-full overflow-hidden rounded-b-[0.8rem]`}
+            className={`max-h-[12rem] transition-all duration-300 delay-75 ease-in-out absolute left-0 top-[100%] w-full overflow-hidden rounded-b-[0.8rem]`}
           >
             <div
               className={`scrollbar-branch h-full z-[110] w-full bg-editor-black2 overflow-y-auto rounded-b-[0.8rem]`}
