@@ -4,6 +4,10 @@ import { commandsType } from '../organisms/Editor';
 export const FullScreen = (commands: commandsType): ICommand => {
   return {
     ...commands.fullscreen,
+    buttonProps: {
+      ...commands.fullscreen.buttonProps,
+      style: { padding: '0.4rem', margin: '0 1.2rem' },
+    },
     icon: (
       <svg
         width="20"

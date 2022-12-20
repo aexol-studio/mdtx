@@ -4,6 +4,10 @@ import { commandsType } from '../organisms/Editor';
 export const Bold = (commands: commandsType): ICommand => {
   return {
     ...commands.bold,
+    buttonProps: {
+      ...commands.bold.buttonProps,
+      style: { padding: 0, margin: '0 1.6rem' },
+    },
     icon: (
       <svg
         width="20"

@@ -17,6 +17,7 @@ export const EditorColorPicker = (
       className: 'colorsButton',
       'aria-label': 'Choose color',
       title: 'Choose color',
+      style: { padding: 0, margin: '0 1.6rem' },
     },
     children: ({ close, execute, getState, textApi }) => {
       return (

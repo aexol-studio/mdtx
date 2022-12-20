@@ -7,7 +7,7 @@ export const EditorHelp = (commands: commandsType): ICommand => {
     buttonProps: {
       'aria-label': 'Get help about editor',
       title: 'Get help about editor',
-      style: { marginRight: '0.4rem' },
+      style: { padding: 0, margin: '0 1.6rem' },
     },
     icon: (
       <svg

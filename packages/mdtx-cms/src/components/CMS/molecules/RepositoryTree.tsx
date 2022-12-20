@@ -1,12 +1,4 @@
-import { AddFileIcon, FileIcon, FolderIcon, ThrashIcon } from '@/src/assets';
-import { Chevron, ContextDots } from '@/src/assets/editor-icons';
-import {
-  FileType,
-  ToastType,
-  useAuthState,
-  useFileState,
-  useToasts,
-} from '@/src/containers';
+import { ToastType, useFileState, useToasts } from '@/src/containers';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
 import { treeBuilder, TreeMenu, TreeObject } from '@/src/utils/treeBuilder';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -17,7 +9,7 @@ import {
   AddNewFileTree,
   TitleInTree,
   FolderOptionsTree,
-} from '../..';
+} from '../atoms';
 
 export const RepositoryTree: React.FC<{
   tree?: TreeObject;
@@ -66,20 +58,41 @@ export const RepositoryTree: React.FC<{
   const [path, setPath] = useState(activePath);
   const ref = useRef<HTMLDivElement>(null);
   const refInput = useRef<HTMLInputElement>(null);
-
+  const onlyMDReg = /(.*)\.md$/;
+  const onlyMD = (p: string) => !!p.match(onlyMDReg);
+  const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
+  const onlyIMG = (p: string) => !!p.match(onlyIMGRef);
   const clickHandler = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     if (tree) {
       //Moving on tree//
-      if (isFile && pickedFilePath !== tree.path && tree) {
+      if (
+        isFile &&
+        pickedFilePath !== tree.path &&
+        tree.path &&
+        onlyMD(tree.path)
+      ) {
+        //MD File
         setPickedFilePath(tree.path);
       }
-      if (isFile && pickedFilePath === tree.path) {
+      if (
+        isFile &&
+        pickedFilePath !== tree.path &&
+        tree.path &&
+        onlyIMG(tree.path)
+      ) {
+        //IMG File
+        console.log(tree.path.slice(tree.path.indexOf('/') + 1));
+      }
+      if (isFile && pickedFilePath === tree.path && tree.path) {
+        //OutClickFile
         setPickedFilePath(undefined);
       }
       if (isFolder && path !== tree.name) {
+        //FolderClick
         setPath(tree.name);
       }
       if (isFolder && path === tree.name) {
+        //FolderOutClick
         setPath(undefined);
       }
       //Moving on tree//
@@ -242,6 +255,17 @@ export const RepositoryTree: React.FC<{
               onMouseEnter={handleHover}
               onMouseLeave={handleHover}
               onClick={clickHandler}
+              draggable={!isFolder && onlyIMG(tree.path!)}
+              onDragStart={(e) => {
+                if (tree.path) {
+                  const pathToTransfer = tree.path.slice(
+                    tree.path.indexOf('/'),
+                  );
+                  e.dataTransfer.setData('text', `![](${pathToTransfer})`);
+                  e.dataTransfer.effectAllowed = 'copyMove';
+                  e.dataTransfer.dropEffect = 'copy';
+                }
+              }}
               id={tree.name}
               className={`${!root ? 'ml-[-2.4rem]' : ''} ${
                 isTitle ? 'w-fit' : 'w-full flex-1'

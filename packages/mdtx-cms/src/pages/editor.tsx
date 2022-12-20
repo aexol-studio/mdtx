@@ -6,8 +6,6 @@ import {
   Modal,
   BranchSelector,
   ChangesModal,
-  ButtonMenu,
-  MenuModalType,
   CommitInput,
   CommitModal,
   PullRequestInput,
@@ -30,6 +28,15 @@ import { Layout } from '../layouts';
 import { useGitHub } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
 import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
+
+export enum MenuModalType {
+  COMMIT = 'COMMIT',
+  PULL_REQUEST = 'PULL_REQUEST',
+  FORK = 'FORK',
+  CHANGES = 'CHANGES',
+  UPLOAD = 'UPLOAD',
+}
+
 export type Organization = {
   login: string;
 };
@@ -178,7 +185,6 @@ const editor = () => {
             afterLoginInfo();
           })
           .catch(() => {
-            // setLogging(false);
             createToast(ToastType.ERROR, 'Something went wrong. Refresh page.');
             setTimeout(() => {
               logOut();
@@ -211,23 +217,23 @@ const editor = () => {
       const { orgs, repos, user } = await getGitHubAfterLoginInfo();
       setOrganizations(orgs);
       setUserRepos(repos);
-      confirmBranchClick('develop');
       const tempArr: {
         full_name: string;
         source?: { full_name: string; owner: { login: string } };
       }[] = [];
-      repos
-        .filter((x) => x.fork)
-        .map((z: { full_name: string }) =>
-          getGitHubRepositoryInfo({
-            owner: z.full_name.split('/')[0],
-            repo: z.full_name.split('/')[1],
-          }).then((x) => {
-            if (x) {
-              tempArr.push(x);
+      Promise.all(
+        repos
+          .filter((x) => x.fork)
+          .map(async (z: { full_name: string }) => {
+            const response = await getGitHubRepositoryInfo({
+              owner: z.full_name.split('/')[0],
+              repo: z.full_name.split('/')[1],
+            });
+            if (response) {
+              tempArr.push(response);
             }
           }),
-        );
+      );
       setUserForks(tempArr);
       setLoggedData(user);
       setLogging(false);
@@ -235,18 +241,12 @@ const editor = () => {
   };
 
   const zipController = new AbortController();
-  const { signal: zipSignal } = zipController;
   const confirmBranchClick = async (branchName?: string) => {
-    // if (isLoggedIn) {
     if (isLoggedIn && selectedRepository) {
       const input = {
         owner: selectedRepository.full_name.split('/')[0],
         repo: selectedRepository.full_name.split('/')[1],
       };
-      // const input = {
-      //   owner: 'aexol-studio',
-      //   repo: 'mdtx',
-      // };
       const getBranchInfo = await getGitHubRepositoryBranch({
         ...input,
         branch: selectedBranch ? selectedBranch.name : branchName!,
@@ -259,31 +259,24 @@ const editor = () => {
           repo: selectedRepository.full_name.split('/')[1],
           tree_sha: getBranchInfo.commit.sha,
         };
-        // const input = {
-        //   owner: 'aexol-studio',
-        //   repo: 'mdtx',
-        //   tree_sha: getBranchInfo.commit.sha,
-        // };
         const items = await getTree(input);
-        // const wantedFiles = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
-        // const isWanted = (p: string) => !!p.match(wantedFiles);
+        const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
+        const onlyIMG = (p: string) => !!p.match(onlyIMGRef);
         const onlyMDReg = /(.*)\.md$/;
         const onlyMD = (p: string) => !!p.match(onlyMDReg);
-        const onlyMDs = items.tree.filter((x) => {
-          const z = x.path?.split('/');
-          const wanted = z?.at(z.length - 1);
+        const filteredItems = items.tree.filter((x) => {
+          const cleanedPath = x.path?.split('/');
+          const wanted = cleanedPath?.at(cleanedPath.length - 1);
           if (wanted) {
-            return onlyMD(wanted);
+            return onlyMD(wanted) || onlyIMG(wanted);
           }
         });
-        const paths = onlyMDs.map((x) => ({
+        const paths = filteredItems.map((x) => ({
           content: undefined,
           dir: x.type === 'tree',
           name: `${selectedRepository.name}/${x.path}`,
-          // name: `aexol-studio/${x.path}`,
         }));
         const tree = treeBuilder(paths);
-        console.log(paths);
         setRepositoryTree(tree);
         setFiles(paths);
         setOrginalFiles(paths);

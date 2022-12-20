@@ -1,4 +1,4 @@
-import { Chevron, FileIcon } from '@/src/assets';
+import { FileIcon } from '@/src/assets';
 import { TreeObject } from '@/src/utils';
 import React, { PropsWithChildren } from 'react';
 

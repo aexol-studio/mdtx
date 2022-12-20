@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useFileState, useRepositoryState } from '@/src/containers';
 import {
@@ -25,6 +25,7 @@ import {
 } from '../editor-functions';
 import { useGitHub } from '@/src/utils';
 import 'highlight.js/styles/atom-one-dark.css';
+import { ContextStore } from '@uiw/react-md-editor';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
 export type commandsType =
@@ -52,6 +53,7 @@ export const Editor: React.FC = () => {
     const utils = await import('@uiw/react-md-editor').then(
       (mod) => mod.MarkdownUtil,
     );
+
     setUtils(utils);
     setCommands(commands);
   };
@@ -105,14 +107,19 @@ export const Editor: React.FC = () => {
     }
     .w-md-editor-toolbar li > button {
       height: 100%;
+      margin: 0 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0.4rem 0;
     }
     .w-md-editor-toolbar li > button:hover, .w-md-editor-toolbar li > button:focus {
       background-color: transparent !important;
     }
+
     .w-md-editor-toolbar-divider {
       height: 2.8rem;
       width: 1px;
-      margin: 0 1.6rem 0 1.6rem !important;
       vertical-align: middle;
       background-color: rgba(132, 132, 161, 0.5);
     }
@@ -128,6 +135,7 @@ export const Editor: React.FC = () => {
     .w-md-editor-preview {
       height: 100%;
       width: 40%;
+      background-color: #11111D !important;
     }
     .w-md-editor-input {
       height: 100%;
@@ -153,17 +161,32 @@ export const Editor: React.FC = () => {
     }
     #headings > div {
       width: 16rem;
-      positon: absolute;
+      position: relative;
       border-radius: 0 0 0.8rem 0.8rem;
       left: 2.2rem;
     }
     #headings > div > div {
+      position: absolute;
+      width: 100%;
+      left: -0.8rem;
       border-radius: 0 0 0.8rem 0.8rem;
       box-shadow: 0 1px 0 1px #9A99AD, 0 0 0 #9A99AD, 0 1px 1px #9A99AD;
     }
     #headings > div > div > ul > li {
       width: 100%;
       padding: 0.4rem 0 0.2rem 0;
+    }
+    #lists > div {
+      position: relative;
+    }
+    #lists > div > div {
+      position: absolute;
+      left:0.8rem;
+      display:flex;
+      flex-direction: column;
+      justify-content:center;
+      align-items:center
+      width: 100%;
     }
     #colors {
       positon: relative !important;
@@ -173,11 +196,14 @@ export const Editor: React.FC = () => {
       width: 24rem;
       border-radius: 1.6rem;
       border: 1px solid #9A99AD;
-      positon: absolute;
+      position: absolute;
       left: 50%;
       transform: translateX(-50%);
       margin-top: 0.6rem;
       padding: 0.8rem 0;
+    }
+    #lists > {
+
     }
     .w-md-editor-text-pre > code,
     .w-md-editor-text-input {
@@ -189,17 +215,18 @@ export const Editor: React.FC = () => {
     }
   `;
   const [privateImageUrl, setPrivateImageUrl] = useState('');
+
   return commands && utils ? (
     <>
       <style>{hardStyles}</style>
       <MDEditor
         height={'100vh'}
         value={getSelectedFileByPath()?.content}
+        highlightEnable={false}
         onChange={(e) => {
           !!pickedFilePath && setSelectedFileContentByPath(e ? e : '');
         }}
         previewOptions={{
-          // rehypePlugins: [rehypeHighlight],
           transformImageUri: (src) => {
             if (selectedRepository?.private && selectedBranch) {
               const input = {

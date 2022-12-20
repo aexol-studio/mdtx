@@ -4,6 +4,10 @@ import { commandsType } from '../organisms/Editor';
 export const BothPreview = (commands: commandsType): ICommand => {
   return {
     ...commands.codeLive,
+    buttonProps: {
+      ...commands.codeLive.buttonProps,
+      style: { padding: '0.4rem', margin: '0' },
+    },
     icon: (
       <svg
         width="20"
