@@ -59,7 +59,7 @@ export const SelectBranch: React.FC<SelectProps<availableBranchType>> = ({
             className={`max-h-[10rem] transition-all duration-300 delay-75 ease-in-out absolute left-0 top-[100%] w-full overflow-hidden rounded-b-[0.8rem]`}
           >
             <div
-              className={`scrollbar-branch max-h-[10rem] z-[110] w-full bg-editor-black2 overflow-y-scroll rounded-b-[0.8rem]`}
+              className={`scrollbar-branch max-h-[10rem] z-[110] w-full bg-editor-black2 overflow-y-scroll overflow-x-hidden rounded-b-[0.8rem]`}
             >
               {options.map((o, idx) => (
                 <div
@@ -67,7 +67,7 @@ export const SelectBranch: React.FC<SelectProps<availableBranchType>> = ({
                     o.name === currentValue?.name
                       ? 'bg-editor-hover1'
                       : 'bg-editor-black2'
-                  } py-[0.8rem] px-[0.8rem] transition-all duration-300 hover:bg-editor-hover1`}
+                  }  py-[0.8rem] px-[0.8rem] transition-all duration-300 hover:bg-editor-hover1`}
                   key={o.name}
                   onClick={() => {
                     handleOpen(false);

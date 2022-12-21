@@ -104,8 +104,9 @@ const editor = () => {
     isLoggedIn,
     setLoggedData,
     loggedData,
-    setTokenWithLocal,
+    setToken,
     setIsLoggedIn,
+    setTokenWithLocal,
     logOut,
   } = useAuthState();
 

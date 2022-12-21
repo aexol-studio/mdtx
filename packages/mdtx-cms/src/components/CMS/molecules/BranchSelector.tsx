@@ -1,5 +1,10 @@
 import { MDtxLogo, PullRequestIcon } from '@/src/assets';
-import { availableBranchType, useRepositoryState } from '@/src/containers';
+import {
+  availableBranchType,
+  ToastType,
+  useRepositoryState,
+  useToasts,
+} from '@/src/containers';
 import { PullRequestsType } from '@/src/pages/editor';
 import Image from 'next/image';
 import React, { useState } from 'react';
@@ -31,6 +36,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
   const handleSelect = (p: boolean) => setOpenSelect(p);
   const { selectedRepository, selectedBranch, handleBranch } =
     useRepositoryState();
+  const { createToast } = useToasts();
   return (
     <div
       className={`${
@@ -51,7 +57,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
               {!pullRequestView ? (
                 <div
                   onClick={() => {
-                    !block && setPullRequestView(true);
+                    setPullRequestView(true);
                     setBlock(true);
                   }}
                   className="absolute bottom-[1.6rem] left-[1.6rem]"
@@ -64,7 +70,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
               ) : (
                 <div
                   onClick={() => {
-                    !block && setPullRequestView(false);
+                    setPullRequestView(false);
                     setBlock(true);
                   }}
                   className="z-[102] absolute bottom-[1.6rem] right-[1.6rem]"
@@ -160,6 +166,11 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                         if (found) {
                           handleBranch(found);
                           confirmBranchClick();
+                        } else {
+                          createToast(
+                            ToastType.ERROR,
+                            'We cannot open this pr right now',
+                          );
                         }
                       }}
                       text="Select"

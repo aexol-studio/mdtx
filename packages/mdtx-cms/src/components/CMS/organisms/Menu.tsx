@@ -98,12 +98,12 @@ export const Menu: React.FC<MenuInteface> = ({
             onClick={() => {
               if (!openMenu) {
                 setOpenMenu(true);
+                setMenuType(MenuType.SEARCH);
               }
               if (openMenu) {
                 setOpenMenu(false);
                 setMenuType(undefined);
               }
-              setMenuType(MenuType.SEARCH);
             }}
           />
         </div>
@@ -115,6 +115,7 @@ export const Menu: React.FC<MenuInteface> = ({
               onClick={() => {
                 if (!openMenu) {
                   setOpenMenu(true);
+                  setMenuType(MenuType.SEARCH);
                 }
                 if (openMenu && menuType === MenuType.SEARCH) {
                   setOpenMenu(false);
@@ -143,6 +144,7 @@ export const Menu: React.FC<MenuInteface> = ({
                     setOpenMenu(false);
                     setMenuType(undefined);
                   }
+                  setMenuType(MenuType.COMMITABLE);
                 }
               }}
               className={`${

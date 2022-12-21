@@ -10,6 +10,7 @@ import {
   ToastsProvider,
 } from '../containers';
 import localFont from '@next/font/local';
+import { GitProvider } from '../containers/GitContainer';
 const LatoFont = Lato({
   weight: ['100', '300', '400', '700', '900'],
   subsets: ['latin-ext'],
@@ -34,27 +35,29 @@ const JostFontLight = localFont({
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <AuthProvider>
-      <RepositoryStateProvider>
-        <FileStateProvider>
-          <ToastsProvider>
-            <style jsx global>
-              {`
-                :root {
-                  --lato-font: ${LatoFont.style.fontFamily};
-                  --ivymode-font: ${IvyModeFont.style.fontFamily};
-                  --jost-font: ${JostFont.style.fontFamily};
-                  --jost-font-light: ${JostFontLight.style.fontFamily};
-                  --fira-font: ${FiraSans.style.fontFamily};
-                }
-                html {
-                  font-family: ${JostFont.style.fontFamily};
-                }
-              `}
-            </style>
-            <Component {...pageProps} />
-          </ToastsProvider>
-        </FileStateProvider>
-      </RepositoryStateProvider>
+      <GitProvider>
+        <RepositoryStateProvider>
+          <FileStateProvider>
+            <ToastsProvider>
+              <style jsx global>
+                {`
+                  :root {
+                    --lato-font: ${LatoFont.style.fontFamily};
+                    --ivymode-font: ${IvyModeFont.style.fontFamily};
+                    --jost-font: ${JostFont.style.fontFamily};
+                    --jost-font-light: ${JostFontLight.style.fontFamily};
+                    --fira-font: ${FiraSans.style.fontFamily};
+                  }
+                  html {
+                    font-family: ${JostFont.style.fontFamily};
+                  }
+                `}
+              </style>
+              <Component {...pageProps} />
+            </ToastsProvider>
+          </FileStateProvider>
+        </RepositoryStateProvider>
+      </GitProvider>
     </AuthProvider>
   );
 }
