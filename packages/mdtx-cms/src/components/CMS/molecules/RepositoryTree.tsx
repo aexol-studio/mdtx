@@ -247,6 +247,7 @@ export const RepositoryTree: React.FC<{
             {creatingModal && (
               <FolderOptionsTree
                 modalRef={ref}
+                handleUploadModal={handleUploadModal}
                 handleCreateFile={handleCreateFile}
                 handleCreatingModal={handleCreatingModal}
               />

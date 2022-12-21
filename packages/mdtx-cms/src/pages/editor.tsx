@@ -135,8 +135,8 @@ const editor = () => {
   const [userRepos, setUserRepos] = useState<RepositoriesCollection>();
   const [userForks, setUserForks] = useState<RepositoriesCollection>();
 
-  const [file, setFile] = useState<File>();
-  const handleFile = (p: File) => setFile(p);
+  const [images, setImages] = useState<FileList>();
+  const handleImages = (p: FileList) => setImages(p);
   const [searchingMode, setSearchingMode] = useState<SearchingType>(
     SearchingType.ALL,
   );
@@ -534,43 +534,15 @@ const editor = () => {
   };
 
   const onUploadSubmit = async () => {
-    const path = creatingFilePath?.slice(creatingFilePath.indexOf('/') + 1);
-    if (file && selectedBranch && selectedRepository?.owner) {
-      const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const base64 = buffer.toString('base64');
-      const oidArray = await getOid({
-        branchName: selectedBranch.name,
-        repositoryName: selectedRepository.name,
-        repositoryOwner: selectedRepository.owner.login,
-      });
-      const createdCommit = await createCommitOnBranch({
-        branch: {
-          branchName: selectedBranch.name,
-          repositoryNameWithOwner: selectedRepository.full_name,
-        },
-        expectedHeadOid: oidArray[0].oid,
-        message: {
-          headline: 'Upload image',
-          body: 'Upload image',
-        },
-        fileChanges: {
-          additions: [
-            {
-              contents: base64,
-              path: path ? path : '' + file.name,
-            },
-          ],
-        },
-      });
-      // if (oidArray && createdCommit.commit?.oid) {
-      //   // resetState();
-      //   const newRedirect = await confirmBranchClick();
-      //   if (newRedirect) {
-      //     setSubmittingCommit(false);
-      //     setMenuModal(undefined);
-      //   }
-      // }
+    if (images?.length) {
+      const files = Array.from(images);
+      Promise.all(
+        files.map(async (file) => {
+          const buffer = await file.arrayBuffer();
+          const base64 = Buffer.from(buffer).toString('base64');
+          console.log(base64);
+        }),
+      );
     }
   };
 
@@ -584,8 +556,8 @@ const editor = () => {
           }}
         >
           <UploadModal
-            file={file}
-            handleFile={handleFile}
+            images={images}
+            handleImages={handleImages}
             onUploadSubmit={onUploadSubmit}
           />
         </Modal>

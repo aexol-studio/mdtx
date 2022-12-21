@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { Hamburger, CloseIconSvg, GithubIcon, AexolAsSvg } from '@/src/assets';
 import { NavigationData } from '@/src/datas/NavigationData';
 
+const URLTOGITLAB = `https://gitlab.aexol.com/oauth/authorize?client_id=ec4d617cc6783e6c3b4d5cdbd99e76933c25c4a5eba59e263115d2a37e8cc674&redirect_uri=http://localhost:3000/editor/&response_type=code&state=somenicestatevalue&scope=api`;
+
 const LoginLink = `https://github.com/login/oauth/authorize?scope=repo%20read:user%20write:org%20read:org&client_id=${process.env.NEXT_PUBLIC_CLIENT_ID}&redirect_uri=${process.env.NEXT_PUBLIC_REDIRECT_URI}`;
 
 export const MobileNavbar = () => {

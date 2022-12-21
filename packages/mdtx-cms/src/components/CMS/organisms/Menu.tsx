@@ -163,7 +163,7 @@ export const Menu: React.FC<MenuInteface> = ({
                 </p>
               </div>
             </div>
-            <div
+            {/* <div
               onClick={() => {
                 if (selectedRepository && repositoryTree?.length) {
                   if (!openMenu) {
@@ -188,9 +188,9 @@ export const Menu: React.FC<MenuInteface> = ({
                 } transition-all duration-500 ease-in-out left-[-0.8rem] absolute h-full rounded-[0.8rem] w-[0.4rem] bg-landing-blue`}
               />
               <ImageIcon />
-            </div>
+            </div> */}
           </div>
-          <div
+          {/* <div
             className={`${
               openMenu && menuType === MenuType.IMAGES
                 ? 'translate-x-[0%] duration-[900ms]'
@@ -201,15 +201,15 @@ export const Menu: React.FC<MenuInteface> = ({
               <p className="select-none text-[1.6rem] leading-[2.4rem] font-[500] text-editor-light2">
                 **section in progress**
               </p>
-              {/* {files
+              {files
                 .filter((x) => onlyIMG(x.name))
                 .map((o) => (
                   <div>
                     <p className="text-editor-light1">{o.name}</p>
                   </div>
-                ))} */}
+                ))}
             </div>
-          </div>
+          </div> */}
           <div
             className={`${
               openMenu && menuType === MenuType.COMMITABLE
