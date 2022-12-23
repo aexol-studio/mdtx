@@ -9,6 +9,7 @@
     "zeus": "zeus schema.docs.graphql ./src --ts"
   },
   "dependencies": {
+    "@gitbeaker/browser": "^35.8.0",
     "@next/font": "^13.0.3",
     "@typed/uuid": "^9.7.0",
     "@uiw/react-md-editor": "^3.19.8",

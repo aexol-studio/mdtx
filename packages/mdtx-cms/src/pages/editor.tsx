@@ -28,6 +28,8 @@ import { Layout } from '../layouts';
 import { useGitHub } from '../utils';
 import { useGithubActions } from '../utils/useGithubActions';
 import { treeBuilder, TreeMenu } from '../utils/treeBuilder';
+import { Gitlab } from '@gitbeaker/browser';
+import { useGitState } from '../containers/GitContainer';
 
 export enum MenuModalType {
   COMMIT = 'COMMIT',
@@ -72,10 +74,31 @@ export enum WatchingModeOnRepository {
   PULL_REQUESTS,
 }
 
+export enum MenuType {
+  SEARCH = 'SEARCH',
+  COMMITABLE = 'COMMITABLE',
+  SETTINGS = 'SETTINGS',
+}
+
+type ConnectionType = {
+  url?: string;
+  applicationId?: string;
+  id: string;
+  name: string;
+  token: string;
+  service: string;
+};
 const editor = () => {
+  const [menuType, setMenuType] = useState<MenuType | undefined>(
+    MenuType.SEARCH,
+  );
+  const handleMenuType = (p?: MenuType) => setMenuType(p);
   const router = useRouter();
   const { createToast } = useToasts();
-
+  const [searchInService, setSearchInService] = useState<
+    ConnectionType | undefined
+  >();
+  const handleSearchInService = (p?: ConnectionType) => setSearchInService(p);
   const {
     getGitHubToken,
     getGitHubAfterLoginInfo,
@@ -170,32 +193,50 @@ const editor = () => {
   const [downloadZIP, setDownloadZIP] = useState(false);
   const [doingFork, setDoingFork] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
-
+  const { connections, getRepository, searchRepository } = useGitState();
   const [logging, setLogging] = useState(false);
-  const { error, code } = router.query;
+  const { error, code, state } = router.query;
 
   useEffect(() => {
-    if (!isLoggedIn) {
-      if (typeof error === 'string') logOut();
-      if (typeof code === 'string' && code.length) {
-        setLogging(true);
-        getGitHubToken(code)
-          .then((data) => {
-            setTokenWithLocal(data.token);
-            setIsLoggedIn(true);
-            afterLoginInfo();
-          })
-          .catch(() => {
-            createToast(ToastType.ERROR, 'Something went wrong. Refresh page.');
-            setTimeout(() => {
-              logOut();
-            }, 500);
-          });
-      }
-    } else {
-      setLogging(true);
-      afterLoginInfo();
+    if (state && state.includes('SETTINGS')) handleMenuType(MenuType.SETTINGS);
+    if (state && state.includes('GITHUB')) {
+      console.log('Integracja z githubem');
+      router.replace('/editor/');
     }
+    if (state && state.includes('GITLAB')) {
+      console.log('Integracja z gitlabem');
+      router.replace('/editor/');
+    }
+
+    // handleSearchInService(connections[0].service);
+    getRepository(
+      { owner: 'aexol', repo: 'aexol-company-manger' },
+      connections[0],
+    ).then((res) => console.log(res));
+    getRepository({ owner: 'aexol-studio', repo: 'mdtx' }, connections[1]).then(
+      (res) => console.log(res),
+    );
+    // if (!isLoggedIn) {
+    //   if (typeof error === 'string') logOut();
+    //   if (typeof code === 'string' && code.length) {
+    //     setLogging(true);
+    //     getGitHubToken(code)
+    //       .then((data) => {
+    //         setTokenWithLocal(data.token);
+    //         setIsLoggedIn(true);
+    //         afterLoginInfo();
+    //       })
+    //       .catch(() => {
+    //         createToast(ToastType.ERROR, 'Something went wrong. Refresh page.');
+    //         setTimeout(() => {
+    //           logOut();
+    //         }, 500);
+    //       });
+    //   }
+    // } else {
+    //   setLogging(true);
+    //   afterLoginInfo();
+    // }
   }, [router.isReady, error, code, isLoggedIn]);
 
   // useEffect(() => {
@@ -222,19 +263,19 @@ const editor = () => {
         full_name: string;
         source?: { full_name: string; owner: { login: string } };
       }[] = [];
-      Promise.all(
-        repos
-          .filter((x) => x.fork)
-          .map(async (z: { full_name: string }) => {
-            const response = await getGitHubRepositoryInfo({
-              owner: z.full_name.split('/')[0],
-              repo: z.full_name.split('/')[1],
-            });
-            if (response) {
-              tempArr.push(response);
-            }
-          }),
-      );
+      // Promise.all(
+      //   repos
+      //     .filter((x) => x.fork)
+      //     .map(async (z: { full_name: string }) => {
+      //       const response = await getGitHubRepositoryInfo({
+      //         owner: z.full_name.split('/')[0],
+      //         repo: z.full_name.split('/')[1],
+      //       });
+      //       if (response) {
+      //         tempArr.push(response);
+      //       }
+      //     }),
+      // );
       setUserForks(tempArr);
       setLoggedData(user);
       setLogging(false);
@@ -305,12 +346,12 @@ const editor = () => {
       const promiseBranches = getGitHubRepositoryBranches(input);
       const promisePullRequest = getGitHubRepositoryPullRequests(input);
       const promiseForks = getGitHubRepositoryForks(input);
-      const promiseAboutFork = getGitHubRepositoryInfo(input);
-      const [branches, pullRequests, forks, aboutFork] = await Promise.all([
+      // const promiseAboutFork = getGitHubRepositoryInfo(input);
+      const [branches, pullRequests, forks] = await Promise.all([
         promiseBranches,
         promisePullRequest,
         promiseForks,
-        promiseAboutFork,
+        // promiseAboutFork,
       ]);
       if (!branches) {
         createToast(ToastType.ERROR, 'We cannot download this repository');
@@ -318,20 +359,20 @@ const editor = () => {
       }
       setAvailablePullRequests(pullRequests);
       setForksOnRepo(forks);
-      const isForked =
-        userForks?.find(
-          (x) => x?.source?.full_name === aboutFork?.source?.full_name,
-        ) ||
-        userForks?.find((x) => x?.source?.full_name === item.full_name) ||
-        item.full_name === aboutFork?.source?.full_name;
-      if (
-        !!isForked ||
-        !!userRepos?.find((x) => x.full_name === item.full_name)
-      ) {
-        setFoundedFork(true);
-      } else {
-        setFoundedFork(false);
-      }
+      // const isForked =
+      //   userForks?.find(
+      //     (x) => x?.source?.full_name === aboutFork?.source?.full_name,
+      //   ) ||
+      //   userForks?.find((x) => x?.source?.full_name === item.full_name) ||
+      //   item.full_name === aboutFork?.source?.full_name;
+      // if (
+      //   !!isForked ||
+      //   !!userRepos?.find((x) => x.full_name === item.full_name)
+      // ) {
+      //   setFoundedFork(true);
+      // } else {
+      //   setFoundedFork(false);
+      // }
       if (branches.length) {
         setDownloadModal(true);
         setAvailableBranches(branches);
@@ -470,7 +511,11 @@ const editor = () => {
   const { signal: searchSignal } = searchController;
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (autoCompleteValue !== '' && autoCompleteValue !== undefined) {
+      if (
+        searchInService &&
+        autoCompleteValue !== '' &&
+        autoCompleteValue !== undefined
+      ) {
         setLoadingFullTree(true);
         setRepositoriesFromSearch(undefined);
         handleRepository(undefined);
@@ -490,9 +535,13 @@ const editor = () => {
             ? organizationsString
             : ''
         }${includeForks ? ` fork:true` : ``}`;
-        getGitHubSearchRepositories(queryString, searchSignal)
+        searchRepository(
+          { searchQuery: autoCompleteValue },
+          searchSignal,
+          searchInService,
+        )
           .then((res) => {
-            setRepositoriesFromSearch(res.items);
+            setRepositoriesFromSearch(res);
             setLoadingFullTree(false);
           })
           .catch(() => {
@@ -506,7 +555,7 @@ const editor = () => {
       searchController.abort();
       clearTimeout(timer);
     };
-  }, [autoCompleteValue, includeForks, searchingMode]);
+  }, [autoCompleteValue, includeForks, searchingMode, searchInService]);
 
   const backToSearch = () => {
     handleRepository(undefined);
@@ -629,6 +678,10 @@ const editor = () => {
       )}
       <div className="z-[100]">
         <Menu
+          menuType={menuType}
+          handleMenuType={handleMenuType}
+          searchInService={searchInService}
+          handleSearchInService={handleSearchInService}
           commitableMenu={
             isFilesTouched && !!selectedRepository && !!repositoryTree
           }

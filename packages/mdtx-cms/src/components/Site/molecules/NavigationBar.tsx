@@ -1,8 +1,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { GithubIcon, MDtxLogo } from '@/src/assets';
-import { NavigationData } from '@/src/datas/NavigationData';
-import { GithubStars, MobileNavbar } from '@/src/components/Site/atoms/';
+import { GithubStars } from '@/src/components/Site/atoms/';
 
 const getRepositoryMDtx = async () => {
   const response = await fetch(

@@ -1,3 +1,5 @@
+import { useGitState } from '@/src/containers/GitContainer';
+import { useState } from 'react';
 import { Input, Select } from '../atoms';
 export enum SearchingType {
   ALL = 'ALL',
@@ -6,6 +8,14 @@ export enum SearchingType {
   // ORGANIZATION = 'ORGANIZATION',
   ORGANIZATIONS = 'ORGANIZATIONS',
 }
+type ConnectionType = {
+  url?: string;
+  applicationId?: string;
+  id: string;
+  name: string;
+  token: string;
+  service: string;
+};
 export interface MenuSearchSectionInterface {
   autoCompleteValue?: string;
   setAutoCompleteValue: React.Dispatch<
@@ -15,6 +25,8 @@ export interface MenuSearchSectionInterface {
   setIncludeForks: React.Dispatch<React.SetStateAction<boolean>>;
   searchingMode: SearchingType;
   setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
+  searchInService?: ConnectionType;
+  handleSearchInService: (p?: ConnectionType) => void;
 }
 
 export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
@@ -24,7 +36,10 @@ export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
   setIncludeForks,
   searchingMode,
   setSearchingMode,
+  searchInService,
+  handleSearchInService,
 }) => {
+  const { connections } = useGitState();
   return (
     <>
       <div
@@ -65,6 +80,13 @@ export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
           <p className="w-fit text-mdtxWhite font-[500] text-[1.4rem] leading-[1.8rem] select-none">
             Include forks
           </p>
+          <Select
+            placeholder={searchInService?.name || ''}
+            options={connections.map((o) => o.name)}
+            onChange={(e) =>
+              handleSearchInService(connections.find((o) => o.name === e)!)
+            }
+          />
         </div>
       </div>
     </>

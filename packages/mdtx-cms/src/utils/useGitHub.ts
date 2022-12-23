@@ -1,5 +1,5 @@
 import { Octokit } from 'octokit';
-import { useAuthState, useToasts } from '../containers';
+import { useAuthState } from '../containers';
 import { unzipFunction } from './unzipFunction';
 
 export const useGitHub = () => {
@@ -10,11 +10,12 @@ export const useGitHub = () => {
   const connectURL = process.env.NEXT_PUBLIC_PROXY || 'http://localhost:7071';
   //USE: FOR SEARCH FOR REPOSITORIES
   const getGitHubSearchRepositories = async (
-    q: string,
+    input: { searchQuery: string },
     signal: AbortSignal,
+    octokit: Octokit,
   ) => {
     const { data } = await octokit.rest.search.repos({
-      q,
+      q: input.searchQuery,
       per_page: 100,
       request: { signal },
     });
@@ -96,10 +97,13 @@ export const useGitHub = () => {
     return data;
   };
   //USE: FOR GET USER REPOSITORY INFO
-  const getGitHubRepositoryInfo = async (input: {
-    owner: string;
-    repo: string;
-  }) => {
+  const getGitHubRepositoryInfo = async (
+    input: {
+      owner: string;
+      repo: string;
+    },
+    octokit: Octokit,
+  ) => {
     const { data } = await octokit.rest.repos.get(input);
     if (!data) throw new Error('Bad response from getGitHubRepositoryInfo()');
     return data;

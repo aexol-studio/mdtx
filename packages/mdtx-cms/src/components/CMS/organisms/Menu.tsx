@@ -1,4 +1,4 @@
-import { Chevron, ImageIcon } from '@/src/assets';
+import { Chevron, ImageIcon, SettingsIcon } from '@/src/assets';
 import {
   RepositoryFromSearch,
   useAuthState,
@@ -13,12 +13,20 @@ import {
   RepositoriesList,
   RepositoryTree,
   SearchingType,
+  SettingsSection,
 } from '../molecules';
 import Image from 'next/image';
 import { CommitableIcon, SearchMenuIcon } from '@/src/assets/menu-icons';
 import { useEffect, useState } from 'react';
-import { MenuModalType } from '@/src/pages/editor';
-
+import { MenuModalType, MenuType } from '@/src/pages/editor';
+type ConnectionType = {
+  url?: string;
+  applicationId?: string;
+  id: string;
+  name: string;
+  token: string;
+  service: string;
+};
 export interface MenuInteface {
   commitableMenu: boolean;
   autoCompleteValue?: string;
@@ -42,12 +50,10 @@ export interface MenuInteface {
   setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
   handleUploadModal: (p: boolean) => void;
   handleMenuModal: (p?: MenuModalType) => void;
-}
-
-enum MenuType {
-  SEARCH = 'SEARCH',
-  COMMITABLE = 'COMMITABLE',
-  IMAGES = 'IMAGES',
+  searchInService?: ConnectionType;
+  handleSearchInService: (p?: ConnectionType) => void;
+  menuType: MenuType | undefined;
+  handleMenuType: (p?: MenuType) => void;
 }
 
 export const Menu: React.FC<MenuInteface> = ({
@@ -69,16 +75,18 @@ export const Menu: React.FC<MenuInteface> = ({
   setSearchingMode,
   handleUploadModal,
   handleMenuModal,
+  searchInService,
+  handleSearchInService,
+  menuType,
+  handleMenuType,
 }) => {
   const { selectedRepository, selectedBranch } = useRepositoryState();
   const { modifiedFiles, files } = useFileState();
   const { loggedData } = useAuthState();
-  const [menuType, setMenuType] = useState<MenuType | undefined>(
-    MenuType.SEARCH,
-  );
+
   useEffect(() => {
     if (!commitableMenu && modifiedFiles.length === 0) {
-      setMenuType(MenuType.SEARCH);
+      handleMenuType(MenuType.SEARCH);
     }
   }, [commitableMenu, modifiedFiles]);
   const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
@@ -98,11 +106,11 @@ export const Menu: React.FC<MenuInteface> = ({
             onClick={() => {
               if (!openMenu) {
                 setOpenMenu(true);
-                setMenuType(MenuType.SEARCH);
+                handleMenuType(MenuType.SEARCH);
               }
               if (openMenu) {
                 setOpenMenu(false);
-                setMenuType(undefined);
+                handleMenuType(undefined);
               }
             }}
           />
@@ -115,13 +123,13 @@ export const Menu: React.FC<MenuInteface> = ({
               onClick={() => {
                 if (!openMenu) {
                   setOpenMenu(true);
-                  setMenuType(MenuType.SEARCH);
+                  handleMenuType(MenuType.SEARCH);
                 }
                 if (openMenu && menuType === MenuType.SEARCH) {
                   setOpenMenu(false);
-                  setMenuType(undefined);
+                  handleMenuType(undefined);
                 }
-                setMenuType(MenuType.SEARCH);
+                handleMenuType(MenuType.SEARCH);
               }}
               className="cursor-pointer min-w-[2rem] min-h-[2rem] relative"
             >
@@ -138,13 +146,13 @@ export const Menu: React.FC<MenuInteface> = ({
                 if (commitableMenu) {
                   if (!openMenu) {
                     setOpenMenu(true);
-                    setMenuType(MenuType.COMMITABLE);
+                    handleMenuType(MenuType.COMMITABLE);
                   }
                   if (openMenu && menuType === MenuType.COMMITABLE) {
                     setOpenMenu(false);
-                    setMenuType(undefined);
+                    handleMenuType(undefined);
                   }
-                  setMenuType(MenuType.COMMITABLE);
+                  handleMenuType(MenuType.COMMITABLE);
                 }
               }}
               className={`${
@@ -165,53 +173,32 @@ export const Menu: React.FC<MenuInteface> = ({
                 </p>
               </div>
             </div>
-            {/* <div
+            <div
               onClick={() => {
-                if (selectedRepository && repositoryTree?.length) {
-                  if (!openMenu) {
-                    setOpenMenu(true);
-                  }
-                  if (openMenu && menuType === MenuType.IMAGES) {
-                    setOpenMenu(false);
-                    setMenuType(undefined);
-                  }
-                  setMenuType(MenuType.IMAGES);
+                if (!openMenu) {
+                  setOpenMenu(true);
                 }
+                if (openMenu && menuType === MenuType.SETTINGS) {
+                  setOpenMenu(false);
+                  handleMenuType(undefined);
+                }
+                handleMenuType(MenuType.SETTINGS);
               }}
-              className={`${
-                selectedRepository && repositoryTree?.length
-                  ? 'cursor-pointer'
-                  : 'cursor-not-allowed opacity-[0.4]'
-              } mt-[2.4rem] cursor-pointer min-w-[2rem] min-h-[2rem] relative`}
+              className={`mt-[2.4rem] cursor-pointer min-w-[2rem] min-h-[2rem] relative`}
             >
               <div
                 className={`${
-                  menuType === MenuType.IMAGES ? 'h-full' : 'h-0'
+                  menuType === MenuType.SETTINGS ? 'h-full' : 'h-0'
                 } transition-all duration-500 ease-in-out left-[-0.8rem] absolute h-full rounded-[0.8rem] w-[0.4rem] bg-landing-blue`}
               />
-              <ImageIcon />
-            </div> */}
-          </div>
-          {/* <div
-            className={`${
-              openMenu && menuType === MenuType.IMAGES
-                ? 'translate-x-[0%] duration-[900ms]'
-                : 'translate-x-[-600px] duration-[300ms]'
-            } w-full h-full transition-transform ease-in-out left-[5.2rem] absolute flex flex-col z-[1]`}
-          >
-            <div className="relative mt-[0.8rem] mx-[0.8rem]">
-              <p className="select-none text-[1.6rem] leading-[2.4rem] font-[500] text-editor-light2">
-                **section in progress**
-              </p>
-              {files
-                .filter((x) => onlyIMG(x.name))
-                .map((o) => (
-                  <div>
-                    <p className="text-editor-light1">{o.name}</p>
-                  </div>
-                ))}
+              <SettingsIcon />
             </div>
-          </div> */}
+          </div>
+
+          <SettingsSection
+            active={openMenu && menuType === MenuType.SETTINGS}
+          />
+
           <div
             className={`${
               openMenu && menuType === MenuType.COMMITABLE
@@ -363,6 +350,8 @@ export const Menu: React.FC<MenuInteface> = ({
               } mt-[2.8rem] max-w-[26.6rem] pl-[1.6rem] transition-all duration-300 ease-in-out relative w-full`}
             >
               <MenuSearchSection
+                searchInService={searchInService}
+                handleSearchInService={handleSearchInService}
                 searchingMode={searchingMode}
                 setSearchingMode={setSearchingMode}
                 includeForks={includeForks}

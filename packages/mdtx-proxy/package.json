@@ -21,6 +21,7 @@
     "@azure/functions": "^3.5.0",
     "@octokit/auth-oauth-app": "^5.0.4",
     "client-oauth2": "^4.3.3",
-    "node-fetch": "2.6.0"
+    "node-fetch": "2.6.0",
+    "oidc-client-ts": "^2.2.0"
   }
 }
