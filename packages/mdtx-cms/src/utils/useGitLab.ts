@@ -70,5 +70,133 @@ export const useGitLab = () => {
       },
     };
   };
-  return { getGitLabSearchRepositories, getGitLabRepositoryInfo };
+
+  const getGitLabTree = async (
+    input: {
+      owner: string;
+      repo: string;
+      branch: string;
+    },
+    connection: ConnectionType,
+  ) => {
+    const tempArr = [];
+    const response = await fetch(
+      `${connection.url}api/v4/projects/${input.owner}%2F${input.repo}/repository/tree?recursive=true&per_page=100&ref=${input.branch}`,
+      {
+        headers: {
+          Authorization: connection.token,
+        },
+      },
+    );
+    tempArr.push(response);
+    const totalPages = Number(response.headers.get('x-total-pages'));
+    let currentPage = Number(response.headers.get('x-page'));
+    if (totalPages && currentPage) {
+      while (currentPage < totalPages) {
+        const response = await fetch(
+          `${connection.url}api/v4/projects/${input.owner}%2F${
+            input.repo
+          }/repository/tree?recursive=true&per_page=100&page=${
+            currentPage + 1
+          }`,
+          {
+            headers: {
+              Authorization: connection.token,
+            },
+          },
+        );
+        tempArr.push(response);
+        currentPage++;
+      }
+    }
+    const promise = await Promise.all(
+      tempArr.map(async (res) => await res.json()),
+    );
+    const tree: {
+      path?: string | undefined;
+      mode?: string | undefined;
+      type?: string | undefined;
+      sha?: string | undefined;
+      size?: number | undefined;
+      url?: string | undefined;
+    }[] = [];
+    promise.map((x) =>
+      x.length
+        ? x.map((o: { mode: string; path: string; id: string; type: string }) =>
+            tree.push({
+              mode: o.mode,
+              path: o.path,
+              sha: o.id,
+              type: o.type,
+              url: connection.url!,
+            }),
+          )
+        : tree.push(x),
+    );
+    return {
+      tree: tree,
+    };
+  };
+
+  const getGitLabContents = async (
+    input: {
+      owner: string;
+      repo: string;
+      branch: string;
+      path: string;
+    },
+    gitlabApi: Gitlab<false>,
+  ) => {
+    const response = await gitlabApi.RepositoryFiles.show(
+      `${input.owner}/${input.repo}`,
+      input.path,
+      input.branch,
+    );
+    return response;
+  };
+
+  const getGitLabRepositoryBranches = async (
+    input: {
+      owner: string;
+      repo: string;
+    },
+    gitlabApi: Gitlab<false>,
+  ) => {
+    const response = await gitlabApi.Branches.all(
+      `${input.owner}/${input.repo}`,
+    );
+    return response.map((o) => ({
+      commit: { sha: o.commit.id as string, url: o.commit.web_url as string },
+      name: o.name,
+      protected: o.protected,
+    }));
+  };
+
+  const createCommitOnGitLab = async (
+    input: {
+      owner: string;
+      repo: string;
+    },
+    gitlabApi: Gitlab<false>,
+  ) => {
+    const response = await gitlabApi.Commits.create(
+      '',
+      '',
+      '',
+      [
+        { action: 'create', filePath: '', content: '', encoding: 'text' },
+        { action: 'update', filePath: '', content: '', encoding: 'text' },
+        { action: 'delete', filePath: '' },
+      ],
+      {},
+    );
+  };
+
+  return {
+    getGitLabSearchRepositories,
+    getGitLabRepositoryInfo,
+    getGitLabTree,
+    getGitLabContents,
+    getGitLabRepositoryBranches,
+  };
 };

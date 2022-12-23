@@ -58,26 +58,43 @@ type ConnectionType = {
 };
 
 const GitContainer = createContainer(() => {
-  //   const { service, serviceURL, token } = useAuthState();
+  const [searchInService, setSearchInService] = useState<
+    ConnectionType | undefined
+  >();
+  const handleSearchInService = (p?: ConnectionType) => setSearchInService(p); //   const { service, serviceURL, token } = useAuthState();
   const [connections, setConnections] = useState<ConnectionType[]>([
     {
+      url: 'https://gitlab.aexol.com/',
+      name: 'Aexol',
+      applicationId:
+        'ec4d617cc6783e6c3b4d5cdbd99e76933c25c4a5eba59e263115d2a37e8cc674',
       id: '1',
-      name: '',
-      service: '',
-      applicationId: '',
-      token: 'Bearer',
-      url: '',
+      service: 'gitlab',
+      token: 'Bearer glpat-7yzhedggCcnrXWkGEidB',
     },
     {
       id: '2',
       name: 'github',
-      service: '',
-      token: 'token',
+      service: 'github',
+      token: 'token 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',
     },
   ]);
   const [loggedData, setLoggedData] = useState<UserType>();
-  const { getGitHubRepositoryInfo, getGitHubSearchRepositories } = useGitHub();
-  const { getGitLabRepositoryInfo, getGitLabSearchRepositories } = useGitLab();
+  const {
+    getGitHubRepositoryInfo,
+    getGitHubSearchRepositories,
+    getGitHubTree,
+    getGitHubRepositoryBranch,
+    getGitHubContents,
+    getGitHubRepositoryBranches,
+  } = useGitHub();
+  const {
+    getGitLabRepositoryInfo,
+    getGitLabSearchRepositories,
+    getGitLabTree,
+    getGitLabContents,
+    getGitLabRepositoryBranches,
+  } = useGitLab();
   const searchRepository = async (
     input: { searchQuery: string },
     signal: AbortSignal,
@@ -106,8 +123,6 @@ const GitContainer = createContainer(() => {
     }
   };
 
-  const getBranches = async () => {};
-
   const getPullRequests = async () => {};
 
   const getForks = async () => {};
@@ -122,7 +137,6 @@ const GitContainer = createContainer(() => {
     switch (connection.service) {
       case '':
         return;
-      //GITHUB
       case 'github':
         const GitHubApi = new Octokit({
           auth: connection.token,
@@ -132,7 +146,6 @@ const GitContainer = createContainer(() => {
           GitHubApi,
         );
         return githubRepository;
-      //GITLAB
       case 'gitlab':
         const GitLabApi = new Gitlab({
           host: connection.url?.slice(0, connection.url.length - 1),
@@ -146,10 +159,101 @@ const GitContainer = createContainer(() => {
     }
   };
 
+  const getTree = async (
+    input: {
+      owner: string;
+      repo: string;
+      branch: string;
+    },
+    connection: ConnectionType,
+  ) => {
+    switch (connection.service) {
+      case '':
+        return;
+      case 'github':
+        const GitHubApi = new Octokit({
+          auth: connection.token,
+        });
+        const getBranchInfo = await getGitHubRepositoryBranch(input, GitHubApi);
+        const inputGit = {
+          owner: input.owner,
+          repo: input.repo,
+          tree_sha: getBranchInfo.commit.sha,
+        };
+        const GitHubTree = await getGitHubTree(inputGit, GitHubApi);
+        return GitHubTree;
+      case 'gitlab':
+        const GitLabTree = await getGitLabTree(input, connection);
+        return GitLabTree;
+    }
+  };
+
+  const getFile = async (
+    input: {
+      owner: string;
+      repo: string;
+      branch: string;
+      path: string;
+    },
+    connection: ConnectionType,
+  ) => {
+    switch (connection.service) {
+      case '':
+        return;
+      case 'github':
+        const GitHubApi = new Octokit({
+          auth: connection.token,
+        });
+        const GitHubContent = await getGitHubContents(input, GitHubApi);
+        return GitHubContent;
+      case 'gitlab':
+        const GitLabApi = new Gitlab({
+          host: connection.url?.slice(0, connection.url.length - 1),
+          token: connection.token.split(' ')[1],
+        });
+        const GitLabTree = await getGitLabContents(input, GitLabApi);
+        return GitLabTree;
+    }
+  };
+
+  const getBranches = async (
+    input: {
+      owner: string;
+      repo: string;
+    },
+    connection: ConnectionType,
+  ) => {
+    switch (connection.service) {
+      case '':
+        return;
+      case 'github':
+        const GitHubApi = new Octokit({
+          auth: connection.token,
+        });
+        const GitHubContent = await getGitHubRepositoryBranches(
+          input,
+          GitHubApi,
+        );
+        return GitHubContent;
+      case 'gitlab':
+        const GitLabApi = new Gitlab({
+          host: connection.url?.slice(0, connection.url.length - 1),
+          token: connection.token.split(' ')[1],
+        });
+        const GitLabTree = await getGitLabRepositoryBranches(input, GitLabApi);
+        return GitLabTree;
+    }
+  };
+
   return {
     connections,
     getRepository,
     searchRepository,
+    getTree,
+    getFile,
+    getBranches,
+    searchInService,
+    handleSearchInService,
   };
 });
 

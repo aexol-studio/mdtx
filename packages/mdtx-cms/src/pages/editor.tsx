@@ -95,10 +95,7 @@ const editor = () => {
   const handleMenuType = (p?: MenuType) => setMenuType(p);
   const router = useRouter();
   const { createToast } = useToasts();
-  const [searchInService, setSearchInService] = useState<
-    ConnectionType | undefined
-  >();
-  const handleSearchInService = (p?: ConnectionType) => setSearchInService(p);
+
   const {
     getGitHubToken,
     getGitHubAfterLoginInfo,
@@ -109,13 +106,13 @@ const editor = () => {
     getGitHubRepositoryForks,
     doGitHubFork,
     getGitHubRepositoryBranch,
-    getTree,
+    getGitHubTree,
   } = useGitHub();
   const { createCommitOnBranch, getOid, createBranch, createPullRequest } =
     useGithubActions();
   const {
     setFiles,
-    setOrginalFiles,
+    setOriginalFiles,
     isFilesTouched,
     modifiedFiles,
     deletions,
@@ -193,28 +190,88 @@ const editor = () => {
   const [downloadZIP, setDownloadZIP] = useState(false);
   const [doingFork, setDoingFork] = useState(false);
   const [loadingFullTree, setLoadingFullTree] = useState(false);
-  const { connections, getRepository, searchRepository } = useGitState();
+  const {
+    connections,
+    getRepository,
+    searchRepository,
+    getTree,
+    getFile,
+    getBranches,
+    searchInService,
+    handleSearchInService,
+  } = useGitState();
   const [logging, setLogging] = useState(false);
   const { error, code, state } = router.query;
 
   useEffect(() => {
     if (state && state.includes('SETTINGS')) handleMenuType(MenuType.SETTINGS);
     if (state && state.includes('GITHUB')) {
-      console.log('Integracja z githubem');
+      console.log('Integracja z githubem', code);
       router.replace('/editor/');
     }
     if (state && state.includes('GITLAB')) {
-      console.log('Integracja z gitlabem');
+      console.log('Integracja z gitlabem'), code;
       router.replace('/editor/');
     }
 
-    // handleSearchInService(connections[0].service);
-    getRepository(
-      { owner: 'aexol', repo: 'aexol-company-manger' },
+    handleSearchInService(connections[0]);
+    // getRepository(
+    //   { owner: 'aexol', repo: 'aexol-company-manger' },
+    //   connections[0],
+    // ).then((res) => console.log(res));
+    // getRepository({ owner: 'aexol-studio', repo: 'mdtx' }, connections[1]).then(
+    //   (res) => console.log(res),
+    // );
+    getTree(
+      { owner: 'aexol', repo: 'profitabee-landing', branch: 'develop' },
       connections[0],
+    ).then((res) => {
+      const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
+      const onlyIMG = (p: string) => !!p.match(onlyIMGRef);
+      const onlyMDReg = /(.*)\.md$/;
+      const onlyMD = (p: string) => !!p.match(onlyMDReg);
+      const filteredItems = res?.tree.filter((x) => {
+        const cleanedPath = x.path?.split('/');
+        const wanted = cleanedPath?.at(cleanedPath.length - 1);
+        if (wanted) {
+          return onlyMD(wanted) || onlyIMG(wanted);
+        }
+      });
+      const paths = filteredItems?.map((x) => ({
+        content: undefined,
+        dir: x.type === 'tree',
+        name: `aexol/${x.path}`,
+      }));
+      const tree = treeBuilder(paths!);
+      setRepositoryTree(tree);
+      setFiles(paths!);
+      setOriginalFiles(paths!);
+    });
+    getTree(
+      { owner: 'aexol-studio', repo: 'mdtx', branch: 'develop' },
+      connections[1],
     ).then((res) => console.log(res));
-    getRepository({ owner: 'aexol-studio', repo: 'mdtx' }, connections[1]).then(
-      (res) => console.log(res),
+    getFile(
+      {
+        owner: 'aexol-studio',
+        repo: 'mdtx',
+        branch: 'develop',
+        path: 'Readme.md',
+      },
+      connections[1],
+    ).then((res) =>
+      console.log('🚀 ~ file: editor.tsx:288 ~ useEffect ~ res', res),
+    );
+    getFile(
+      {
+        owner: 'aexol',
+        repo: 'profitabee-landing',
+        branch: 'develop',
+        path: 'packages/bddx/README.md',
+      },
+      connections[0],
+    ).then((res) =>
+      console.log('🚀 ~ file: editor.tsx:288 ~ useEffect ~ res', res),
     );
     // if (!isLoggedIn) {
     //   if (typeof error === 'string') logOut();
@@ -284,81 +341,67 @@ const editor = () => {
 
   const zipController = new AbortController();
   const confirmBranchClick = async (branchName?: string) => {
-    if (isLoggedIn && selectedRepository) {
+    if (isLoggedIn && searchInService && selectedRepository) {
+      setDownloadZIP(true);
       const input = {
         owner: selectedRepository.full_name.split('/')[0],
         repo: selectedRepository.full_name.split('/')[1],
+        branch: branchName ? branchName : 'develop',
       };
-      const getBranchInfo = await getGitHubRepositoryBranch({
-        ...input,
-        branch: selectedBranch ? selectedBranch.name : branchName!,
+      const items = await getTree(input, searchInService);
+      const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
+      const onlyIMG = (p: string) => !!p.match(onlyIMGRef);
+      const onlyMDReg = /(.*)\.md$/;
+      const onlyMD = (p: string) => !!p.match(onlyMDReg);
+      const filteredItems = items?.tree.filter((x) => {
+        const cleanedPath = x.path?.split('/');
+        const wanted = cleanedPath?.at(cleanedPath.length - 1);
+        if (wanted) {
+          return onlyMD(wanted) || onlyIMG(wanted);
+        }
       });
-      if (getBranchInfo !== undefined) {
-        setDownloadZIP(true);
-        branchName && handleBranch(getBranchInfo);
-        const input = {
-          owner: selectedRepository.full_name.split('/')[0],
-          repo: selectedRepository.full_name.split('/')[1],
-          tree_sha: getBranchInfo.commit.sha,
-        };
-        const items = await getTree(input);
-        const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
-        const onlyIMG = (p: string) => !!p.match(onlyIMGRef);
-        const onlyMDReg = /(.*)\.md$/;
-        const onlyMD = (p: string) => !!p.match(onlyMDReg);
-        const filteredItems = items.tree.filter((x) => {
-          const cleanedPath = x.path?.split('/');
-          const wanted = cleanedPath?.at(cleanedPath.length - 1);
-          if (wanted) {
-            return onlyMD(wanted) || onlyIMG(wanted);
-          }
-        });
-        const paths = filteredItems.map((x) => ({
-          content: undefined,
-          dir: x.type === 'tree',
-          name: `${selectedRepository.name}/${x.path}`,
-        }));
-        const tree = treeBuilder(paths);
-        setRepositoryTree(tree);
-        setFiles(paths);
-        setOrginalFiles(paths);
-        setAutoCompleteValue('');
-        setRepositoriesFromSearch(undefined);
-        setDownloadZIP(false);
-        setDownloadModal(false);
-        createToast(ToastType.SUCCESS, 'Done.');
-        return true;
-      } else {
-        setDownloadZIP(false);
-        setDownloadModal(false);
-        createToast(ToastType.SUCCESS, 'Error while downloading repository.');
-        return false;
-      }
+      const paths = filteredItems?.map((x) => ({
+        content: undefined,
+        dir: x.type === 'tree',
+        name: `${selectedRepository.name}/${x.path}`,
+      }));
+      const tree = treeBuilder(paths!);
+      setRepositoryTree(tree);
+      setFiles(paths!);
+      setOriginalFiles(paths);
+      setAutoCompleteValue('');
+      setRepositoriesFromSearch(undefined);
+      setDownloadZIP(false);
+      setDownloadModal(false);
+      createToast(ToastType.SUCCESS, 'Done.');
+      return true;
+    } else {
+      return false;
     }
   };
   const handleRepositoryPick = async (item: RepositoryFromSearch) => {
     handleRepository(item);
-    if (isLoggedIn) {
+    if (isLoggedIn && searchInService) {
       const input = {
         owner: item.full_name.split('/')[0],
         repo: item.full_name.split('/')[1],
       };
-      const promiseBranches = getGitHubRepositoryBranches(input);
-      const promisePullRequest = getGitHubRepositoryPullRequests(input);
-      const promiseForks = getGitHubRepositoryForks(input);
+      const promiseBranches = getBranches(input, searchInService);
+      // const promisePullRequest = getGitHubRepositoryPullRequests(input);
+      // const promiseForks = getGitHubRepositoryForks(input);
       // const promiseAboutFork = getGitHubRepositoryInfo(input);
-      const [branches, pullRequests, forks] = await Promise.all([
+      const [branches] = await Promise.all([
         promiseBranches,
-        promisePullRequest,
-        promiseForks,
+        // promisePullRequest,
+        // promiseForks,
         // promiseAboutFork,
       ]);
       if (!branches) {
         createToast(ToastType.ERROR, 'We cannot download this repository');
         return;
       }
-      setAvailablePullRequests(pullRequests);
-      setForksOnRepo(forks);
+      // setAvailablePullRequests(pullRequests);
+      // setForksOnRepo(forks);
       // const isForked =
       //   userForks?.find(
       //     (x) => x?.source?.full_name === aboutFork?.source?.full_name,

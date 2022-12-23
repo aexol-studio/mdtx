@@ -109,21 +109,28 @@ export const useGitHub = () => {
     return data;
   };
   //USE: FOR GET ALL REPOSITORY BRANCHES
-  const getGitHubRepositoryBranches = async (input: {
-    owner: string;
-    repo: string;
-  }) => {
+  const getGitHubRepositoryBranches = async (
+    input: {
+      owner: string;
+      repo: string;
+    },
+    octokit: Octokit,
+  ) => {
     const { data } = await octokit.rest.repos.listBranches(input);
     if (!data)
       throw new Error('Bad response from getGitHubRepositoryBranches()');
+    console.log(data);
     return data;
   };
   //USE: FOR GET ALL REPOSITORY BRANCH
-  const getGitHubRepositoryBranch = async (input: {
-    owner: string;
-    repo: string;
-    branch: string;
-  }) => {
+  const getGitHubRepositoryBranch = async (
+    input: {
+      owner: string;
+      repo: string;
+      branch: string;
+    },
+    octokit: Octokit,
+  ) => {
     const { data } = await octokit.rest.repos.getBranch(input);
     if (!data) throw new Error('Bad response from getGitHubRepositoryBranch()');
     return data;
@@ -154,22 +161,31 @@ export const useGitHub = () => {
     return data;
   };
 
-  const getContents = async (input: {
-    owner: string;
-    repo: string;
-    path: string;
-    ref: string;
-  }) => {
-    const { data } = await octokit.rest.repos.getContent(input);
+  const getGitHubContents = async (
+    input: {
+      owner: string;
+      repo: string;
+      path: string;
+      branch: string;
+    },
+    octokit: Octokit,
+  ) => {
+    const { data } = await octokit.rest.repos.getContent({
+      ...input,
+      ref: input.branch,
+    });
     if (!data) throw new Error('Bad response from getContents()');
     return data;
   };
 
-  const getTree = async (input: {
-    owner: string;
-    repo: string;
-    tree_sha: string;
-  }) => {
+  const getGitHubTree = async (
+    input: {
+      owner: string;
+      repo: string;
+      tree_sha: string;
+    },
+    octokit: Octokit,
+  ) => {
     const { data } = await octokit.rest.git.getTree({
       ...input,
       recursive: 'true',
@@ -211,8 +227,8 @@ export const useGitHub = () => {
     getGitHubRepositoryPullRequests,
     getGitHubRepositoryForks,
     doGitHubFork,
-    getContents,
-    getTree,
+    getGitHubContents,
+    getGitHubTree,
     getGitHubRepositoryBranch,
   };
 };

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
 import { useGitHub } from '../utils';
+import { useGitState } from './GitContainer';
 import { useRepositoryState } from './RepositoryStateContainer';
 
 export type FileType = {
@@ -12,7 +13,7 @@ export type FileType = {
 
 const FileStateContainer = createContainer(() => {
   const [files, setFiles] = useState<FileType[]>([]);
-  const [orginalFiles, setOrginalFiles] = useState<FileType[]>();
+  const [originalFiles, setOriginalFiles] = useState<FileType[]>();
   const [modifiedFiles, setModifiedFiles] = useState<FileType[]>([]);
   const [deletions, setDeletions] = useState<FileType[]>([]);
   const [imageToAdd, setImageToAdd] = useState<string>();
@@ -20,9 +21,9 @@ const FileStateContainer = createContainer(() => {
   const [isFilesTouched, setIsFilesTouched] = useState(false);
   const [creatingFilePath, setCreatingFilePath] = useState<string>();
   const { selectedBranch, selectedRepository } = useRepositoryState();
-  const { getContents } = useGitHub();
+  const { connections, getFile, searchInService } = useGitState();
   const resetState = () => {
-    setOrginalFiles(undefined);
+    setOriginalFiles(undefined);
     setModifiedFiles([]);
     setFiles([]);
     setDeletions([]);
@@ -33,7 +34,7 @@ const FileStateContainer = createContainer(() => {
   useEffect(() => {
     if (
       JSON.stringify(files.filter((z) => z.name.includes('.md'))) ===
-      JSON.stringify(orginalFiles?.filter((z) => z.name.includes('.md')))
+      JSON.stringify(originalFiles?.filter((z) => z.name.includes('.md')))
     ) {
       setIsFilesTouched(false);
       setModifiedFiles([]);
@@ -44,39 +45,31 @@ const FileStateContainer = createContainer(() => {
 
   useEffect(() => {
     const found = files?.find((x) => x.name === pickedFilePath);
-    const foundInOrginal = orginalFiles?.find((x) => x.name === found?.name);
+    const foundInOriginal = originalFiles?.find((x) => x.name === found?.name);
     const owner = selectedRepository?.full_name.split('/');
     const ref = selectedBranch?.name;
-    if (ref && owner && found && found.content === undefined) {
+    console.log(files);
+
+    if (
+      searchInService &&
+      owner &&
+      ref &&
+      found &&
+      found.content === undefined
+    ) {
       setBlock(true);
-      if (foundInOrginal) {
-        getContents({
-          owner: owner[0],
-          repo: owner[1],
-          ref: selectedBranch?.name,
-          path: found.name.slice(found.name.indexOf('/') + 1),
-        }).then((z) => {
-          setFiles((prev) => {
-            const toSet = [
-              ...prev.filter(
-                (x) =>
-                  x.name.slice(x.name.indexOf('/') + 1) !==
-                  found.name.slice(found.name.indexOf('/') + 1),
-              ),
-              {
-                content:
-                  'content' in z
-                    ? Buffer.from(z.content, 'base64').toString('utf-8')
-                    : '',
-                dir: false,
-                name: found.name,
-              },
-            ];
-            setBlock(false);
-            return toSet;
-          });
-          setOrginalFiles((prev) => {
-            if (prev) {
+      if (foundInOriginal) {
+        getFile(
+          {
+            owner: owner[0],
+            repo: owner[1],
+            branch: ref ? ref : 'develop',
+            path: found.name.slice(found.name.indexOf('/') + 1),
+          },
+          searchInService,
+        ).then((res) => {
+          if (res) {
+            setFiles((prev) => {
               const toSet = [
                 ...prev.filter(
                   (x) =>
@@ -85,8 +78,8 @@ const FileStateContainer = createContainer(() => {
                 ),
                 {
                   content:
-                    'content' in z
-                      ? Buffer.from(z.content, 'base64').toString('utf-8')
+                    'content' in res
+                      ? Buffer.from(res.content, 'base64').toString('utf-8')
                       : '',
                   dir: false,
                   name: found.name,
@@ -94,14 +87,35 @@ const FileStateContainer = createContainer(() => {
               ];
               setBlock(false);
               return toSet;
-            } else {
-              setBlock(false);
-              return prev;
-            }
-          });
+            });
+            setOriginalFiles((prev) => {
+              if (prev) {
+                const toSet = [
+                  ...prev.filter(
+                    (x) =>
+                      x.name.slice(x.name.indexOf('/') + 1) !==
+                      found.name.slice(found.name.indexOf('/') + 1),
+                  ),
+                  {
+                    content:
+                      'content' in res
+                        ? Buffer.from(res.content, 'base64').toString('utf-8')
+                        : '',
+                    dir: false,
+                    name: found.name,
+                  },
+                ];
+                setBlock(false);
+                return toSet;
+              } else {
+                setBlock(false);
+                return prev;
+              }
+            });
+          }
         });
       } else {
-        setOrginalFiles(files);
+        setOriginalFiles(files);
         setBlock(false);
       }
     }
@@ -116,12 +130,12 @@ const FileStateContainer = createContainer(() => {
       prev?.map((x) => {
         if (x.name === pickedFilePath) {
           setModifiedFiles((prev) => {
-            const orginalContent = orginalFiles?.find(
+            const originalContent = originalFiles?.find(
               (x) => x.name === pickedFilePath,
             );
             if (prev) {
               if (x.name === pickedFilePath) {
-                if (content === orginalContent?.content) {
+                if (content === originalContent?.content) {
                   return [...prev.filter((x) => x.name !== pickedFilePath)];
                 } else {
                   return [
@@ -166,8 +180,8 @@ const FileStateContainer = createContainer(() => {
     setPickedFilePath,
     files,
     setFiles,
-    orginalFiles,
-    setOrginalFiles,
+    originalFiles,
+    setOriginalFiles,
     modifiedFiles,
     getSelectedFileByPath,
     setSelectedFileContentByPath,
