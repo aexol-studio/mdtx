@@ -64,19 +64,18 @@ const GitContainer = createContainer(() => {
   const handleSearchInService = (p?: ConnectionType) => setSearchInService(p); //   const { service, serviceURL, token } = useAuthState();
   const [connections, setConnections] = useState<ConnectionType[]>([
     {
-      url: 'https://gitlab.aexol.com/',
+      url: '',
       name: 'Aexol',
-      applicationId:
-        'ec4d617cc6783e6c3b4d5cdbd99e76933c25c4a5eba59e263115d2a37e8cc674',
+      applicationId: '',
       id: '1',
       service: 'gitlab',
-      token: 'Bearer glpat-7yzhedggCcnrXWkGEidB',
+      token: '',
     },
     {
       id: '2',
       name: 'github',
       service: 'github',
-      token: 'token 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',
+      token: '',
     },
   ]);
   const [loggedData, setLoggedData] = useState<UserType>();
