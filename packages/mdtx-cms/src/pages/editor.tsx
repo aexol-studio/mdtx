@@ -149,8 +149,9 @@ const editor = () => {
     const [logging, setLogging] = useState(false);
     const { error, code, state } = router.query;
     const { createConnection, getConnections } = useMDTXBackend();
-    const { setIntegrations, handleSearchInService, searchInService } = useAuthState();
+    const { setIntegrations, handleSearchInService, searchInService, logOut } = useAuthState();
     useEffect(() => {
+        if (error) logOut();
         if (!integrations) {
             getConnections().then(res => {
                 setIntegrations(res);

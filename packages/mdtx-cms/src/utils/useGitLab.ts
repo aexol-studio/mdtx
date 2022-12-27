@@ -34,7 +34,10 @@ export const useGitLab = () => {
         },
         gitlabApi: Gitlab<false>,
     ): Promise<PullRequestsType[]> => {
-        const response = await gitlabApi.MergeRequests.all({ projectId: `${input.owner}/${input.repo}` });
+        const response = await gitlabApi.MergeRequests.all({
+            projectId: `${input.owner}/${input.repo}`,
+            state: 'opened',
+        });
         if (!response) throw new Error('Cannot get MergeRequests from GitLab');
         const returnVal: PullRequestsType[] = response.map(o => ({
             base: {
