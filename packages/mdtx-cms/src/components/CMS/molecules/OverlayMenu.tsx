@@ -1,3 +1,3 @@
 export const OverlayMenu = () => {
-  return <div>OverlayMenu</div>;
+    return <div>OverlayMenu</div>;
 };

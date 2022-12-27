@@ -1,79 +1,71 @@
 import React, { useContext, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { useFileState, useRepositoryState } from '@/src/containers';
+import { useAuthState, useFileState, useRepositoryState } from '@/src/containers';
 import {
-  Code,
-  CodeBlock,
-  Quotes,
-  Through,
-  Bold,
-  Italic,
-  Comment,
-  EditorLink,
-  EditorDownload,
-  Headings,
-  FullScreen,
-  BothPreview,
-  EditPreview,
-  MarkdownPreview,
-  EditorColorPicker,
-  UserInfo,
-  EditorHelp,
-  EditorInfo,
-  Lists,
-  EditorImage,
+    Code,
+    CodeBlock,
+    Quotes,
+    Through,
+    Bold,
+    Italic,
+    Comment,
+    EditorLink,
+    EditorDownload,
+    Headings,
+    FullScreen,
+    BothPreview,
+    EditPreview,
+    MarkdownPreview,
+    EditorColorPicker,
+    UserInfo,
+    EditorHelp,
+    EditorInfo,
+    Lists,
+    EditorImage,
 } from '../editor-functions';
-import { useGitHub } from '@/src/utils';
 import 'highlight.js/styles/atom-one-dark.css';
-import { ContextStore } from '@uiw/react-md-editor';
+import { useGitState } from '@/src/containers/GitContainer';
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
-export type commandsType =
-  typeof import('@uiw/react-md-editor/lib/commands/index');
-export type utilsType =
-  typeof import('@uiw/react-md-editor/lib/utils/markdownUtils');
+export type commandsType = typeof import('@uiw/react-md-editor/lib/commands/index');
+export type utilsType = typeof import('@uiw/react-md-editor/lib/utils/markdownUtils');
 
 export const Editor: React.FC = () => {
-  const { getContents } = useGitHub();
-  const [color, setColor] = useState('#ffffff');
-  const handleColor = (p: string) => setColor(p);
-  const { selectedRepository, selectedBranch } = useRepositoryState();
-  const {
-    getSelectedFileByPath,
-    setSelectedFileContentByPath,
-    pickedFilePath,
-  } = useFileState();
+    const { getFile } = useGitState();
+    const { searchInService } = useAuthState();
+    const { selectedRepository, selectedBranch } = useRepositoryState();
+    const { getSelectedFileByPath, setSelectedFileContentByPath, block, pickedFilePath } = useFileState();
+    const [privateImageUrl, setPrivateImageUrl] = useState('');
+    const [markdownValue, setMarkdownValue] = useState<string | undefined>('## You can test markdown edtior here !');
+    const [color, setColor] = useState('#ffffff');
+    const handleColor = (p: string) => setColor(p);
 
-  const [commands, setCommands] = useState<commandsType>();
-  const [utils, setUtils] = useState<utilsType>();
-  const loaderCommands = async () => {
-    const commands = await import('@uiw/react-md-editor').then(
-      (mod) => mod.commands,
-    );
-    const utils = await import('@uiw/react-md-editor').then(
-      (mod) => mod.MarkdownUtil,
-    );
+    const [commands, setCommands] = useState<commandsType>();
+    const [utils, setUtils] = useState<utilsType>();
+    const loaderCommands = async () => {
+        const commands = await import('@uiw/react-md-editor').then(mod => mod.commands);
+        const utils = await import('@uiw/react-md-editor').then(mod => mod.MarkdownUtil);
 
-    setUtils(utils);
-    setCommands(commands);
-  };
+        setUtils(utils);
+        setCommands(commands);
+    };
 
-  useEffect(() => {
-    loaderCommands();
-  }, []);
-  const handleDownload = (text: string) => {
-    if (!text) return;
-    const file = new Blob([text], { type: 'text/plain' });
-    const element = document.createElement('a');
-    element.href = URL.createObjectURL(file);
-    element.download = 'mdtx' + `-` + Date.now() + '.md';
-    document.body.appendChild(element);
-    element.click();
-    if (element) {
-      document.body.removeChild(element);
-    }
-  };
-  const hardStyles = `
+    useEffect(() => {
+        loaderCommands();
+    }, []);
+    const handleDownload = (text: string) => {
+        if (!text) return;
+        const file = new Blob([text], { type: 'text/plain' });
+        const element = document.createElement('a');
+        element.href = URL.createObjectURL(file);
+        element.download = 'mdtx' + `-` + Date.now() + '.md';
+        document.body.appendChild(element);
+        element.click();
+        if (element) {
+            document.body.removeChild(element);
+        }
+    };
+    const hardStyles = `
     .w-md-editor-toolbar li.active > button {
       background: #8484a180 !important;
       border-radius: 0.8rem;
@@ -214,80 +206,104 @@ export const Editor: React.FC = () => {
       color: #9A99AD !important;
     }
   `;
-  const [privateImageUrl, setPrivateImageUrl] = useState('');
 
-  return commands && utils ? (
-    <>
-      <style>{hardStyles}</style>
-      <MDEditor
-        height={'100vh'}
-        value={getSelectedFileByPath()?.content}
-        highlightEnable={false}
-        onChange={(e) => {
-          !!pickedFilePath && setSelectedFileContentByPath(e ? e : '');
-        }}
-        previewOptions={{
-          transformImageUri: (src) => {
-            if (selectedRepository?.private && selectedBranch) {
-              const input = {
-                owner: selectedRepository.full_name.split('/')[0],
-                repo: selectedRepository.full_name.split('/')[1],
-                path: src,
-                ref: selectedBranch?.name,
-              };
-              getContents(input)
-                .then((x) =>
-                  setPrivateImageUrl(
-                    ('download_url' in x && x.download_url) || '',
-                  ),
-                )
-                .catch(() => {});
-            }
-            return selectedRepository?.private
-              ? !src.includes('https') || !src.includes('http')
-                ? privateImageUrl
-                : src
-              : !src.includes('https') || !src.includes('http')
-              ? `https://github.com/${selectedRepository?.full_name}/blob/${selectedBranch?.name}/${src}?raw=true`
-              : src;
-          },
-        }}
-        commands={[
-          Headings(commands),
-          commands.divider,
-          Bold(commands),
-          Italic(commands),
-          Through(commands),
-          commands.divider,
-          Comment(utils),
-          Quotes(commands),
-          Lists(commands),
-          commands.divider,
-          EditorLink(commands),
-          EditorImage(commands),
-          commands.divider,
-          Code(commands),
-          CodeBlock(commands),
-          commands.divider,
-          EditorColorPicker(commands, utils, handleColor, color),
-          commands.divider,
-          EditorDownload(handleDownload),
-        ]}
-        extraCommands={[
-          commands.divider,
-          FullScreen(commands),
-          BothPreview(commands),
-          MarkdownPreview(commands),
-          EditPreview(commands),
-          commands.divider,
-          EditorHelp(commands),
-          EditorInfo(commands),
-          commands.divider,
-          UserInfo(commands),
-        ]}
-      />
-    </>
-  ) : (
-    <></>
-  );
+    return commands && utils ? (
+        <>
+            <style>{hardStyles}</style>
+            <MDEditor
+                height={'100vh'}
+                value={
+                    block
+                        ? 'Loading markdown ...'
+                        : !!pickedFilePath
+                        ? getSelectedFileByPath()?.content
+                            ? getSelectedFileByPath()?.content
+                            : ''
+                        : markdownValue
+                }
+                highlightEnable={false}
+                onChange={e => {
+                    !!pickedFilePath ? setSelectedFileContentByPath(e ? e : '') : setMarkdownValue(e);
+                }}
+                previewOptions={{
+                    components: {
+                        a: ({ children, ...props }) => {
+                            return (
+                                <a {...props} target={'_blank'}>
+                                    {children}
+                                </a>
+                            );
+                        },
+                    },
+                    transformImageUri: src => {
+                        if (selectedRepository?.private && selectedBranch) {
+                            const input = {
+                                owner: selectedRepository.full_name.split('/')[0],
+                                repo: selectedRepository.full_name.split('/')[1],
+                                path: src,
+                                branch: selectedBranch?.name,
+                            };
+                            getFile(input, searchInService!)
+                                .then(
+                                    x =>
+                                        x &&
+                                        setPrivateImageUrl(('download_url' in x && (x.download_url as string)) || ''),
+                                )
+                                .catch(() => {});
+                        }
+                        return selectedRepository?.private
+                            ? !src.includes('https') || !src.includes('http')
+                                ? privateImageUrl
+                                : src
+                            : !src.includes('https') || !src.includes('http')
+                            ? `${
+                                  searchInService?.service === 'github'
+                                      ? 'https://github.com/'
+                                      : searchInService?.service === 'gitlab'
+                                      ? searchInService.url
+                                      : ''
+                              }${selectedRepository?.full_name}/${
+                                  searchInService?.service === 'github' ? 'blob' : 'raw'
+                              }/${selectedBranch?.name}${src[0] === '/' ? '' : '/'}${src}?raw=true`
+                            : src;
+                    },
+                }}
+                commands={[
+                    Headings(commands),
+                    commands.divider,
+                    Bold(commands),
+                    Italic(commands),
+                    Through(commands),
+                    commands.divider,
+                    Comment(utils),
+                    Quotes(commands),
+                    Lists(commands),
+                    commands.divider,
+                    EditorLink(commands),
+                    EditorImage(commands),
+                    commands.divider,
+                    Code(commands),
+                    CodeBlock(commands),
+                    commands.divider,
+                    EditorColorPicker(commands, utils, handleColor, color),
+                    commands.divider,
+                    EditorDownload(handleDownload),
+                ]}
+                extraCommands={[
+                    commands.divider,
+                    FullScreen(commands),
+                    BothPreview(commands),
+                    MarkdownPreview(commands),
+                    EditPreview(commands),
+                    commands.divider,
+                    EditorHelp(commands),
+                    EditorInfo(commands),
+                    commands.divider,
+                    UserInfo(commands),
+                ]}
+            />
+        </>
+    ) : (
+        <></>
+    );
 };
