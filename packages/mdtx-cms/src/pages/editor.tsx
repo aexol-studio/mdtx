@@ -59,7 +59,7 @@ export type PullRequestsType = {
     updated_at: string;
 };
 
-type RepositoriesCollection = {
+export type RepositoriesCollection = {
     full_name: string;
     source?: { full_name: string; owner: { login: string } };
 }[];
@@ -139,13 +139,23 @@ const editor = () => {
         originalFile?: string;
         changedFile?: string;
     }>();
+    console.log(selectedRepository);
     const handlePreviewChanges = (p: { originalFile?: string; changedFile?: string }) => setPreviewChanges(p);
     const [submittingCommit, setSubmittingCommit] = useState(false);
     const [submittingPullRequest, setPullRequest] = useState(false);
     const [downloadZIP, setDownloadZIP] = useState(false);
     const [doingFork, setDoingFork] = useState(false);
     const [loadingFullTree, setLoadingFullTree] = useState(false);
-    const { searchRepository, getTree, getBranches, doCommit, doPullRequest, getPullRequests } = useGitState();
+    const {
+        getRepository,
+        searchRepository,
+        getTree,
+        getBranches,
+        doCommit,
+        doPullRequest,
+        getPullRequests,
+        getForks,
+    } = useGitState();
     const [logging, setLogging] = useState(false);
     const { error, code, state } = router.query;
     const { createConnection, getConnections } = useMDTXBackend();
@@ -292,21 +302,22 @@ const editor = () => {
             };
             const promiseBranches = getBranches(input, connection ? connection : searchInService!);
             const promisePullRequest = getPullRequests(input, connection ? connection : searchInService!);
-            // const promiseForks = getGitHubRepositoryForks(input);
-            // const promiseAboutFork = getGitHubRepositoryInfo(input);
-            const [branches, pullRequests] = await Promise.all([
+            const promiseForks = getForks(input, connection ? connection : searchInService!);
+            const promiseAboutFork = getRepository(input, connection ? connection : searchInService!);
+            const [branches, pullRequests, forks, aboutFork] = await Promise.all([
                 promiseBranches,
                 promisePullRequest,
-                // promiseForks,
-                // promiseAboutFork,
+                promiseForks,
+                promiseAboutFork,
             ]);
             if (!branches) {
                 createToast(ToastType.ERROR, 'We cannot download this repository');
                 return;
             }
             setAvailablePullRequests(pullRequests);
-            // setForksOnRepo(forks);
-            // const isForked =
+            setForksOnRepo(forks);
+            console.log(aboutFork);
+
             //   userForks?.find(
             //     (x) => x?.source?.full_name === aboutFork?.source?.full_name,
             //   ) ||

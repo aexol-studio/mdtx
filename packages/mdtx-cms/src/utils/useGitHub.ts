@@ -129,7 +129,7 @@ export const useGitHub = () => {
         return data;
     };
     //USE: FOR GET ALL REPOSITORY FORKS
-    const getGitHubRepositoryForks = async (input: { owner: string; repo: string }) => {
+    const getGitHubRepositoryForks = async (input: { owner: string; repo: string }, octokit: Octokit) => {
         const { data } = await octokit.rest.repos.listForks(input);
         if (!data) throw new Error('Bad response from getGitHubRepositoryForks()');
         return data;

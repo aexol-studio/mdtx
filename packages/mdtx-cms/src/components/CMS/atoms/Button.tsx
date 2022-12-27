@@ -6,17 +6,20 @@ interface ButtonInterface {
     customClassName?: string;
     withAnimation?: boolean;
     onClick?: () => void;
+    blocked?: boolean;
 }
 
-export const Button: React.FC<ButtonInterface> = ({ type, href, text, withAnimation, onClick }) => {
+export const Button: React.FC<ButtonInterface> = ({ type, href, text, withAnimation, onClick, blocked }) => {
     if (type && type === 'link' && !href) throw new Error('Add href tag if you want to use Link');
     return (
         <div
-            onClick={() => onClick && onClick()}
+            onClick={() => !blocked && onClick && onClick()}
             className={`${
                 withAnimation ? 'transition-all duration-300 ease-in-out' : ''
-            } after:absolute after:content-[''] after:top-0 after:left-0 after:rounded-[0.8rem] after:bg-editor-purple1 after:w-0 hover:after:w-full after:h-full 
-      relative z-[102] cursor-pointer flex justify-center items-center rounded-[0.8rem] overflow-hidden w-fit bg-editor-blue2 after:transition-all after:duration-500 after:ease-in-out`}>
+            } after:absolute after:content-[''] after:top-0 after:left-0 after:rounded-[0.8rem] after:bg-editor-purple1 after:w-0 after:h-full 
+      relative z-[102] cursor-pointer flex justify-center items-center rounded-[0.8rem] overflow-hidden w-fit ${
+          !blocked ? 'bg-editor-blue2  hover:after:w-full' : 'bg-editor-purple1'
+      } after:transition-all after:duration-500 after:ease-in-out`}>
             {type ? (
                 type === 'form' ? (
                     <input

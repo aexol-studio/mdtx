@@ -49,6 +49,7 @@ export type UserType = {
 const GitContainer = createContainer(() => {
     const {
         getGitHubRepositoryInfo,
+        getGitHubRepositoryForks,
         getGitHubSearchRepositories,
         getGitHubTree,
         getGitHubRepositoryBranch,
@@ -61,6 +62,7 @@ const GitContainer = createContainer(() => {
     const {
         getGitLabRepositoryInfo,
         getGitLabSearchRepositories,
+        getGitLabRepositoryForks,
         getGitLabTree,
         getGitLabContents,
         getGitLabRepositoryBranches,
@@ -125,8 +127,35 @@ const GitContainer = createContainer(() => {
         }
     };
 
-    const getForks = async () => {};
-
+    const getForks = async (
+        input: {
+            owner: string;
+            repo: string;
+        },
+        connection: ConnectionType,
+    ) => {
+        switch (connection.service) {
+            case '':
+                return;
+            case 'github':
+                const GitHubApi = new Octokit({
+                    auth: connection.token,
+                });
+                const githubForks = await getGitHubRepositoryForks(input, GitHubApi);
+                return githubForks;
+            case 'gitlab':
+                const host =
+                    connection.url && connection.url[connection.url.length - 1] === '/'
+                        ? connection.url?.slice(0, connection.url.length - 1)
+                        : connection.url;
+                const GitLabApi = new Gitlab({
+                    host,
+                    token: connection.token,
+                });
+                const GitLabForks = await getGitLabRepositoryForks(input, GitLabApi);
+                return GitLabForks;
+        }
+    };
     const getRepository = async (
         input: {
             owner: string;
@@ -322,6 +351,7 @@ const GitContainer = createContainer(() => {
         getFile,
         getBranches,
         getPullRequests,
+        getForks,
         doCommit,
         doPullRequest,
     };
