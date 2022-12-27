@@ -1,2 +1,2 @@
-export * from './CommitableIcon';
+export * from './CommittableIcon';
 export * from './SearchMenuIcon';

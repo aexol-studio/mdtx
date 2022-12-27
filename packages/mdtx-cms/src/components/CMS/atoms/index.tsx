@@ -13,3 +13,4 @@ export * from './AddNewFileTree';
 export * from './TitleInTree';
 export * from './DeleteFileTree';
 export * from './FolderOptionsTree';
+export * from './MenuButton';

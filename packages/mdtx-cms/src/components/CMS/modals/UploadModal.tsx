@@ -1,15 +1,14 @@
-import { useFileState } from '@/src/containers';
 import { Button } from '../atoms';
 
 interface IUploadModal {
-  file?: File;
-  handleFile: (p: File) => void;
+  images?: FileList;
+  handleImages: (p: FileList) => void;
   onUploadSubmit: () => Promise<void>;
 }
 
 export const UploadModal: React.FC<IUploadModal> = ({
-  file,
-  handleFile,
+  images,
+  handleImages,
   onUploadSubmit,
 }) => {
   return (
@@ -19,10 +18,11 @@ export const UploadModal: React.FC<IUploadModal> = ({
           UPLOAD IMAGE
         </p>
         <input
+          multiple
           onChange={(e) => {
             if (e.target.files) {
-              const singleFile = e.target.files[0];
-              handleFile(singleFile);
+              const files = e.target.files;
+              handleImages(files);
             }
           }}
           type={'file'}
@@ -30,7 +30,7 @@ export const UploadModal: React.FC<IUploadModal> = ({
         />
         <div className="w-fit">
           <Button
-            onClick={() => file && onUploadSubmit()}
+            onClick={() => images && images.length > 0 && onUploadSubmit()}
             customClassName="mt-[0.8rem]"
             text="Send"
           />

@@ -1,58 +1,49 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { createContainer } from 'unstated-next';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { ConnectionType } from '../mdtx-backend-zeus/selectors';
+type IndexModalType = 'login' | 'register' | 'forgot' | undefined;
 
-export type UserType = {
-  login: string;
-  html_url: string;
-  avatar_url: string;
-  name: string | null;
-};
+const AuthContainer = createContainer(() => {
+    const router = useRouter();
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const [token, setToken] = useLocalStorage('MDTXToken', '');
+    const [integrations, setIntegrations] = useState<ConnectionType[] | undefined>();
+    const [searchInService, setSearchInService] = useState<ConnectionType | undefined>();
+    const handleSearchInService = (p?: ConnectionType) => setSearchInService(p);
+    const [indexModal, setIndexModal] = useState<IndexModalType>();
+    const handleModal = (p: IndexModalType) => setIndexModal(p);
+    useEffect(() => {
+        if (token === '') {
+            setToken('');
+            setIsLoggedIn(false);
+        } else {
+            setIsLoggedIn(true);
+        }
+    }, [token]);
 
-const AuthConatiner = createContainer(() => {
-  const router = useRouter();
-  const [token, _setToken] = useState<string | undefined>();
-  const [loggedData, setLoggedData] = useState<UserType>();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+    const logOut = () => {
+        setToken('');
+        setIsLoggedIn(false);
+        window.localStorage.removeItem('MDTXToken');
+        router.push('/');
+    };
 
-  useEffect(() => {
-    const tok = window.localStorage.getItem('token');
-    if (tok) {
-      setToken(tok);
-      setIsLoggedIn(true);
-    }
-  }, []);
-
-  const setTokenWithLocal = (value: string) => {
-    _setToken(value);
-    setIsLoggedIn(true);
-    window.localStorage.setItem('token', value);
-  };
-
-  const setToken = (value: string) => {
-    _setToken(value);
-    setIsLoggedIn(true);
-  };
-
-  const logOut = () => {
-    setIsLoggedIn(false);
-    _setToken(undefined);
-    setLoggedData(undefined);
-    window.localStorage.removeItem('token');
-    router.push('/');
-  };
-
-  return {
-    token,
-    setToken,
-    isLoggedIn,
-    setIsLoggedIn,
-    loggedData,
-    setLoggedData,
-    setTokenWithLocal,
-    logOut,
-  };
+    return {
+        token,
+        isLoggedIn,
+        setIsLoggedIn,
+        logOut,
+        setToken,
+        indexModal,
+        handleModal,
+        integrations,
+        setIntegrations,
+        searchInService,
+        handleSearchInService,
+    };
 });
 
-export const AuthProvider = AuthConatiner.Provider;
-export const useAuthState = AuthConatiner.useContainer;
+export const AuthProvider = AuthContainer.Provider;
+export const useAuthState = AuthContainer.useContainer;
