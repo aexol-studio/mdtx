@@ -3,98 +3,98 @@
 @tailwind utilities;
 
 @layer utilities {
-  .scrollbar {
-    scrollbar-color: #005eee transparent;
-  }
-  .scrollbar::-webkit-scrollbar {
-    width: 0.4rem;
-  }
+    .scrollbar {
+        scrollbar-color: #55566d transparent;
+    }
+    .scrollbar::-webkit-scrollbar {
+        width: 0.4rem;
+    }
 
-  .scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-  }
+    .scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
-  .scrollbar::-webkit-scrollbar-thumb {
-    background: transparent;
-    background: #005eee;
-  }
+    .scrollbar::-webkit-scrollbar-thumb {
+        background: transparent;
+        background: #55566d;
+    }
 
-  .scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #477fd3;
-  }
-  .scrollbar-branch {
-    scrollbar-color: #005eee transparent;
-  }
-  .scrollbar-branch::-webkit-scrollbar {
-    width: 0.2rem;
-  }
+    .scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #8484a180;
+    }
+    .scrollbar-branch {
+        scrollbar-color: #55566d transparent;
+    }
+    .scrollbar-branch::-webkit-scrollbar {
+        width: 0.2rem;
+    }
 
-  .scrollbar-branch::-webkit-scrollbar-track {
-    background: transparent;
-  }
+    .scrollbar-branch::-webkit-scrollbar-track {
+        background: transparent;
+    }
 
-  .scrollbar-branch::-webkit-scrollbar-thumb {
-    background: transparent;
-    background: #005eee;
-  }
+    .scrollbar-branch::-webkit-scrollbar-thumb {
+        background: transparent;
+        background: #55566d;
+    }
 
-  .scrollbar-branch::-webkit-scrollbar-thumb:hover {
-    background: #477fd3;
-  }
+    .scrollbar-branch::-webkit-scrollbar-thumb:hover {
+        background: #8484a180;
+    }
 }
 
 body,
 button {
-  box-sizing: border-box;
-  overflow: auto !important;
+    box-sizing: border-box;
+    overflow: auto !important;
 }
 
 a:hover {
-  text-decoration: underline;
-  cursor: pointer;
+    text-decoration: underline;
+    cursor: pointer;
 }
 
 button,
 select {
-  cursor: pointer;
+    cursor: pointer;
 }
 
 html {
-  scroll-behavior: smooth;
-  font-size: 62.5%;
-  text-size-adjust: none;
-  -webkit-text-size-adjust: none;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+    font-size: 62.5%;
+    text-size-adjust: none;
+    -webkit-text-size-adjust: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
 }
 
 input,
 select {
-  font-size: 1.6rem;
+    font-size: 1.6rem;
 }
 
 ul {
-  list-style: none;
+    list-style: none;
 }
 
 h1 {
-  font-size: 5rem;
+    font-size: 5rem;
 }
 h2 {
-  font-size: 3.8rem;
+    font-size: 3.8rem;
 }
 h3 {
-  font-size: 3rem;
+    font-size: 3rem;
 }
 h4 {
-  font-size: 2.2rem;
+    font-size: 2.2rem;
 }
 
 p {
-  font-size: 1.6rem;
+    font-size: 1.6rem;
 }
 
 a {
-  font-size: 1.6rem;
+    font-size: 1.6rem;
 }

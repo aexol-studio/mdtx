@@ -205,6 +205,23 @@ export const Editor: React.FC = () => {
       font-family: var(--fira-font) !important;
       color: #9A99AD !important;
     }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1E1E2C;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #55566D;
+      border-radius: 8px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #9A99AD;
+    }
   `;
 
     return commands && utils ? (
@@ -221,7 +238,6 @@ export const Editor: React.FC = () => {
                             : ''
                         : markdownValue
                 }
-                highlightEnable={false}
                 onChange={e => {
                     !!pickedFilePath ? setSelectedFileContentByPath(e ? e : '') : setMarkdownValue(e);
                 }}
