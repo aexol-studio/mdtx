@@ -31,9 +31,6 @@ export interface MenuInterface {
     handleRepositoryPick: (item: RepositoryFromSearch, connection?: ConnectionType) => Promise<boolean | undefined>;
     includeForks: boolean;
     setIncludeForks: React.Dispatch<React.SetStateAction<boolean>>;
-    forksOnRepo?: {
-        full_name: string;
-    }[];
     searchingMode: SearchingType;
     setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
     handleUploadModal: (p: boolean) => void;
@@ -58,7 +55,6 @@ export const Menu: React.FC<MenuInterface> = ({
     handleRepositoryPick,
     includeForks,
     setIncludeForks,
-    forksOnRepo,
     searchingMode,
     setSearchingMode,
     handleUploadModal,
@@ -71,7 +67,6 @@ export const Menu: React.FC<MenuInterface> = ({
     const { selectedRepository, selectedBranch } = useRepositoryState();
     const { modifiedFiles, files } = useFileState();
     const { integrations, setIntegrations } = useAuthState();
-    // const { loggedData } = useAuthState();
     const { addRepository, getConnections } = useMDTXBackend();
 
     const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
@@ -281,20 +276,6 @@ export const Menu: React.FC<MenuInterface> = ({
                                         </p>
 
                                         <div className="mt-[0.4rem]" />
-                                        {/* {selectedRepository?.full_name.includes(
-                      loggedData ? loggedData.login : '',
-                    ) ? (
-                      <p className="select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
-                        Owner: <span className="text-editor-light1">You</span>
-                      </p>
-                    ) : (
-                      <p className="select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
-                        Owner:{' '}
-                        <span className="text-editor-light1">
-                          {selectedRepository?.owner?.login}
-                        </span>
-                      </p>
-                    )} */}
 
                                         <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
                                             Original repository:{' '}
@@ -302,22 +283,6 @@ export const Menu: React.FC<MenuInterface> = ({
                                                 {!selectedRepository?.fork ? 'yes' : 'no'}
                                             </span>
                                         </p>
-                                        {/* {forksOnRepo?.find((x) =>
-                      x.full_name.includes(loggedData ? loggedData.login : ''),
-                    ) && (
-                      <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
-                        Already forked by logged user:{' '}
-                        <span className="text-editor-light1">yes</span>
-                      </p>
-                    )} */}
-                                        {/* {!selectedRepository?.full_name.includes(
-                      loggedData ? loggedData.login : '',
-                    ) && (
-                      <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
-                        Is your repository:{' '}
-                        <span className="text-editor-light1">no</span>
-                      </p>
-                    )} */}
                                         {canBeAdded && (
                                             <p
                                                 onClick={async () => {

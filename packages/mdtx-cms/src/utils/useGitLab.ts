@@ -7,13 +7,23 @@ import { ConnectionType } from '../mdtx-backend-zeus/selectors';
 import { PullRequestsType, RepositoriesCollection } from '../pages/editor';
 
 export const useGitLab = () => {
+    const getGitLabUser = async (gitlab: Gitlab<false>) => {
+        try {
+            const response = await gitlab.Users.current();
+            if (!response) throw new Error('Bad response from getGitLabUser()');
+            console.log(response);
+            return response;
+        } catch {
+            throw new Error('Something went wrong');
+        }
+    };
+
     const getGitLabSearchRepositories = async (
         input: { searchQuery: string },
         signal: AbortSignal,
         gitlab: Gitlab<false>,
     ): Promise<RepositoryFromSearch[] | undefined> => {
         const response = await gitlab.Projects.search(input.searchQuery);
-        console.log('🚀 ~ file: useGitLab.ts:16 ~ useGitLab ~ response', response);
         if (!response) return;
         if (response.length) {
             return response.map(obj => {
@@ -380,5 +390,6 @@ export const useGitLab = () => {
         createPullRequestOnGitLab,
         requestForAccess,
         doGitLabFork,
+        getGitLabUser,
     };
 };

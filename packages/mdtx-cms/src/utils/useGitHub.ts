@@ -53,12 +53,11 @@ export const useGitHub = () => {
             if (!response) throw new Error('Bad response from getGitHubToken()');
             return await response.json();
         } catch {
-            logOut();
             throw new Error('Something went wrong');
         }
     };
     //USE: FOR GET USER INFO
-    const getGitHubUser = async () => {
+    const getGitHubUser = async (octokit: Octokit) => {
         try {
             const { data } = await octokit.rest.users.getAuthenticated();
             if (!data) throw new Error('Bad response from getGitHubUser()');
@@ -176,12 +175,11 @@ export const useGitHub = () => {
 
     const getGitHubAfterLoginInfo = async () => {
         try {
-            const promiseUserInfo = getGitHubUser();
+            // const promiseUserInfo = getGitHubUser();
             const promiseOrganisations = getGitHubUserOrganisationsInfo();
             const promiseUserRepos = getGitHubUserRepositoriesInfo();
-            const [user, orgs, repos] = await Promise.all([promiseUserInfo, promiseOrganisations, promiseUserRepos]);
+            const [orgs, repos] = await Promise.all([promiseOrganisations, promiseUserRepos]);
             return {
-                user,
                 orgs,
                 repos,
             };

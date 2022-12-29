@@ -85,15 +85,29 @@ const editor = () => {
     const [menuType, setMenuType] = useState<MenuType | undefined>(MenuType.SEARCH);
     const handleMenuType = (p?: MenuType) => setMenuType(p);
     const router = useRouter();
+    const { error, code, state } = router.query;
+    const { isLoggedIn, integrations, setIntegrations, handleSearchInService, searchInService, logOut } =
+        useAuthState();
     const { createToast } = useToasts();
 
-    const { getGitHubToken, getGitHubAfterLoginInfo, doGitHubFork } = useGitHub();
-    const { setFiles, setOriginalFiles, originalFiles, isFilesTouched, modifiedFiles, deletions, resetState } =
-        useFileState();
-
-    const { isLoggedIn, integrations } = useAuthState();
+    const { createConnection, getConnections } = useMDTXBackend();
+    const { getGitHubToken } = useGitHub();
 
     const { selectedRepository, handleRepository, selectedBranch, handleBranch } = useRepositoryState();
+    const {
+        getRepository,
+        searchRepository,
+        getTree,
+        getBranches,
+        doCommit,
+        doPullRequest,
+        getPullRequests,
+        getForks,
+        doFork,
+        getCurrentUser,
+    } = useGitState();
+    const { setFiles, setOriginalFiles, originalFiles, isFilesTouched, modifiedFiles, deletions, resetState } =
+        useFileState();
 
     const {
         control: controlCommit,
@@ -114,9 +128,6 @@ const editor = () => {
 
     const [includeForks, setIncludeForks] = useState(true);
     const [foundedFork, setFoundedFork] = useState(false);
-    const [forksOnRepo, setForksOnRepo] = useState<RepositoriesCollection>();
-    const [userRepos, setUserRepos] = useState<RepositoriesCollection>();
-    const [userForks, setUserForks] = useState<RepositoriesCollection>();
 
     const [images, setImages] = useState<FileList>();
     const handleImages = (p: FileList) => setImages(p);
@@ -139,28 +150,15 @@ const editor = () => {
         originalFile?: string;
         changedFile?: string;
     }>();
-    console.log(selectedRepository);
     const handlePreviewChanges = (p: { originalFile?: string; changedFile?: string }) => setPreviewChanges(p);
     const [submittingCommit, setSubmittingCommit] = useState(false);
     const [submittingPullRequest, setPullRequest] = useState(false);
     const [downloadZIP, setDownloadZIP] = useState(false);
     const [doingFork, setDoingFork] = useState(false);
     const [loadingFullTree, setLoadingFullTree] = useState(false);
-    const {
-        getRepository,
-        searchRepository,
-        getTree,
-        getBranches,
-        doCommit,
-        doPullRequest,
-        getPullRequests,
-        getForks,
-        doFork,
-    } = useGitState();
+
     const [logging, setLogging] = useState(false);
-    const { error, code, state } = router.query;
-    const { createConnection, getConnections } = useMDTXBackend();
-    const { setIntegrations, handleSearchInService, searchInService, logOut } = useAuthState();
+
     useEffect(() => {
         if (error) logOut();
         if (!integrations) {
@@ -215,33 +213,6 @@ const editor = () => {
     //     // return () => window.removeEventListener('beforeunload', unloadCallback);
     //   }
     // }, [isLoggedIn]);
-    const afterLoginInfo = async () => {
-        if (isLoggedIn) {
-            router.replace('/editor');
-            const { orgs, repos, user } = await getGitHubAfterLoginInfo();
-            setOrganizations(orgs);
-            setUserRepos(repos);
-            const tempArr: {
-                full_name: string;
-                source?: { full_name: string; owner: { login: string } };
-            }[] = [];
-            // Promise.all(
-            //   repos
-            //     .filter((x) => x.fork)
-            //     .map(async (z: { full_name: string }) => {
-            //       const response = await getGitHubRepositoryInfo({
-            //         owner: z.full_name.split('/')[0],
-            //         repo: z.full_name.split('/')[1],
-            //       });
-            //       if (response) {
-            //         tempArr.push(response);
-            //       }
-            //     }),
-            // );
-            setUserForks(tempArr);
-            setLogging(false);
-        }
-    };
 
     const zipController = new AbortController();
     const confirmBranchClick = async (
@@ -305,33 +276,37 @@ const editor = () => {
             const promisePullRequest = getPullRequests(input, connection ? connection : searchInService!);
             const promiseForks = getForks(input, connection ? connection : searchInService!);
             const promiseAboutFork = getRepository(input, connection ? connection : searchInService!);
-            const [branches, pullRequests, forks, aboutFork] = await Promise.all([
+            const promiseUser = getCurrentUser(connection ? connection : searchInService!);
+
+            const [branches, pullRequests, forks, aboutFork, user] = await Promise.all([
                 promiseBranches,
                 promisePullRequest,
                 promiseForks,
                 promiseAboutFork,
+                promiseUser,
             ]);
+            console.log('🚀 ~ file: editor.tsx:311 ~ handleRepositoryPick ~ forks', forks);
+            console.log('🚀 ~ file: editor.tsx:310 ~ handleRepositoryPick ~ aboutFork', aboutFork);
+            console.log('🚀 ~ file: editor.tsx:310 ~ handleRepositoryPick ~ user', user);
             if (!branches) {
                 createToast(ToastType.ERROR, 'We cannot download this repository');
                 return;
             }
             setAvailablePullRequests(pullRequests);
-            setForksOnRepo(forks);
-            console.log(aboutFork);
+            if (forks?.length) {
+                if (user)
+                    forks.forEach(fork => {
+                        const userNameFromFork = fork.full_name;
+                        const userName: string =
+                            'login' in user ? (user.login as string) : 'username' in user ? user.username : '';
+                        if (userNameFromFork.includes(userName)) {
+                            setFoundedFork(true);
+                        }
+                    });
+            } else {
+                setFoundedFork(false);
+            }
 
-            //   userForks?.find(
-            //     (x) => x?.source?.full_name === aboutFork?.source?.full_name,
-            //   ) ||
-            //   userForks?.find((x) => x?.source?.full_name === item.full_name) ||
-            //   item.full_name === aboutFork?.source?.full_name;
-            // if (
-            //   !!isForked ||
-            //   !!userRepos?.find((x) => x.full_name === item.full_name)
-            // ) {
-            //   setFoundedFork(true);
-            // } else {
-            //   setFoundedFork(false);
-            // }
             if (branches.length) {
                 setDownloadModal(true);
                 setAvailableBranches(branches);
@@ -567,7 +542,6 @@ const editor = () => {
                     setRepositoryTree={setRepositoryTree}
                     searchingMode={searchingMode}
                     setSearchingMode={setSearchingMode}
-                    forksOnRepo={forksOnRepo}
                     includeForks={includeForks}
                     setIncludeForks={setIncludeForks}
                     backToSearch={backToSearch}

@@ -180,7 +180,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                                     </div>
                                 </div>
                             )}
-                            {!foundedFork && (
+                            {!foundedFork && !selectedRepository?.permissions?.admin && (
                                 <p className="w-fit mt-[1.6rem] text-editor-purple2 text-[1.6rem] font-[400] select-none">
                                     Need more access?{' '}
                                     <span

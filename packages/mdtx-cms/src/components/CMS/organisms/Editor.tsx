@@ -147,8 +147,8 @@ export const Editor: React.FC = () => {
     #headings > button:focus,
     #headings > button:hover,
     #headings > button:active {
-      background-color: #272839 !important;
-      color: #272839 !important;
+      background-color: #FFFFFF20 !important;
+      color: #FFFFFF20 !important;
     }
     #headings > div {
       width: 16rem;
