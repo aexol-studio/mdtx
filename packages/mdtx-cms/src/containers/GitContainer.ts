@@ -60,6 +60,7 @@ const GitContainer = createContainer(() => {
         createPullRequestOnGitHub,
         doGitHubFork,
         getGitHubUser,
+        getGitHubUserRepositoriesInfo,
     } = useGitHub();
     const {
         getGitLabRepositoryInfo,
@@ -73,6 +74,7 @@ const GitContainer = createContainer(() => {
         createPullRequestOnGitLab,
         doGitLabFork,
         getGitLabUser,
+        getGitLabUserRepositories,
     } = useGitLab();
 
     const getCurrentUser = async (connection: ConnectionType) => {
@@ -98,7 +100,29 @@ const GitContainer = createContainer(() => {
                 return gitlabUser;
         }
     };
-
+    const getRepositoriesForCurrentUser = async (connection: ConnectionType, input?: { userID: number }) => {
+        switch (connection.service) {
+            case 'none':
+                return;
+            case 'github':
+                const GitHubApi = new Octokit({
+                    auth: connection.token,
+                });
+                const githubUserRepositories = await getGitHubUserRepositoriesInfo(GitHubApi);
+                return githubUserRepositories;
+            case 'gitlab':
+                const host =
+                    connection.url && connection.url[connection.url.length - 1] === '/'
+                        ? connection.url?.slice(0, connection.url.length - 1)
+                        : connection.url;
+                const GitLabApi = new Gitlab({
+                    host,
+                    token: connection.token,
+                });
+                const gitlabUserRepositories = await getGitLabUserRepositories({ userID: input!.userID }, GitLabApi);
+                return gitlabUserRepositories;
+        }
+    };
     const searchRepository = async (
         input: { searchQuery: string },
         signal: AbortSignal,
@@ -415,6 +439,7 @@ const GitContainer = createContainer(() => {
         doFork,
         doPullRequest,
         getCurrentUser,
+        getRepositoriesForCurrentUser,
     };
 });
 

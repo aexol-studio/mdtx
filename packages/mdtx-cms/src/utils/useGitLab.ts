@@ -378,6 +378,40 @@ export const useGitLab = () => {
         if (!response) throw new Error('Something went wrong while doing doGitLabFork');
         return response;
     };
+
+    const getGitLabUserRepositories = async (input: { userID: number }, gitlabApi: Gitlab<false>) => {
+        const response = await gitlabApi.Users.projects(input.userID);
+        if (!response) throw new Error('Something went wrong while getting getGitLabUserRepositories');
+        if (response.length > 0) {
+            return response.map(obj => {
+                return {
+                    name: obj.name,
+                    full_name: obj.path_with_namespace,
+                    default_branch: obj.default_branch || 'develop',
+                    id: obj.id,
+                    node_id: String(obj.id),
+                    fork: obj.forks_count > 0,
+                    private: false,
+                    owner: {
+                        avatar_url: obj.avatar_url || obj.namespace.avatar_url || '',
+                        login: obj.namespace.path,
+                        type: obj.namespace.kind,
+                    },
+                    permissions: {
+                        admin: obj.owner
+                            ? true
+                            : //@ts-ignore
+                            obj.permissions.group_access && obj.permissions.project_access
+                            ? true
+                            : false,
+                        //@ts-ignore
+                        gitlabPermission: obj.permissions.project_access ? true : false,
+                    },
+                };
+            });
+        }
+    };
+
     return {
         getGitLabSearchRepositories,
         getGitLabRepositoryInfo,
@@ -391,5 +425,6 @@ export const useGitLab = () => {
         requestForAccess,
         doGitLabFork,
         getGitLabUser,
+        getGitLabUserRepositories,
     };
 };

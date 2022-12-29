@@ -1,3 +1,4 @@
+import { ConnectionType } from '@/src/mdtx-backend-zeus/selectors';
 import { useState } from 'react';
 import { createContainer } from 'unstated-next';
 
@@ -23,6 +24,8 @@ export type RepositoryFromSearch = {
         gitlabPermission?: boolean;
     };
 };
+
+export type RepositoryFromSearchWithIntegration = RepositoryFromSearch & ConnectionType;
 
 export type availableBranchType = {
     commit: {

@@ -6,3 +6,4 @@ export * from './OverlayMenu';
 export * from './BranchSelector';
 export * from './SettingsSection';
 export * from './FavouritesSection';
+export * from './RepositoriesFromIntegrationsSection';

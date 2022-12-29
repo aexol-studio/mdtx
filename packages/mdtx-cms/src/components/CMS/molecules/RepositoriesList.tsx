@@ -1,4 +1,5 @@
 import { RepositoryFromSearch } from '@/src/containers';
+import { ConnectionType } from '@/src/mdtx-backend-zeus/selectors';
 import Image from 'next/image';
 
 export const RepositoriesList: React.FC<{

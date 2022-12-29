@@ -68,7 +68,7 @@ export const useGitHub = () => {
         }
     };
     //USE: FOR GET USER REPOSITORIES INFO
-    const getGitHubUserRepositoriesInfo = async () => {
+    const getGitHubUserRepositoriesInfo = async (octokit: Octokit) => {
         const { data } = await octokit.rest.repos.listForAuthenticatedUser({
             sort: 'updated',
             per_page: 100,
@@ -171,21 +171,6 @@ export const useGitHub = () => {
         });
         if (!data) throw new Error('Bad response from getTree()');
         return data;
-    };
-
-    const getGitHubAfterLoginInfo = async () => {
-        try {
-            // const promiseUserInfo = getGitHubUser();
-            const promiseOrganisations = getGitHubUserOrganisationsInfo();
-            const promiseUserRepos = getGitHubUserRepositoriesInfo();
-            const [orgs, repos] = await Promise.all([promiseOrganisations, promiseUserRepos]);
-            return {
-                orgs,
-                repos,
-            };
-        } catch {
-            throw new Error('Bad response from getGitHubAfterLoginInfo()');
-        }
     };
 
     const createCommitOnGitHub = async (
@@ -313,7 +298,6 @@ export const useGitHub = () => {
         getGitHubToken,
         getGitHubUser,
         getGitHubRepositoryInfo,
-        getGitHubAfterLoginInfo,
         getGitHubUserRepositoriesInfo,
         getGitHubUserOrganisationsInfo,
         getGitHubRepositoryBranches,

@@ -23,6 +23,7 @@ import {
     RepositoryFromSearch,
     availableBranchType,
     useRepositoryState,
+    RepositoryFromSearchWithIntegration,
 } from '../containers';
 import { Layout } from '../layouts';
 import { useGitHub } from '../utils';
@@ -79,6 +80,7 @@ export enum MenuType {
     COMMITTABLE = 'COMMITTABLE',
     SETTINGS = 'SETTINGS',
     FAVORITES = 'FAVORITES',
+    INTEGRATIONSREPOS = 'INTEGRATIONSREPOS',
 }
 
 const editor = () => {
@@ -105,6 +107,7 @@ const editor = () => {
         getForks,
         doFork,
         getCurrentUser,
+        getRepositoriesForCurrentUser,
     } = useGitState();
     const { setFiles, setOriginalFiles, originalFiles, isFilesTouched, modifiedFiles, deletions, resetState } =
         useFileState();
@@ -156,17 +159,38 @@ const editor = () => {
     const [downloadZIP, setDownloadZIP] = useState(false);
     const [doingFork, setDoingFork] = useState(false);
     const [loadingFullTree, setLoadingFullTree] = useState(false);
-
+    const [allRepositoriesFromIntegrations, setAllRepositoriesFromIntegrations] = useState<RepositoryFromSearch[]>();
+    const handleAllRepositoriesFromIntegrations = (p: RepositoryFromSearch[]) => setAllRepositoriesFromIntegrations(p);
     const [logging, setLogging] = useState(false);
 
     useEffect(() => {
         if (error) logOut();
         if (!integrations) {
-            getConnections().then(res => {
+            setLogging(true);
+            getConnections().then(async res => {
                 setIntegrations(res);
-                if (res) handleSearchInService(res[0]);
+                if (res) {
+                    handleSearchInService(res[0]);
+                    const userRepositoriesForAllIntegrations = await Promise.all(
+                        res.map(async o => {
+                            const promiseUser = await getCurrentUser(o);
+                            if (promiseUser) {
+                                const response = await getRepositoriesForCurrentUser(o, {
+                                    userID: promiseUser.id,
+                                });
+                                return response;
+                            }
+                        }),
+                    );
+                    setLogging(false);
+
+                    const tempArr: RepositoryFromSearch[] = [];
+                    userRepositoriesForAllIntegrations.map(o => o && tempArr.push(...o));
+                    handleAllRepositoriesFromIntegrations(tempArr);
+                }
             });
         }
+
         if (state && state.includes('SETTINGS')) handleMenuType(MenuType.SETTINGS);
         if (state && state.includes('GITHUB')) {
             if (code) {
@@ -285,26 +309,34 @@ const editor = () => {
                 promiseAboutFork,
                 promiseUser,
             ]);
-            console.log('🚀 ~ file: editor.tsx:311 ~ handleRepositoryPick ~ forks', forks);
-            console.log('🚀 ~ file: editor.tsx:310 ~ handleRepositoryPick ~ aboutFork', aboutFork);
-            console.log('🚀 ~ file: editor.tsx:310 ~ handleRepositoryPick ~ user', user);
+            setAvailablePullRequests(pullRequests);
+
+            if (allRepositoriesFromIntegrations) {
+                allRepositoriesFromIntegrations.forEach(o => {
+                    const repoName = o.full_name.split('/')[1];
+                    if (aboutFork?.full_name.split('/')[1] === repoName) {
+                        setFoundedFork(true);
+                    }
+                });
+            }
             if (!branches) {
                 createToast(ToastType.ERROR, 'We cannot download this repository');
                 return;
             }
-            setAvailablePullRequests(pullRequests);
-            if (forks?.length) {
-                if (user)
-                    forks.forEach(fork => {
-                        const userNameFromFork = fork.full_name;
-                        const userName: string =
-                            'login' in user ? (user.login as string) : 'username' in user ? user.username : '';
-                        if (userNameFromFork.includes(userName)) {
-                            setFoundedFork(true);
-                        }
-                    });
-            } else {
-                setFoundedFork(false);
+            if (!foundedFork) {
+                if (forks?.length) {
+                    if (user)
+                        forks.forEach(fork => {
+                            const userNameFromFork = fork.full_name;
+                            const userName: string =
+                                'login' in user ? (user.login as string) : 'username' in user ? user.username : '';
+                            if (userNameFromFork.includes(userName)) {
+                                setFoundedFork(true);
+                            }
+                        });
+                } else {
+                    setFoundedFork(false);
+                }
             }
 
             if (branches.length) {
@@ -532,6 +564,7 @@ const editor = () => {
             )}
             <div className="z-[100]">
                 <Menu
+                    allRepositoriesFromIntegrations={allRepositoriesFromIntegrations}
                     menuType={menuType}
                     handleMenuType={handleMenuType}
                     searchInService={searchInService}

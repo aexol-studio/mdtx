@@ -6,6 +6,7 @@ import { LogoInEditor, MenuButton } from '../atoms';
 import {
     FavoritesSection,
     MenuSearchSection,
+    RepositoriesFromIntegrationsSection,
     RepositoriesList,
     RepositoryTree,
     SearchingType,
@@ -25,6 +26,7 @@ export interface MenuInterface {
     setOpenMenu: (p: boolean) => void;
     loadingFullTree: boolean;
     repositoriesFromSearch?: RepositoryFromSearch[];
+    allRepositoriesFromIntegrations?: RepositoryFromSearch[];
     backToSearch: () => void;
     repositoryTree?: TreeMenu;
     setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
@@ -42,6 +44,7 @@ export interface MenuInterface {
 }
 
 export const Menu: React.FC<MenuInterface> = ({
+    allRepositoriesFromIntegrations,
     committableMenu: committableMenu,
     autoCompleteValue,
     setAutoCompleteValue,
@@ -174,6 +177,24 @@ export const Menu: React.FC<MenuInterface> = ({
                             badgeValue={favLength}>
                             <FavoritesIcon />
                         </MenuButton>
+                        <MenuButton
+                            withSpacing
+                            blocked={!allRepositoriesFromIntegrations?.length}
+                            menuState={menuType === MenuType.INTEGRATIONSREPOS}
+                            onClick={() => {
+                                if (allRepositoriesFromIntegrations?.length) {
+                                    if (!openMenu) {
+                                        setOpenMenu(true);
+                                    }
+                                    if (openMenu && menuType === MenuType.INTEGRATIONSREPOS) {
+                                        setOpenMenu(false);
+                                        handleMenuType(undefined);
+                                    }
+                                    handleMenuType(MenuType.INTEGRATIONSREPOS);
+                                }
+                            }}>
+                            <FavoritesIcon />
+                        </MenuButton>
                     </div>
 
                     <SettingsSection
@@ -183,6 +204,11 @@ export const Menu: React.FC<MenuInterface> = ({
                     <FavoritesSection
                         handleRepositoryPick={handleRepositoryPick}
                         active={openMenu && menuType === MenuType.FAVORITES}
+                    />
+                    <RepositoriesFromIntegrationsSection
+                        handleRepositoryPick={handleRepositoryPick}
+                        active={openMenu && menuType === MenuType.INTEGRATIONSREPOS}
+                        allRepositoriesFromIntegrations={allRepositoriesFromIntegrations}
                     />
                     <div
                         className={`${
