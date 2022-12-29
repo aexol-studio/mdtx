@@ -58,6 +58,7 @@ const GitContainer = createContainer(() => {
         getGitHubRepositoryPullRequests,
         createCommitOnGitHub,
         createPullRequestOnGitHub,
+        doGitHubFork,
     } = useGitHub();
     const {
         getGitLabRepositoryInfo,
@@ -69,6 +70,7 @@ const GitContainer = createContainer(() => {
         getGitLabRepositoryPullRequests,
         createCommitOnGitLab,
         createPullRequestOnGitLab,
+        doGitLabFork,
     } = useGitLab();
     const searchRepository = async (
         input: { searchQuery: string },
@@ -126,7 +128,37 @@ const GitContainer = createContainer(() => {
                 return GitLabTree;
         }
     };
-
+    const doFork = async (
+        input: {
+            owner: string;
+            repo: string;
+        },
+        connection: ConnectionType,
+    ) => {
+        switch (connection.service) {
+            case '':
+                return;
+            case 'github':
+                const GitHubApi = new Octokit({
+                    auth: connection.token,
+                });
+                const githubFork = await doGitHubFork(input, GitHubApi);
+                if (!githubFork) return false;
+                return true;
+            case 'gitlab':
+                const host =
+                    connection.url && connection.url[connection.url.length - 1] === '/'
+                        ? connection.url?.slice(0, connection.url.length - 1)
+                        : connection.url;
+                const GitLabApi = new Gitlab({
+                    host,
+                    token: connection.token,
+                });
+                const GitLabFork = await doGitLabFork(input, GitLabApi);
+                if (!GitLabFork) return false;
+                return true;
+        }
+    };
     const getForks = async (
         input: {
             owner: string;
@@ -353,6 +385,7 @@ const GitContainer = createContainer(() => {
         getPullRequests,
         getForks,
         doCommit,
+        doFork,
         doPullRequest,
     };
 });

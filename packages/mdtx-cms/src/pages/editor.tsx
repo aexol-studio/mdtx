@@ -155,6 +155,7 @@ const editor = () => {
         doPullRequest,
         getPullRequests,
         getForks,
+        doFork,
     } = useGitState();
     const [logging, setLogging] = useState(false);
     const { error, code, state } = router.query;
@@ -456,10 +457,13 @@ const editor = () => {
         if (isLoggedIn) {
             setDoingFork(true);
             createToast(ToastType.MESSAGE, 'Creating fork!');
-            doGitHubFork({
-                owner: fullName.split('/')[0],
-                repo: fullName.split('/')[1],
-            }).then(response => {
+            doFork(
+                {
+                    owner: fullName.split('/')[0],
+                    repo: fullName.split('/')[1],
+                },
+                searchInService!,
+            ).then(response => {
                 if (response) {
                     createToast(ToastType.SUCCESS, 'Fork created!');
                     setAutoCompleteValue('');

@@ -2,14 +2,29 @@ import React from 'react';
 
 export const CommittableIcon = () => {
     return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-                d="M13 7L11.8845 4.76892C11.5634 4.1268 11.4029 3.80573 11.1634 3.57116C10.9516 3.36373 10.6963 3.20597 10.4161 3.10931C10.0992 3 9.74021 3 9.02229 3H5.2C4.0799 3 3.51984 3 3.09202 3.21799C2.71569 3.40973 2.40973 3.71569 2.21799 4.09202C2 4.51984 2 5.0799 2 6.2V7M2 7H17.2C18.8802 7 19.7202 7 20.362 7.32698C20.9265 7.6146 21.3854 8.07354 21.673 8.63803C22 9.27976 22 10.1198 22 11.8V16.2C22 17.8802 22 18.7202 21.673 19.362C21.3854 19.9265 20.9265 20.3854 20.362 20.673C19.7202 21 18.8802 21 17.2 21H6.8C5.11984 21 4.27976 21 3.63803 20.673C3.07354 20.3854 2.6146 19.9265 2.32698 19.362C2 18.7202 2 17.8802 2 16.2V7ZM9 14L11 16L15.5 11.5"
-                stroke="#E1E5EE"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g clipPath="url(#clip0_306_5003)">
+                <path
+                    d="M6.12399 2.99992C3.66457 4.36465 2 6.98789 2 9.99992C2 13.7276 4.54955 16.8598 8 17.7479M14 16.9297C16.3912 15.5464 18 12.961 18 9.99992C18 6.27224 15.4505 3.14004 12 2.25195"
+                    stroke="#E1E5EE"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                />
+                <path d="M7 5L7 2L4 2" stroke="#E1E5EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                    d="M13 8L8.5 12L7 10"
+                    stroke="#E1E5EE"
+                    strokeWidth="1.66667"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                <path d="M13 15V18H16" stroke="#E1E5EE" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </g>
+            <defs>
+                <clipPath id="clip0_306_5003">
+                    <rect width="20" height="20" fill="white" />
+                </clipPath>
+            </defs>
         </svg>
     );
 };

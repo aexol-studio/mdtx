@@ -5,7 +5,6 @@ export * from './LogoInEditor';
 export * from './Selects';
 export * from './Input';
 export * from './PermissionsTable';
-export * from './PullRequestView';
 export * from './ColorPicker';
 export * from './FileInTree';
 export * from './FolderInTree';

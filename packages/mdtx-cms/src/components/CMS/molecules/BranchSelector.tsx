@@ -5,7 +5,6 @@ import { useGitLab } from '@/src/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { off } from 'process';
 import React, { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
 import { Button, PermissionsTable, SelectBranch } from '../atoms';
@@ -181,7 +180,7 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                                     </div>
                                 </div>
                             )}
-                            {searchInService?.service === 'github' && !foundedFork && (
+                            {!foundedFork && (
                                 <p className="w-fit mt-[1.6rem] text-editor-purple2 text-[1.6rem] font-[400] select-none">
                                     Need more access?{' '}
                                     <span

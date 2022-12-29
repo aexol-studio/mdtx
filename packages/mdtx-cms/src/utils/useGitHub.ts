@@ -135,7 +135,7 @@ export const useGitHub = () => {
         return data;
     };
     //USE: FOR FORK
-    const doGitHubFork = async (input: { owner: string; repo: string }) => {
+    const doGitHubFork = async (input: { owner: string; repo: string }, octokit: Octokit) => {
         const { data } = await octokit.rest.repos.createFork(input);
         if (!data) throw new Error('Bad response from doGitHubFork()');
         return data;

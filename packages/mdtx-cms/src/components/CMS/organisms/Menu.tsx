@@ -12,7 +12,7 @@ import {
     SettingsSection,
 } from '../molecules';
 import Image from 'next/image';
-import { CommittableIcon, SearchMenuIcon } from '@/src/assets/menu-icons';
+import { CommittableIcon, FavoritesIcon, SearchMenuIcon } from '@/src/assets/menu-icons';
 import { MenuModalType, MenuType } from '@/src/pages/editor';
 import { ConnectionType } from '@/src/mdtx-backend-zeus/selectors';
 import { useMDTXBackend } from '@/src/utils/useMDTXBackend';
@@ -177,7 +177,7 @@ export const Menu: React.FC<MenuInterface> = ({
                                 }
                             }}
                             badgeValue={favLength}>
-                            <FolderIcon />
+                            <FavoritesIcon />
                         </MenuButton>
                     </div>
 

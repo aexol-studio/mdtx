@@ -138,7 +138,6 @@ export const Editor: React.FC = () => {
       flex-direction: column;
       justify-content: start;
       align-items: start;
-      width: 100%;
       gap: 0.8rem;
       padding: 0.4rem 0;
     }
@@ -165,7 +164,6 @@ export const Editor: React.FC = () => {
       box-shadow: 0 1px 0 1px #9A99AD, 0 0 0 #9A99AD, 0 1px 1px #9A99AD;
     }
     #headings > div > div > ul > li {
-      width: 100%;
       padding: 0.4rem 0 0.2rem 0;
     }
     #lists > div {

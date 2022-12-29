@@ -357,7 +357,17 @@ export const useGitLab = () => {
             }
         }
     };
-
+    const doGitLabFork = async (
+        input: {
+            owner: string;
+            repo: string;
+        },
+        gitlabApi: Gitlab<false>,
+    ) => {
+        const response = await gitlabApi.Projects.fork(`${input.owner}/${input.repo}`);
+        if (!response) throw new Error('Something went wrong while doing doGitLabFork');
+        return response;
+    };
     return {
         getGitLabSearchRepositories,
         getGitLabRepositoryInfo,
@@ -369,5 +379,6 @@ export const useGitLab = () => {
         createCommitOnGitLab,
         createPullRequestOnGitLab,
         requestForAccess,
+        doGitLabFork,
     };
 };
