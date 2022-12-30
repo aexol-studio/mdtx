@@ -1,6 +1,6 @@
 import { CloseIconSvg } from '@/src/assets';
 import { useOutsideClick } from '@/src/hooks/useOutsideClick';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export const Modal: React.FC<{
     children: React.ReactNode;
@@ -9,6 +9,14 @@ export const Modal: React.FC<{
     customClassName?: string;
 }> = ({ children, closeFnc, customClassName, blockingState }) => {
     const ref = useRef<HTMLDivElement>(null);
+    const handleUserKeyPress = (event: any) => {
+        const { key } = event;
+        if (key === 'Escape') !blockingState && closeFnc();
+    };
+    useEffect(() => {
+        window.addEventListener('keydown', handleUserKeyPress);
+        return () => window.removeEventListener('keydown', handleUserKeyPress);
+    });
     useOutsideClick(ref, () => !blockingState && closeFnc());
     return (
         <div

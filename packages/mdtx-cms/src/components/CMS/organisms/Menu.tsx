@@ -1,18 +1,25 @@
 import { Chevron, FolderIcon, ImageIcon, SettingsIcon } from '@/src/assets';
-import { RepositoryFromSearch, useAuthState, useFileState, useRepositoryState } from '@/src/containers';
+import {
+    RepositoriesFromUserWithIntegration,
+    RepositoryFromSearch,
+    useAuthState,
+    useFileState,
+    useRepositoryState,
+} from '@/src/containers';
 import { TreeMenu } from '@/src/utils/treeBuilder';
 import { PulseLoader } from 'react-spinners';
 import { LogoInEditor, MenuButton } from '../atoms';
 import {
     FavoritesSection,
     MenuSearchSection,
+    RepositoriesFromIntegrationsSection,
     RepositoriesList,
     RepositoryTree,
     SearchingType,
     SettingsSection,
 } from '../molecules';
 import Image from 'next/image';
-import { CommittableIcon, SearchMenuIcon } from '@/src/assets/menu-icons';
+import { CommittableIcon, FavoritesIcon, SearchMenuIcon } from '@/src/assets/menu-icons';
 import { MenuModalType, MenuType } from '@/src/pages/editor';
 import { ConnectionType } from '@/src/mdtx-backend-zeus/selectors';
 import { useMDTXBackend } from '@/src/utils/useMDTXBackend';
@@ -25,15 +32,13 @@ export interface MenuInterface {
     setOpenMenu: (p: boolean) => void;
     loadingFullTree: boolean;
     repositoriesFromSearch?: RepositoryFromSearch[];
+    allRepositoriesFromIntegrations?: RepositoriesFromUserWithIntegration[];
     backToSearch: () => void;
     repositoryTree?: TreeMenu;
     setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
     handleRepositoryPick: (item: RepositoryFromSearch, connection?: ConnectionType) => Promise<boolean | undefined>;
     includeForks: boolean;
     setIncludeForks: React.Dispatch<React.SetStateAction<boolean>>;
-    forksOnRepo?: {
-        full_name: string;
-    }[];
     searchingMode: SearchingType;
     setSearchingMode: React.Dispatch<React.SetStateAction<SearchingType>>;
     handleUploadModal: (p: boolean) => void;
@@ -42,9 +47,11 @@ export interface MenuInterface {
     handleSearchInService: (p?: ConnectionType) => void;
     menuType: MenuType | undefined;
     handleMenuType: (p?: MenuType) => void;
+    afterLogin: (res?: ConnectionType[], withLoading?: boolean) => Promise<boolean>;
 }
 
 export const Menu: React.FC<MenuInterface> = ({
+    allRepositoriesFromIntegrations,
     committableMenu: committableMenu,
     autoCompleteValue,
     setAutoCompleteValue,
@@ -58,7 +65,6 @@ export const Menu: React.FC<MenuInterface> = ({
     handleRepositoryPick,
     includeForks,
     setIncludeForks,
-    forksOnRepo,
     searchingMode,
     setSearchingMode,
     handleUploadModal,
@@ -67,11 +73,11 @@ export const Menu: React.FC<MenuInterface> = ({
     handleSearchInService,
     menuType,
     handleMenuType,
+    afterLogin,
 }) => {
     const { selectedRepository, selectedBranch } = useRepositoryState();
-    const { modifiedFiles, files } = useFileState();
+    const { modifiedFiles } = useFileState();
     const { integrations, setIntegrations } = useAuthState();
-    // const { loggedData } = useAuthState();
     const { addRepository, getConnections } = useMDTXBackend();
 
     const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
@@ -177,17 +183,41 @@ export const Menu: React.FC<MenuInterface> = ({
                                 }
                             }}
                             badgeValue={favLength}>
-                            <FolderIcon />
+                            <FavoritesIcon />
+                        </MenuButton>
+                        <MenuButton
+                            withSpacing
+                            blocked={!allRepositoriesFromIntegrations?.length || !integrations?.length}
+                            menuState={menuType === MenuType.INTEGRATIONSREPOS}
+                            onClick={() => {
+                                if (allRepositoriesFromIntegrations?.length) {
+                                    if (!openMenu) {
+                                        setOpenMenu(true);
+                                    }
+                                    if (openMenu && menuType === MenuType.INTEGRATIONSREPOS) {
+                                        setOpenMenu(false);
+                                        handleMenuType(undefined);
+                                    }
+                                    handleMenuType(MenuType.INTEGRATIONSREPOS);
+                                }
+                            }}>
+                            <FavoritesIcon />
                         </MenuButton>
                     </div>
 
                     <SettingsSection
+                        afterLogin={afterLogin}
                         handleMenuType={handleMenuType}
                         active={openMenu && menuType === MenuType.SETTINGS}
                     />
                     <FavoritesSection
                         handleRepositoryPick={handleRepositoryPick}
                         active={openMenu && menuType === MenuType.FAVORITES}
+                    />
+                    <RepositoriesFromIntegrationsSection
+                        handleRepositoryPick={handleRepositoryPick}
+                        active={openMenu && menuType === MenuType.INTEGRATIONSREPOS}
+                        allRepositoriesFromIntegrations={allRepositoriesFromIntegrations}
                     />
                     <div
                         className={`${
@@ -281,20 +311,6 @@ export const Menu: React.FC<MenuInterface> = ({
                                         </p>
 
                                         <div className="mt-[0.4rem]" />
-                                        {/* {selectedRepository?.full_name.includes(
-                      loggedData ? loggedData.login : '',
-                    ) ? (
-                      <p className="select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
-                        Owner: <span className="text-editor-light1">You</span>
-                      </p>
-                    ) : (
-                      <p className="select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
-                        Owner:{' '}
-                        <span className="text-editor-light1">
-                          {selectedRepository?.owner?.login}
-                        </span>
-                      </p>
-                    )} */}
 
                                         <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
                                             Original repository:{' '}
@@ -302,22 +318,6 @@ export const Menu: React.FC<MenuInterface> = ({
                                                 {!selectedRepository?.fork ? 'yes' : 'no'}
                                             </span>
                                         </p>
-                                        {/* {forksOnRepo?.find((x) =>
-                      x.full_name.includes(loggedData ? loggedData.login : ''),
-                    ) && (
-                      <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
-                        Already forked by logged user:{' '}
-                        <span className="text-editor-light1">yes</span>
-                      </p>
-                    )} */}
-                                        {/* {!selectedRepository?.full_name.includes(
-                      loggedData ? loggedData.login : '',
-                    ) && (
-                      <p className="mt-[0.4rem] select-none text-[1.2rem] leading-[1.8rem] font-[500] text-editor-light2">
-                        Is your repository:{' '}
-                        <span className="text-editor-light1">no</span>
-                      </p>
-                    )} */}
                                         {canBeAdded && (
                                             <p
                                                 onClick={async () => {

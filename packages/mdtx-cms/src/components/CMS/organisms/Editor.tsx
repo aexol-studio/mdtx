@@ -138,7 +138,6 @@ export const Editor: React.FC = () => {
       flex-direction: column;
       justify-content: start;
       align-items: start;
-      width: 100%;
       gap: 0.8rem;
       padding: 0.4rem 0;
     }
@@ -148,8 +147,8 @@ export const Editor: React.FC = () => {
     #headings > button:focus,
     #headings > button:hover,
     #headings > button:active {
-      background-color: #272839 !important;
-      color: #272839 !important;
+      background-color: #FFFFFF20 !important;
+      color: #FFFFFF20 !important;
     }
     #headings > div {
       width: 16rem;
@@ -165,7 +164,6 @@ export const Editor: React.FC = () => {
       box-shadow: 0 1px 0 1px #9A99AD, 0 0 0 #9A99AD, 0 1px 1px #9A99AD;
     }
     #headings > div > div > ul > li {
-      width: 100%;
       padding: 0.4rem 0 0.2rem 0;
     }
     #lists > div {
@@ -205,6 +203,23 @@ export const Editor: React.FC = () => {
       font-family: var(--fira-font) !important;
       color: #9A99AD !important;
     }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #1E1E2C;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #55566D;
+      border-radius: 8px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #9A99AD;
+    }
   `;
 
     return commands && utils ? (
@@ -221,7 +236,6 @@ export const Editor: React.FC = () => {
                             : ''
                         : markdownValue
                 }
-                highlightEnable={false}
                 onChange={e => {
                     !!pickedFilePath ? setSelectedFileContentByPath(e ? e : '') : setMarkdownValue(e);
                 }}

@@ -48,6 +48,7 @@ export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
             <div className={`w-full mx-auto mb-[1.2rem]`}>
                 <p className="w-fit text-[1.4rem] leading-[1.8rem] font-[500] text-[#FFF] mb-[0.8rem]">Search by</p>
                 <Select
+                    value={searchingMode}
                     placeholder={searchingMode}
                     options={Object.values(SearchingType)}
                     onChange={e => setSearchingMode(e as SearchingType)}
@@ -74,6 +75,7 @@ export const MenuSearchSection: React.FC<MenuSearchSectionInterface> = ({
                     )}
                     <div className="z-[5] relative min-w-[20rem]">
                         <Select
+                            value={searchInService?.name || ''}
                             placeholder={searchInService?.name || ''}
                             options={integrations.map(o => o.name!)}
                             onChange={e => handleSearchInService(integrations.find(o => o.name === e)!)}

@@ -4,12 +4,13 @@ import { useState } from 'react';
 interface SelectProps<T> {
     value?: T;
     placeholder: string;
+    additionalClass?: string;
     empty?: string;
     options: Array<T>;
     onChange: (value: T) => void;
 }
 
-export const Select: React.FC<SelectProps<string>> = ({ value, options, onChange, placeholder }) => {
+export const Select: React.FC<SelectProps<string>> = ({ value, options, onChange, placeholder, additionalClass }) => {
     const [open, setOpen] = useState(false);
     const currentValue = options.find(o => o === value);
     return (
@@ -34,30 +35,39 @@ export const Select: React.FC<SelectProps<string>> = ({ value, options, onChange
                     className={`${
                         open ? 'rounded-bl-[0rem] rounded-br-[0rem]' : 'rounded-bl-[0.5rem] rounded-br-[0.5rem]'
                     } py-[0.4rem] px-[0.4rem] rounded-tl-[0.5rem] rounded-tr-[0.5rem] `}>
-                    <p className="w-fit text-[1.2rem]"> {currentValue}</p>
+                    <p className="w-fit pl-[0.8rem] text-[1.2rem]">{currentValue}</p>
                 </div>
             ) : (
                 <div
                     className={`${
                         open ? 'rounded-bl-[0rem] rounded-br-[0rem]' : 'rounded-bl-[0.5rem] rounded-br-[0.5rem]'
                     } py-[0.4rem] px-[1.2rem] rounded-tl-[0.5rem] rounded-tr-[0.5rem]`}>
-                    <p className="w-fit text-[1.2rem]"> {placeholder}</p>
+                    <p className="w-fit pl-[0.8rem] text-[1.2rem]">{placeholder}</p>
                 </div>
             )}
             {open && (
                 <div
-                    className={`absolute z-[101] w-[100%] max-h-[30rem] overflow-y-auto rounded-b-[0.8rem] top-[2.6rem]`}>
+                    className={`${
+                        additionalClass ? additionalClass : 'max-h-[30rem]'
+                    } absolute z-[101] w-[100%] overflow-y-auto rounded-b-[0.8rem] top-[2.6rem]`}>
                     {options.map((o, idx) => (
                         <div
                             className={`${idx !== 0 && ''} ${
-                                o === currentValue ? 'bg-editor-purple2' : 'bg-editor-black2'
-                            } py-[0.4rem] pl-[1.2rem] transition-all duration-[250] hover:bg-editor-purple1`}
+                                o === currentValue
+                                    ? 'after:bg-editor-hover0 after:absolute after:w-full after:h-full after:content-[""] after:top-0 after:left-0'
+                                    : ''
+                            } overflow-hidden bg-editor-black2 py-[0.4rem] pl-[1.2rem] transition-all duration-[250] group hover:bg-editor-purple1 relative`}
                             key={o}
                             onClick={() => {
                                 setOpen(false);
                                 onChange(o);
                             }}>
-                            <p className="w-fit text-[1.2rem]">{o}</p>
+                            <p
+                                className={`${
+                                    o === currentValue ? 'text-editor-light1' : ''
+                                } w-fit text-[1.2rem] group-hover:text-editor-light1`}>
+                                {o}
+                            </p>
                         </div>
                     ))}
                 </div>

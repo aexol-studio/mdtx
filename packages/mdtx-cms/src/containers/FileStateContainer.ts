@@ -57,7 +57,7 @@ const FileStateContainer = createContainer(() => {
                     {
                         owner: owner[0],
                         repo: owner[1],
-                        branch: ref ? ref : 'develop',
+                        branch: ref,
                         path: found.name.slice(found.name.indexOf('/') + 1),
                     },
                     searchInService,
@@ -77,7 +77,6 @@ const FileStateContainer = createContainer(() => {
                                     name: found.name,
                                 },
                             ];
-                            setBlock(false);
                             return toSet;
                         });
                         setOriginalFiles(prev => {
@@ -97,13 +96,14 @@ const FileStateContainer = createContainer(() => {
                                         name: found.name,
                                     },
                                 ];
-                                setBlock(false);
                                 return toSet;
                             } else {
-                                setBlock(false);
                                 return prev;
                             }
                         });
+                        setBlock(false);
+                    } else {
+                        setBlock(false);
                     }
                 });
             } else {
@@ -114,8 +114,7 @@ const FileStateContainer = createContainer(() => {
     }, [pickedFilePath]);
 
     const getSelectedFileByPath = () => {
-        const found = files?.find(x => x.name === pickedFilePath);
-        return !block ? found : { ...found, content: '' };
+        return files?.find(x => x.name === pickedFilePath);
     };
     const setSelectedFileContentByPath = (content: string) => {
         setFiles(prev =>

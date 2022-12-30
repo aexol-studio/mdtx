@@ -1,11 +1,10 @@
 import { RepositoryFromSearch, useAuthState } from '@/src/containers';
 import { useGitState } from '@/src/containers/GitContainer';
 import { ConnectionType } from '@/src/mdtx-backend-zeus/selectors';
-import { MenuType } from '@/src/pages/editor';
 
 export const FavoritesSection: React.FC<{
     active: boolean;
-    handleRepositoryPick: (item: RepositoryFromSearch, connection: ConnectionType) => Promise<boolean | undefined>;
+    handleRepositoryPick: (item: RepositoryFromSearch, connection?: ConnectionType) => Promise<boolean | undefined>;
 }> = ({ active, handleRepositoryPick }) => {
     const { integrations, handleSearchInService } = useAuthState();
     const { getRepository } = useGitState();

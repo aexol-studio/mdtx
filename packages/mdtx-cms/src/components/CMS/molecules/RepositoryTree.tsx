@@ -21,7 +21,7 @@ export const RepositoryTree: React.FC<{
         modifiedFiles,
         setFiles,
         deletions,
-        getSelectedFileByPath,
+        block,
         setDeletions,
         setImageToAdd,
         creatingFilePath,
@@ -49,7 +49,7 @@ export const RepositoryTree: React.FC<{
     const onlyIMGRef = /(.*)\.(png|jpg|jpeg|gif|webp)$/;
     const onlyIMG = (p: string) => !!p.match(onlyIMGRef);
     const clickHandler = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        if (tree) {
+        if (!block && tree) {
             //Moving on tree//
             if (isFile && pickedFilePath !== tree.path && tree.path && onlyMD(tree.path)) {
                 //MD File
@@ -116,7 +116,7 @@ export const RepositoryTree: React.FC<{
                     return [
                         ...prev,
                         {
-                            content: undefined,
+                            content: '',
                             dir: false,
                             name: creatingFilePath + cleanFileName + '.md',
                             isCreated: true,
@@ -126,7 +126,7 @@ export const RepositoryTree: React.FC<{
                 const newTree = treeBuilder([
                     ...files,
                     {
-                        content: undefined,
+                        content: '',
                         dir: false,
                         name: creatingFilePath + cleanFileName + '.md',
                     },

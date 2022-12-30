@@ -49,6 +49,7 @@ export type UserType = {
 const GitContainer = createContainer(() => {
     const {
         getGitHubRepositoryInfo,
+        getGitHubRepositoryForks,
         getGitHubSearchRepositories,
         getGitHubTree,
         getGitHubRepositoryBranch,
@@ -57,17 +58,71 @@ const GitContainer = createContainer(() => {
         getGitHubRepositoryPullRequests,
         createCommitOnGitHub,
         createPullRequestOnGitHub,
+        doGitHubFork,
+        getGitHubUser,
+        getGitHubUserRepositoriesInfo,
     } = useGitHub();
     const {
         getGitLabRepositoryInfo,
         getGitLabSearchRepositories,
+        getGitLabRepositoryForks,
         getGitLabTree,
         getGitLabContents,
         getGitLabRepositoryBranches,
         getGitLabRepositoryPullRequests,
         createCommitOnGitLab,
         createPullRequestOnGitLab,
+        doGitLabFork,
+        getGitLabUser,
+        getGitLabUserRepositories,
     } = useGitLab();
+
+    const getCurrentUser = async (connection: ConnectionType) => {
+        switch (connection.service) {
+            case 'none':
+                return;
+            case 'github':
+                const GitHubApi = new Octokit({
+                    auth: connection.token,
+                });
+                const githubUser = await getGitHubUser(GitHubApi);
+                return githubUser;
+            case 'gitlab':
+                const host =
+                    connection.url && connection.url[connection.url.length - 1] === '/'
+                        ? connection.url?.slice(0, connection.url.length - 1)
+                        : connection.url;
+                const GitLabApi = new Gitlab({
+                    host,
+                    token: connection.token,
+                });
+                const gitlabUser = await getGitLabUser(GitLabApi);
+                return gitlabUser;
+        }
+    };
+    const getRepositoriesForCurrentUser = async (connection: ConnectionType, input?: { userID: number }) => {
+        switch (connection.service) {
+            case 'none':
+                return;
+            case 'github':
+                const GitHubApi = new Octokit({
+                    auth: connection.token,
+                });
+                const githubUserRepositories = await getGitHubUserRepositoriesInfo(GitHubApi);
+                return githubUserRepositories;
+            case 'gitlab':
+                const host =
+                    connection.url && connection.url[connection.url.length - 1] === '/'
+                        ? connection.url?.slice(0, connection.url.length - 1)
+                        : connection.url;
+                const GitLabApi = new Gitlab({
+                    host,
+                    token: connection.token,
+                });
+                const gitlabUserRepositories = await getGitLabUserRepositories({ userID: input!.userID }, GitLabApi);
+                return gitlabUserRepositories;
+        }
+    };
     const searchRepository = async (
         input: { searchQuery: string },
         signal: AbortSignal,
@@ -124,9 +179,66 @@ const GitContainer = createContainer(() => {
                 return GitLabTree;
         }
     };
-
-    const getForks = async () => {};
-
+    const doFork = async (
+        input: {
+            owner: string;
+            repo: string;
+        },
+        connection: ConnectionType,
+    ) => {
+        switch (connection.service) {
+            case '':
+                return;
+            case 'github':
+                const GitHubApi = new Octokit({
+                    auth: connection.token,
+                });
+                const githubFork = await doGitHubFork(input, GitHubApi);
+                if (!githubFork) return false;
+                return true;
+            case 'gitlab':
+                const host =
+                    connection.url && connection.url[connection.url.length - 1] === '/'
+                        ? connection.url?.slice(0, connection.url.length - 1)
+                        : connection.url;
+                const GitLabApi = new Gitlab({
+                    host,
+                    token: connection.token,
+                });
+                const GitLabFork = await doGitLabFork(input, GitLabApi);
+                if (!GitLabFork) return false;
+                return true;
+        }
+    };
+    const getForks = async (
+        input: {
+            owner: string;
+            repo: string;
+        },
+        connection: ConnectionType,
+    ) => {
+        switch (connection.service) {
+            case '':
+                return;
+            case 'github':
+                const GitHubApi = new Octokit({
+                    auth: connection.token,
+                });
+                const githubForks = await getGitHubRepositoryForks(input, GitHubApi);
+                return githubForks;
+            case 'gitlab':
+                const host =
+                    connection.url && connection.url[connection.url.length - 1] === '/'
+                        ? connection.url?.slice(0, connection.url.length - 1)
+                        : connection.url;
+                const GitLabApi = new Gitlab({
+                    host,
+                    token: connection.token,
+                });
+                const GitLabForks = await getGitLabRepositoryForks(input, GitLabApi);
+                return GitLabForks;
+        }
+    };
     const getRepository = async (
         input: {
             owner: string;
@@ -322,8 +434,12 @@ const GitContainer = createContainer(() => {
         getFile,
         getBranches,
         getPullRequests,
+        getForks,
         doCommit,
+        doFork,
         doPullRequest,
+        getCurrentUser,
+        getRepositoriesForCurrentUser,
     };
 });
 

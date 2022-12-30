@@ -1,29 +1,54 @@
+import { RepositoryFromSearch } from './../containers/RepositoryStateContainer';
 import { Gitlab } from '@gitbeaker/core/dist/types/resources';
 import { FileType } from '../containers';
-import { RepositoryFromGitlab } from '../containers/GitContainer';
 import { ConnectionType } from '../mdtx-backend-zeus/selectors';
-import { PullRequestsType } from '../pages/editor';
+import { PullRequestsType, RepositoriesCollection } from '../pages/editor';
 
 export const useGitLab = () => {
-    const getGitLabSearchRepositories = async (input: { searchQuery: string }, signal: AbortSignal, gitlab: Gitlab) => {
-        const response = await gitlab.Projects.search(input.searchQuery);
+    const getGitLabUser = async (gitlab: Gitlab<false>) => {
+        try {
+            const response = await gitlab.Users.current();
+            if (!response) throw new Error('Bad response from getGitLabUser()');
+            return response;
+        } catch {
+            throw new Error('Something went wrong');
+        }
+    };
 
+    const getGitLabSearchRepositories = async (
+        input: { searchQuery: string },
+        signal: AbortSignal,
+        gitlab: Gitlab<false>,
+    ): Promise<RepositoryFromSearch[] | undefined> => {
+        const response = await gitlab.Projects.search(input.searchQuery);
         if (!response) return;
         if (response.length) {
-            return response.map(obj => ({
-                name: obj.name,
-                full_name: obj.path_with_namespace,
-                default_branch: obj.default_branch || 'develop',
-                id: obj.id,
-                node_id: String(obj.id),
-                fork: obj.forks_count > 0,
-                private: false,
-                owner: {
-                    avatar_url: obj.namespace.avatar_url || '',
-                    login: obj.namespace.path,
-                    type: obj.namespace.kind,
-                },
-            }));
+            return response.map(obj => {
+                return {
+                    name: obj.name,
+                    full_name: obj.path_with_namespace,
+                    default_branch: obj.default_branch || 'develop',
+                    id: obj.id,
+                    node_id: String(obj.id),
+                    fork: obj.forks_count > 0,
+                    private: false,
+                    owner: {
+                        avatar_url: obj.avatar_url || obj.namespace.avatar_url || '',
+                        login: obj.namespace.path,
+                        type: obj.namespace.kind,
+                    },
+                    permissions: {
+                        admin: obj.owner
+                            ? true
+                            : //@ts-ignore
+                            obj.permissions.group_access && obj.permissions.project_access
+                            ? true
+                            : false,
+                        //@ts-ignore
+                        gitlabPermission: obj.permissions.project_access ? true : false,
+                    },
+                };
+            });
         }
     };
 
@@ -76,6 +101,10 @@ export const useGitLab = () => {
                 avatar_url: response.namespace.avatar_url ? response.namespace.avatar_url : response.avatar_url,
                 login: response.owner?.name ? response.owner.name : response.namespace.name,
                 type: response.namespace.kind,
+            },
+            permissions: {
+                admin: response.permissions.group_access && response.permissions.project_access ? true : false,
+                gitlabPermission: response.permissions.project_access ? true : false,
             },
         };
     };
@@ -153,7 +182,31 @@ export const useGitLab = () => {
         gitlabApi: Gitlab<false>,
     ) => {
         const response = await gitlabApi.RepositoryFiles.show(`${input.owner}/${input.repo}`, input.path, input.branch);
+        if (!response) throw new Error('Cannot get GitLab content');
         return response;
+    };
+
+    const requestForAccess = async (input: { owner: string; repo: string }, gitlabApi: Gitlab<false>) => {
+        const response = await gitlabApi.ProjectAccessRequests.request(`${input.owner}/${input.repo}`);
+        if (!response) throw new Error('Cannot get GitLab access request');
+        return response;
+    };
+
+    const getGitLabRepositoryForks = async (
+        input: { owner: string; repo: string },
+        gitlabApi: Gitlab<false>,
+    ): Promise<RepositoriesCollection> => {
+        const response = await gitlabApi.Projects.forks(`${input.owner}/${input.repo}`);
+        if (!response) throw new Error('Cannot get GitLab repository forks');
+        return response.map(o => ({
+            full_name: o.path_with_namespace,
+            source: {
+                //@ts-ignore
+                full_name: o.forked_from_project.path_with_namespace,
+                //@ts-ignore
+                owner: { login: o.forked_from_project.path_with_namespace.split('/')[0] },
+            },
+        }));
     };
 
     const getGitLabRepositoryBranches = async (
@@ -311,6 +364,50 @@ export const useGitLab = () => {
             }
         }
     };
+    const doGitLabFork = async (
+        input: {
+            owner: string;
+            repo: string;
+        },
+        gitlabApi: Gitlab<false>,
+    ) => {
+        const response = await gitlabApi.Projects.fork(`${input.owner}/${input.repo}`);
+        if (!response) throw new Error('Something went wrong while doing doGitLabFork');
+        return response;
+    };
+
+    const getGitLabUserRepositories = async (input: { userID: number }, gitlabApi: Gitlab<false>) => {
+        const response = await gitlabApi.Users.projects(input.userID);
+        if (!response) throw new Error('Something went wrong while getting getGitLabUserRepositories');
+        if (response.length > 0) {
+            return response.map(obj => {
+                return {
+                    name: obj.name,
+                    full_name: obj.path_with_namespace,
+                    default_branch: obj.default_branch || 'develop',
+                    id: obj.id,
+                    node_id: String(obj.id),
+                    fork: obj.forks_count > 0,
+                    private: false,
+                    owner: {
+                        avatar_url: obj.avatar_url || obj.namespace.avatar_url || '',
+                        login: obj.namespace.path,
+                        type: obj.namespace.kind,
+                    },
+                    permissions: {
+                        admin: obj.owner
+                            ? true
+                            : //@ts-ignore
+                            obj.permissions.group_access && obj.permissions.project_access
+                            ? true
+                            : false,
+                        //@ts-ignore
+                        gitlabPermission: obj.permissions.project_access ? true : false,
+                    },
+                };
+            });
+        }
+    };
 
     return {
         getGitLabSearchRepositories,
@@ -318,8 +415,13 @@ export const useGitLab = () => {
         getGitLabTree,
         getGitLabContents,
         getGitLabRepositoryBranches,
+        getGitLabRepositoryPullRequests,
+        getGitLabRepositoryForks,
         createCommitOnGitLab,
         createPullRequestOnGitLab,
-        getGitLabRepositoryPullRequests,
+        requestForAccess,
+        doGitLabFork,
+        getGitLabUser,
+        getGitLabUserRepositories,
     };
 };

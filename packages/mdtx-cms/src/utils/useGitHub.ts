@@ -53,12 +53,11 @@ export const useGitHub = () => {
             if (!response) throw new Error('Bad response from getGitHubToken()');
             return await response.json();
         } catch {
-            logOut();
             throw new Error('Something went wrong');
         }
     };
     //USE: FOR GET USER INFO
-    const getGitHubUser = async () => {
+    const getGitHubUser = async (octokit: Octokit) => {
         try {
             const { data } = await octokit.rest.users.getAuthenticated();
             if (!data) throw new Error('Bad response from getGitHubUser()');
@@ -69,7 +68,7 @@ export const useGitHub = () => {
         }
     };
     //USE: FOR GET USER REPOSITORIES INFO
-    const getGitHubUserRepositoriesInfo = async () => {
+    const getGitHubUserRepositoriesInfo = async (octokit: Octokit) => {
         const { data } = await octokit.rest.repos.listForAuthenticatedUser({
             sort: 'updated',
             per_page: 100,
@@ -129,13 +128,13 @@ export const useGitHub = () => {
         return data;
     };
     //USE: FOR GET ALL REPOSITORY FORKS
-    const getGitHubRepositoryForks = async (input: { owner: string; repo: string }) => {
+    const getGitHubRepositoryForks = async (input: { owner: string; repo: string }, octokit: Octokit) => {
         const { data } = await octokit.rest.repos.listForks(input);
         if (!data) throw new Error('Bad response from getGitHubRepositoryForks()');
         return data;
     };
     //USE: FOR FORK
-    const doGitHubFork = async (input: { owner: string; repo: string }) => {
+    const doGitHubFork = async (input: { owner: string; repo: string }, octokit: Octokit) => {
         const { data } = await octokit.rest.repos.createFork(input);
         if (!data) throw new Error('Bad response from doGitHubFork()');
         return data;
@@ -174,22 +173,6 @@ export const useGitHub = () => {
         return data;
     };
 
-    const getGitHubAfterLoginInfo = async () => {
-        try {
-            const promiseUserInfo = getGitHubUser();
-            const promiseOrganisations = getGitHubUserOrganisationsInfo();
-            const promiseUserRepos = getGitHubUserRepositoriesInfo();
-            const [user, orgs, repos] = await Promise.all([promiseUserInfo, promiseOrganisations, promiseUserRepos]);
-            return {
-                user,
-                orgs,
-                repos,
-            };
-        } catch {
-            throw new Error('Bad response from getGitHubAfterLoginInfo()');
-        }
-    };
-
     const createCommitOnGitHub = async (
         input: {
             owner: string;
@@ -202,9 +185,16 @@ export const useGitHub = () => {
         token: string,
     ) => {
         const filesToSend: { path: string; contents: string }[] = [];
+        console.log(modifiedFiles);
         modifiedFiles.map(x => {
             if (x.content) {
                 const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+                filesToSend.push({
+                    path: x.name.slice(x.name.indexOf('/') + 1),
+                    contents: doBuffer,
+                });
+            } else {
+                const doBuffer = Buffer.from('', 'utf-8').toString('base64');
                 filesToSend.push({
                     path: x.name.slice(x.name.indexOf('/') + 1),
                     contents: doBuffer,
@@ -315,7 +305,6 @@ export const useGitHub = () => {
         getGitHubToken,
         getGitHubUser,
         getGitHubRepositoryInfo,
-        getGitHubAfterLoginInfo,
         getGitHubUserRepositoriesInfo,
         getGitHubUserOrganisationsInfo,
         getGitHubRepositoryBranches,
