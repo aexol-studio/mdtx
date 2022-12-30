@@ -2,7 +2,6 @@ export * from './Select';
 export * from './Button';
 export * from './Switcher';
 export * from './LogoInEditor';
-export * from './Selects';
 export * from './Input';
 export * from './PermissionsTable';
 export * from './ColorPicker';

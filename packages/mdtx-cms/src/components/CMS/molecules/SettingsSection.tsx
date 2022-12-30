@@ -1,4 +1,5 @@
 import { useAuthState } from '@/src/containers';
+import { ConnectionType } from '@/src/mdtx-backend-zeus/selectors';
 import { MenuType } from '@/src/pages/editor';
 import { useMDTXBackend } from '@/src/utils/useMDTXBackend';
 import Link from 'next/link';
@@ -15,10 +16,11 @@ type GitLabIntegrationType = {
     name: string;
 };
 
-export const SettingsSection: React.FC<{ active: boolean; handleMenuType: (p?: MenuType) => void }> = ({
-    active,
-    handleMenuType,
-}) => {
+export const SettingsSection: React.FC<{
+    active: boolean;
+    handleMenuType: (p?: MenuType) => void;
+    afterLogin: (res?: ConnectionType[], withLoading?: boolean) => Promise<boolean>;
+}> = ({ active, handleMenuType, afterLogin }) => {
     const { integrations, setIntegrations, handleSearchInService } = useAuthState();
     const [gitLabIntegration, setGitLabIntegration] = useState(false);
     const { createConnection, getConnections, deleteConnection } = useMDTXBackend();
@@ -47,6 +49,7 @@ export const SettingsSection: React.FC<{ active: boolean; handleMenuType: (p?: M
                 handleSearchInService(conns[0]);
                 setGitLabIntegration(false);
                 handleMenuType(MenuType.SEARCH);
+                await afterLogin(conns, true);
             }
         }
     };
@@ -67,11 +70,12 @@ export const SettingsSection: React.FC<{ active: boolean; handleMenuType: (p?: M
                         const response = await deleteConnection(thisIntegration?._id!);
                         if (response) {
                             const conns = await getConnections();
+                            setIntegrations(conns);
+                            handleMenuType(MenuType.SETTINGS);
                             if (conns) {
-                                setIntegrations(conns);
                                 handleSearchInService(conns[0]);
-                                handleMenuType(MenuType.SEARCH);
                             }
+                            await afterLogin(conns, true);
                         }
                     }}>
                     <p className="text-editor-light2">Integrated with github</p>
@@ -94,6 +98,11 @@ export const SettingsSection: React.FC<{ active: boolean; handleMenuType: (p?: M
                             if (response) {
                                 const conns = await getConnections();
                                 setIntegrations(conns);
+                                handleMenuType(MenuType.SETTINGS);
+                                if (conns) {
+                                    handleSearchInService(conns[0]);
+                                }
+                                await afterLogin(conns, true);
                             }
                         }}>
                         <p className="text-editor-light2">Integrated with gitlab as {obj.name}</p>

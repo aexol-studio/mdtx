@@ -4,13 +4,14 @@ import Image from 'next/image';
 
 export const RepositoriesList: React.FC<{
     repositories: RepositoryFromSearch[];
-    handleRepositoryPick: (item: RepositoryFromSearch) => Promise<boolean | undefined>;
-}> = ({ repositories, handleRepositoryPick }) => (
+    connection?: ConnectionType;
+    handleRepositoryPick: (item: RepositoryFromSearch, connection?: ConnectionType) => Promise<boolean | undefined>;
+}> = ({ repositories, connection, handleRepositoryPick }) => (
     <div>
         {repositories.map(item => (
             <div
                 onClick={() => {
-                    handleRepositoryPick(item);
+                    handleRepositoryPick(item, connection);
                 }}
                 key={item.full_name}
                 className="cursor-pointer pl-[0.8rem] py-[0.8rem] hover:bg-editor-hover0 items-center flex gap-[0.8rem]">

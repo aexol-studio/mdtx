@@ -4,12 +4,13 @@ import { useState } from 'react';
 interface SelectProps<T> {
     value?: T;
     placeholder: string;
+    additionalClass?: string;
     empty?: string;
     options: Array<T>;
     onChange: (value: T) => void;
 }
 
-export const Select: React.FC<SelectProps<string>> = ({ value, options, onChange, placeholder }) => {
+export const Select: React.FC<SelectProps<string>> = ({ value, options, onChange, placeholder, additionalClass }) => {
     const [open, setOpen] = useState(false);
     const currentValue = options.find(o => o === value);
     return (
@@ -46,7 +47,9 @@ export const Select: React.FC<SelectProps<string>> = ({ value, options, onChange
             )}
             {open && (
                 <div
-                    className={`absolute z-[101] w-[100%] max-h-[30rem] overflow-y-auto rounded-b-[0.8rem] top-[2.6rem]`}>
+                    className={`${
+                        additionalClass ? additionalClass : 'max-h-[30rem]'
+                    } absolute z-[101] w-[100%] overflow-y-auto rounded-b-[0.8rem] top-[2.6rem]`}>
                     {options.map((o, idx) => (
                         <div
                             className={`${idx !== 0 && ''} ${

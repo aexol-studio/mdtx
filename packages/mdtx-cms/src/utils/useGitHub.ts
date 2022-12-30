@@ -185,9 +185,16 @@ export const useGitHub = () => {
         token: string,
     ) => {
         const filesToSend: { path: string; contents: string }[] = [];
+        console.log(modifiedFiles);
         modifiedFiles.map(x => {
             if (x.content) {
                 const doBuffer = Buffer.from(x.content, 'utf-8').toString('base64');
+                filesToSend.push({
+                    path: x.name.slice(x.name.indexOf('/') + 1),
+                    contents: doBuffer,
+                });
+            } else {
+                const doBuffer = Buffer.from('', 'utf-8').toString('base64');
                 filesToSend.push({
                     path: x.name.slice(x.name.indexOf('/') + 1),
                     contents: doBuffer,

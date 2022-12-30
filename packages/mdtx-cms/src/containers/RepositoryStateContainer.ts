@@ -24,8 +24,7 @@ export type RepositoryFromSearch = {
         gitlabPermission?: boolean;
     };
 };
-
-export type RepositoryFromSearchWithIntegration = RepositoryFromSearch & ConnectionType;
+export type RepositoriesFromUserWithIntegration = { repos: RepositoryFromSearch[]; con: ConnectionType };
 
 export type availableBranchType = {
     commit: {

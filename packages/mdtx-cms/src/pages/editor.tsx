@@ -23,7 +23,7 @@ import {
     RepositoryFromSearch,
     availableBranchType,
     useRepositoryState,
-    RepositoryFromSearchWithIntegration,
+    RepositoriesFromUserWithIntegration,
 } from '../containers';
 import { Layout } from '../layouts';
 import { useGitHub } from '../utils';
@@ -159,39 +159,55 @@ const editor = () => {
     const [downloadZIP, setDownloadZIP] = useState(false);
     const [doingFork, setDoingFork] = useState(false);
     const [loadingFullTree, setLoadingFullTree] = useState(false);
-    const [allRepositoriesFromIntegrations, setAllRepositoriesFromIntegrations] = useState<RepositoryFromSearch[]>();
-    const handleAllRepositoriesFromIntegrations = (p: RepositoryFromSearch[]) => setAllRepositoriesFromIntegrations(p);
+    const [allRepositoriesFromIntegrations, setAllRepositoriesFromIntegrations] =
+        useState<RepositoriesFromUserWithIntegration[]>();
+    const handleAllRepositoriesFromIntegrations = (p?: RepositoriesFromUserWithIntegration[]) =>
+        setAllRepositoriesFromIntegrations(p);
     const [logging, setLogging] = useState(false);
+
+    const afterLogin = async (res: ConnectionType[] | undefined, withLoading?: boolean) => {
+        withLoading && setLogging(true);
+        if (res) {
+            handleSearchInService(res[0]);
+            const userRepositoriesForAllIntegrations = await Promise.all(
+                res.map(async o => {
+                    const promiseUser = await getCurrentUser(o);
+                    if (promiseUser) {
+                        const response = await getRepositoriesForCurrentUser(o, {
+                            userID: promiseUser.id,
+                        });
+                        return { repos: response, con: o };
+                    }
+                }),
+            );
+            const tempArr: RepositoriesFromUserWithIntegration[] = [];
+            userRepositoriesForAllIntegrations.map(o => o && o.repos && tempArr.push({ repos: o.repos, con: o.con }));
+            handleAllRepositoriesFromIntegrations(tempArr);
+            withLoading && setLogging(false);
+            handleMenuType(MenuType.SEARCH);
+            return true;
+        } else {
+            withLoading && setLogging(false);
+            return false;
+        }
+    };
 
     useEffect(() => {
         if (error) logOut();
         if (!integrations) {
             setLogging(true);
             getConnections().then(async res => {
+                handleAllRepositoriesFromIntegrations(undefined);
+                handleMenuType(MenuType.SETTINGS);
                 setIntegrations(res);
-                if (res) {
-                    handleSearchInService(res[0]);
-                    const userRepositoriesForAllIntegrations = await Promise.all(
-                        res.map(async o => {
-                            const promiseUser = await getCurrentUser(o);
-                            if (promiseUser) {
-                                const response = await getRepositoriesForCurrentUser(o, {
-                                    userID: promiseUser.id,
-                                });
-                                return response;
-                            }
-                        }),
-                    );
-                    setLogging(false);
-
-                    const tempArr: RepositoryFromSearch[] = [];
-                    userRepositoriesForAllIntegrations.map(o => o && tempArr.push(...o));
-                    handleAllRepositoriesFromIntegrations(tempArr);
-                }
+                const login = await afterLogin(res);
+                if (login) setLogging(false);
             });
         }
 
-        if (state && state.includes('SETTINGS')) handleMenuType(MenuType.SETTINGS);
+        if (state && state.includes('SETTINGS')) {
+            handleMenuType(MenuType.SETTINGS);
+        }
         if (state && state.includes('GITHUB')) {
             if (code) {
                 setLogging(true);
@@ -207,7 +223,8 @@ const editor = () => {
                             setIntegrations(conns);
                             if (conns) handleSearchInService(conns[0]);
                             router.replace('/editor/');
-                            setLogging(false);
+                            const login = await afterLogin(conns);
+                            if (login) setLogging(false);
                         }
                     })
                     .catch(() => {
@@ -217,10 +234,6 @@ const editor = () => {
                     });
             }
         }
-        // if (state && state.includes('GITLAB')) {
-        //     console.log('Integracja z gitlabem'), code;
-        //     router.replace('/editor/');
-        // }
     }, [router.isReady, error, code, state]);
 
     // useEffect(() => {
@@ -312,11 +325,13 @@ const editor = () => {
             setAvailablePullRequests(pullRequests);
 
             if (allRepositoriesFromIntegrations) {
-                allRepositoriesFromIntegrations.forEach(o => {
-                    const repoName = o.full_name.split('/')[1];
-                    if (aboutFork?.full_name.split('/')[1] === repoName) {
-                        setFoundedFork(true);
-                    }
+                allRepositoriesFromIntegrations.forEach(integration => {
+                    integration.repos.forEach(o => {
+                        const repoName = o.full_name.split('/')[1];
+                        if (aboutFork?.full_name.split('/')[1] === repoName) {
+                            setFoundedFork(true);
+                        }
+                    });
                 });
             }
             if (!branches) {
@@ -564,6 +579,7 @@ const editor = () => {
             )}
             <div className="z-[100]">
                 <Menu
+                    afterLogin={afterLogin}
                     allRepositoriesFromIntegrations={allRepositoriesFromIntegrations}
                     menuType={menuType}
                     handleMenuType={handleMenuType}

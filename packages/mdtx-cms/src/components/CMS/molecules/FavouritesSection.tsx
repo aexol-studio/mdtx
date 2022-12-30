@@ -4,7 +4,7 @@ import { ConnectionType } from '@/src/mdtx-backend-zeus/selectors';
 
 export const FavoritesSection: React.FC<{
     active: boolean;
-    handleRepositoryPick: (item: RepositoryFromSearch, connection: ConnectionType) => Promise<boolean | undefined>;
+    handleRepositoryPick: (item: RepositoryFromSearch, connection?: ConnectionType) => Promise<boolean | undefined>;
 }> = ({ active, handleRepositoryPick }) => {
     const { integrations, handleSearchInService } = useAuthState();
     const { getRepository } = useGitState();

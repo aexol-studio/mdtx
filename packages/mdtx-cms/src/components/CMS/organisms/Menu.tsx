@@ -1,5 +1,11 @@
 import { Chevron, FolderIcon, ImageIcon, SettingsIcon } from '@/src/assets';
-import { RepositoryFromSearch, useAuthState, useFileState, useRepositoryState } from '@/src/containers';
+import {
+    RepositoriesFromUserWithIntegration,
+    RepositoryFromSearch,
+    useAuthState,
+    useFileState,
+    useRepositoryState,
+} from '@/src/containers';
 import { TreeMenu } from '@/src/utils/treeBuilder';
 import { PulseLoader } from 'react-spinners';
 import { LogoInEditor, MenuButton } from '../atoms';
@@ -26,7 +32,7 @@ export interface MenuInterface {
     setOpenMenu: (p: boolean) => void;
     loadingFullTree: boolean;
     repositoriesFromSearch?: RepositoryFromSearch[];
-    allRepositoriesFromIntegrations?: RepositoryFromSearch[];
+    allRepositoriesFromIntegrations?: RepositoriesFromUserWithIntegration[];
     backToSearch: () => void;
     repositoryTree?: TreeMenu;
     setRepositoryTree: React.Dispatch<React.SetStateAction<TreeMenu | undefined>>;
@@ -41,6 +47,7 @@ export interface MenuInterface {
     handleSearchInService: (p?: ConnectionType) => void;
     menuType: MenuType | undefined;
     handleMenuType: (p?: MenuType) => void;
+    afterLogin: (res?: ConnectionType[], withLoading?: boolean) => Promise<boolean>;
 }
 
 export const Menu: React.FC<MenuInterface> = ({
@@ -66,9 +73,10 @@ export const Menu: React.FC<MenuInterface> = ({
     handleSearchInService,
     menuType,
     handleMenuType,
+    afterLogin,
 }) => {
     const { selectedRepository, selectedBranch } = useRepositoryState();
-    const { modifiedFiles, files } = useFileState();
+    const { modifiedFiles } = useFileState();
     const { integrations, setIntegrations } = useAuthState();
     const { addRepository, getConnections } = useMDTXBackend();
 
@@ -179,7 +187,7 @@ export const Menu: React.FC<MenuInterface> = ({
                         </MenuButton>
                         <MenuButton
                             withSpacing
-                            blocked={!allRepositoriesFromIntegrations?.length}
+                            blocked={!allRepositoriesFromIntegrations?.length || !integrations?.length}
                             menuState={menuType === MenuType.INTEGRATIONSREPOS}
                             onClick={() => {
                                 if (allRepositoriesFromIntegrations?.length) {
@@ -198,6 +206,7 @@ export const Menu: React.FC<MenuInterface> = ({
                     </div>
 
                     <SettingsSection
+                        afterLogin={afterLogin}
                         handleMenuType={handleMenuType}
                         active={openMenu && menuType === MenuType.SETTINGS}
                     />

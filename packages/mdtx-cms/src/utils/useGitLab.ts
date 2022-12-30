@@ -1,8 +1,6 @@
 import { RepositoryFromSearch } from './../containers/RepositoryStateContainer';
 import { Gitlab } from '@gitbeaker/core/dist/types/resources';
-
 import { FileType } from '../containers';
-import { RepositoryFromGitlab } from '../containers/GitContainer';
 import { ConnectionType } from '../mdtx-backend-zeus/selectors';
 import { PullRequestsType, RepositoriesCollection } from '../pages/editor';
 
@@ -11,7 +9,6 @@ export const useGitLab = () => {
         try {
             const response = await gitlab.Users.current();
             if (!response) throw new Error('Bad response from getGitLabUser()');
-            console.log(response);
             return response;
         } catch {
             throw new Error('Something went wrong');

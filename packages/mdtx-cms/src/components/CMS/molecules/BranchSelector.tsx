@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { PulseLoader } from 'react-spinners';
-import { Button, PermissionsTable, SelectBranch } from '../atoms';
+import { Button, PermissionsTable, Select } from '../atoms';
 import { Gitlab as GitLabApi } from '@gitbeaker/browser';
 
 interface IBranchSelector {
@@ -31,15 +31,12 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
 }) => {
     const router = useRouter();
     const [pullRequestView, setPullRequestView] = useState(false);
-    const [block, setBlock] = useState(true);
-    const [openSelect, setOpenSelect] = useState(false);
-    const handleSelect = (p: boolean) => setOpenSelect(p);
     const { selectedRepository, selectedBranch, handleBranch, handleRepository } = useRepositoryState();
     const { requestForAccess, getGitLabRepositoryInfo } = useGitLab();
     const { searchInService } = useAuthState();
     const { createToast } = useToasts();
     return (
-        <div className={`${openSelect ? '' : block ? 'overflow-hidden' : ''} pt-[3.2rem] flex flex-col h-full`}>
+        <div className={`pt-[3.2rem] flex flex-col h-full`}>
             {downloadZIP || doingFork ? (
                 <div className="flex h-full justify-center items-center flex-col gap-[4.2rem]">
                     <p className="text-mdtxWhite uppercase text-[1.2rem] font-[700] select-none">
@@ -55,7 +52,6 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                                 <div
                                     onClick={() => {
                                         setPullRequestView(true);
-                                        setBlock(true);
                                     }}
                                     className="absolute bottom-[1.6rem] left-[1.6rem]">
                                     <p className="group cursor-pointer w-fit text-editor-light1 text-[1.2rem] font-[500] select-none">
@@ -67,7 +63,6 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                                 <div
                                     onClick={() => {
                                         setPullRequestView(false);
-                                        setBlock(true);
                                     }}
                                     className="z-[102] absolute bottom-[1.6rem] right-[1.6rem]">
                                     <p className="group cursor-pointer w-fit text-editor-light1 text-[1.2rem] font-[500] select-none">
@@ -94,7 +89,6 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                         </div>
                     </div>
                     <div
-                        onTransitionEnd={() => setBlock(false)}
                         className={`${
                             !pullRequestView ? 'translate-x-[200%] invisible h-0' : 'translate-x-0 visible'
                         } max-h-[21.4rem] transition-transform duration-300 ease-in-out w-full flex-col`}>
@@ -164,7 +158,6 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                         </div>
                     </div>
                     <div
-                        onTransitionEnd={() => setBlock(false)}
                         className={`${
                             pullRequestView ? 'translate-x-[-200%] invisible ' : 'translate-x-0 visible'
                         } px-[10.8rem] transition-transform duration-300 ease-in-out`}>
@@ -252,16 +245,13 @@ export const BranchSelector: React.FC<IBranchSelector> = ({
                                     <p className="text-editor-light1 text-[1.4rem] leading-[1.8rem] font-[500] mb-[0.8rem]">
                                         Branch
                                     </p>
-                                    <div className="">
-                                        <SelectBranch
-                                            open={openSelect}
-                                            handleOpen={handleSelect}
-                                            onChange={e => handleBranch(e)}
-                                            options={availableBranches}
-                                            placeholder={availableBranches[0].name}
-                                            value={selectedBranch}
-                                        />
-                                    </div>
+                                    <Select
+                                        additionalClass="max-h-[8rem]"
+                                        onChange={e => handleBranch(availableBranches.find(o => o.name === e))}
+                                        options={availableBranches.map(o => o.name)}
+                                        placeholder={availableBranches[0].name}
+                                        value={selectedBranch?.name}
+                                    />
                                 </div>
                                 <div className="flex h-full">
                                     <Button
