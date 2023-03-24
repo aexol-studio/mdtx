@@ -11,5 +11,6 @@ jobs:
         with:
           node-version: '16.x'
           registry-url: 'https://registry.npmjs.org'
+      - run: npm profile set email aexol@aexol.com
       - run: npm install
       - run: npm run build -ws --if-present
